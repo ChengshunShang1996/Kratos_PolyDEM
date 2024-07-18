@@ -18,6 +18,7 @@
 #include "custom_elements/cylinder_continuum_particle.h"
 #include "custom_elements/spheric_particle.h"
 #include "custom_elements/spheric_continuum_particle.h"
+#include "custom_elements/polyhedron_particle.h"
 #include "custom_elements/polyhedron_skin_spheric_particle.h"
 #include "custom_elements/nanoparticle.h"
 #include "custom_elements/analytic_spheric_particle.h"

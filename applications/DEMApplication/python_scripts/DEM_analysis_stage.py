@@ -120,6 +120,7 @@ class DEMAnalysisStage(AnalysisStage):
         self.dem_inlet_model_part = self.model.CreateModelPart("DEMInletPart")
         self.mapping_model_part = self.model.CreateModelPart("MappingPart")
         self.contact_model_part = self.model.CreateModelPart("ContactPart")
+        self.polyhedron_model_part = self.model.CreateModelPart("PolyhedronPart")
 
         mp_list = []
         mp_list.append(self.spheres_model_part)
@@ -128,6 +129,7 @@ class DEMAnalysisStage(AnalysisStage):
         mp_list.append(self.dem_inlet_model_part)
         mp_list.append(self.mapping_model_part)
         mp_list.append(self.contact_model_part)
+        mp_list.append(self.polyhedron_model_part)
 
         self.all_model_parts = DEM_procedures.SetOfModelParts(mp_list)
 

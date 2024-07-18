@@ -13,6 +13,7 @@ set(KRATOS_DEM_APPLICATION_CORE
     ${CMAKE_CURRENT_SOURCE_DIR}/DEM_application.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_strategies/strategies/explicit_solver_strategy.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_strategies/strategies/explicit_solver_continuum.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_strategies/strategies/explicit_solver_ccontact_strategy.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_elements/spheric_particle.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_elements/nanoparticle.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_elements/analytic_spheric_particle.cpp
@@ -27,6 +28,7 @@ set(KRATOS_DEM_APPLICATION_CORE
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_elements/rigid_body_element.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_elements/ship_element.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_elements/contact_info_spheric_particle.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_elements/polyhedron_particle.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_elements/polyhedron_skin_spheric_particle.cpp
     #${CMAKE_CURRENT_SOURCE_DIR}/custom_elements/analytic_rigid_body_element.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_conditions/RigidFace.cpp

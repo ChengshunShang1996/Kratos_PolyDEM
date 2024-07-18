@@ -122,11 +122,37 @@ void ParticleContactElement::InitializeSolutionStep(const ProcessInfo& r_process
     } // else we keep it at 1.0.
 }
 
-////************************************************************************************
-////************************************************************************************
 void ParticleContactElement::FinalizeSolutionStep(const ProcessInfo& r_process_info) {}
 
 void ParticleContactElement::Calculate(const Variable<double>& rVariable, double& Output, const ProcessInfo& r_process_info) {}
+
+void ParticleContactElement::CalculateRightHandSide(VectorType& rRightHandSideVector,
+                                                    const ProcessInfo& rCurrentProcessInfo){
+    KRATOS_TRY
+
+
+    //Poly_particle_1
+
+
+    //Poly_particle_2
+
+
+
+
+    KRATOS_CATCH( "" )
+    }
+
+void ParticleContactElement::GJK() {
+    KRATOS_TRY
+
+    KRATOS_CATCH( "" )
+}
+
+void ParticleContactElement::EPA() {
+    KRATOS_TRY
+
+    KRATOS_CATCH( "" )
+}
 
 } // Namespace Kratos
 

@@ -49,6 +49,7 @@ namespace Kratos {
         mDragConstantVector[2] = rigid_body_element_sub_model_part[DEM_DRAG_CONSTANT_Z];
     }
     
+    /*
     void PolyhedronParticle::ComputeWaterDragForce() {
 
         KRATOS_TRY
@@ -102,74 +103,9 @@ namespace Kratos {
         }
 
         KRATOS_CATCH("")
-    }
+    } */
+
     
-    void PolyhedronParticle::ComputeBuoyancyEffects() {
-
-        KRATOS_TRY
-
-        const double water_density = 1000;
-        const double gravity = 9.81;
-        const double water_level = 0.0;
-
-        for (unsigned int i = 0; i != mListOfRigidFaces.size(); ++i) {
-            double mean_pressure = 0.0;
-            double rigid_face_area = 0.0;
-            Point rigid_face_centroid;
-            array_1d<double, 3> normal_to_rigid_face = ZeroVector(3);
-            array_1d<double, 3> normal_rigid_face_force = ZeroVector(3);
-            array_1d<double, 3> rigid_body_centroid_to_rigid_face_centroid_vector = ZeroVector(3);
-            array_1d<double, 3> buoyancy_moment = ZeroVector(3);
-            unsigned int rigid_face_size = mListOfRigidFaces[i]->GetGeometry().size();
-
-            for (unsigned int j = 0; j < rigid_face_size; j++) {
-                double node_Z_coordinate = mListOfRigidFaces[i]->GetGeometry()[j].Coordinates()[2];
-                mean_pressure += ((node_Z_coordinate >= water_level) ? 0.0 : -node_Z_coordinate * water_density * gravity);
-            }
-
-            rigid_face_centroid = mListOfRigidFaces[i]->GetGeometry().Center();
-            if (rigid_face_size) mean_pressure /= rigid_face_size;
-            else KRATOS_INFO("DEM") << "A rigid face with no nodes was found!";
-            mListOfRigidFaces[i]->CalculateNormal(normal_to_rigid_face);
-            rigid_face_area = mListOfRigidFaces[i]->GetGeometry().Area();
-            normal_rigid_face_force[0] = mean_pressure * rigid_face_area * normal_to_rigid_face[0];
-            normal_rigid_face_force[1] = mean_pressure * rigid_face_area * normal_to_rigid_face[1];
-            normal_rigid_face_force[2] = mean_pressure * rigid_face_area * normal_to_rigid_face[2];
-
-            for (unsigned int i = 0; i < rigid_face_size; i++) {
-                rigid_body_centroid_to_rigid_face_centroid_vector[0] = rigid_face_centroid.Coordinates()[0] - GetGeometry()[0].Coordinates()[0];
-                rigid_body_centroid_to_rigid_face_centroid_vector[1] = rigid_face_centroid.Coordinates()[1] - GetGeometry()[0].Coordinates()[1];
-                rigid_body_centroid_to_rigid_face_centroid_vector[2] = rigid_face_centroid.Coordinates()[2] - GetGeometry()[0].Coordinates()[2];
-                if (GeometryFunctions::DotProduct(rigid_body_centroid_to_rigid_face_centroid_vector, normal_to_rigid_face) > 0.0) {
-                    DEM_MULTIPLY_BY_SCALAR_3(normal_rigid_face_force, -1.0)
-                }
-            }
-
-            array_1d<double, 3>& total_forces = GetGeometry()[0].FastGetSolutionStepValue(TOTAL_FORCES);
-            DEM_ADD_SECOND_TO_FIRST(total_forces, normal_rigid_face_force)
-            array_1d<double, 3>& total_moments = GetGeometry()[0].FastGetSolutionStepValue(PARTICLE_MOMENT);
-            GeometryFunctions::CrossProduct(rigid_body_centroid_to_rigid_face_centroid_vector, normal_rigid_face_force, buoyancy_moment);
-            DEM_ADD_SECOND_TO_FIRST(total_moments, buoyancy_moment)
-        }
-
-        KRATOS_CATCH("")
-    }
-
-    void PolyhedronParticle::ComputeEngineForce() {
-
-        KRATOS_TRY
-        
-        array_1d<double, 3>& external_applied_force = GetGeometry()[0].FastGetSolutionStepValue(EXTERNAL_APPLIED_FORCE);
-        const array_1d<double, 3> velocity = GetGeometry()[0].FastGetSolutionStepValue(VELOCITY);
-
-        if ((GetGeometry()[0].FastGetSolutionStepValue(VELOCITY)[0]) < mThresholdVelocity) external_applied_force[0] = mEnginePerformance * mMaxEngineForce;
-        else if (velocity[0]) external_applied_force[0] = mEnginePerformance * mEnginePower / velocity[0];
-        
-        noalias(GetGeometry()[0].FastGetSolutionStepValue(TOTAL_FORCES)) += external_applied_force;
-
-        KRATOS_CATCH("")
-    }
-
     void PolyhedronParticle::ComputeExternalForces(const array_1d<double,3>& gravity) {
 
         KRATOS_TRY
