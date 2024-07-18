@@ -79,6 +79,11 @@ namespace Kratos {
                                      ModelPart& inlet_mp,
                                      ModelPart& clusters_mp);
 
+        void CreatePropertiesProxies(ModelPart& balls_mp,
+                                     ModelPart& inlet_mp,
+                                     ModelPart& clusters_mp,
+                                     ModelPart& polyhedron_mp);
+
         void CreatePropertiesProxies(ModelPart& r_model_part);
 
         std::vector<PropertiesProxy>& GetPropertiesProxies(ModelPart& r_model_part);

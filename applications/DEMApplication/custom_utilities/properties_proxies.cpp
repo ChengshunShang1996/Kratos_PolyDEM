@@ -102,6 +102,29 @@ namespace Kratos {
         KRATOS_CATCH("")
     }
 
+    void PropertiesProxiesManager::CreatePropertiesProxies(
+                                                  ModelPart& balls_mp,
+                                                  ModelPart& inlet_mp,
+                                                  ModelPart& clusters_mp,
+                                                  ModelPart& polyhedron_mp) {
+        KRATOS_TRY
+
+        balls_mp[VECTOR_OF_PROPERTIES_PROXIES] = std::vector<PropertiesProxy>();
+
+        std::vector<PropertiesProxy>& vector_of_proxies = balls_mp[VECTOR_OF_PROPERTIES_PROXIES];
+        vector_of_proxies.clear();
+        vector_of_proxies.resize( balls_mp.NumberOfProperties() + inlet_mp.NumberOfProperties() + clusters_mp.NumberOfProperties() + polyhedron_mp.NumberOfProperties() );
+        int properties_counter = 0;
+        AddPropertiesProxiesFromModelPartProperties(vector_of_proxies, balls_mp,      properties_counter);
+        AddPropertiesProxiesFromModelPartProperties(vector_of_proxies, inlet_mp,      properties_counter);
+        AddPropertiesProxiesFromModelPartProperties(vector_of_proxies, clusters_mp,   properties_counter);
+        AddPropertiesProxiesFromModelPartProperties(vector_of_proxies, polyhedron_mp, properties_counter);
+
+        return;
+
+        KRATOS_CATCH("")
+    }
+
     void PropertiesProxiesManager::CreatePropertiesProxies(ModelPart& r_model_part) {
 
         KRATOS_TRY

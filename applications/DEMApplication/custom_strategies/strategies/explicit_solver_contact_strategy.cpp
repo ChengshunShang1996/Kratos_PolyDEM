@@ -4,6 +4,8 @@
 // Date: July 2024
 /////////////////////////////////////////////////////////////
 
+//Important: Current contact-based explicit strategy solver is not appliable to Clusters!!!
+
 #include "explicit_solver_contact_strategy.h"
 #include "utilities/parallel_utilities.h"
 #include "utilities/atomic_utilities.h"
@@ -16,51 +18,27 @@ namespace Kratos {
 
         ModelPart& r_model_part = GetModelPart();
         ModelPart& fem_model_part = GetFemModelPart();
-        ProcessInfo& r_process_info = r_model_part.GetProcessInfo();
-        //SendProcessInfoToClustersModelPart();
+        ModelPart& polyhedron_model_part = GetPolyhedronModelPart();
 
-        if (r_model_part.GetCommunicator().MyPID() == 0) {
+        ProcessInfo& r_process_info = r_model_part.GetProcessInfo();
+        SendProcessInfoToClustersModelPart();
+
+        if (polyhedron_model_part.GetCommunicator().MyPID() == 0) {
             KRATOS_INFO("DEM") << "------------------CONTACT-BASED EXPLICIT SOLVER STRATEGY---------------------" << "\n" << std::endl;
         }
 
         mNumberOfThreads = ParallelUtilities::GetNumThreads();
         DisplayThreadInfo();
 
-        RebuildListOfSphericParticles <PolyhedronParticle> (r_model_part.GetCommunicator().LocalMesh().Elements(), mListOfPolyhedronParticles);
-        RebuildListOfSphericParticles <PolyhedronParticle> (r_model_part.GetCommunicator().GhostMesh().Elements(), mListOfGhostPolyhedronParticles);
+        RebuildListOfSphericParticles <SphericParticle> (r_model_part.GetCommunicator().LocalMesh().Elements(), mListOfSphericParticles);
+        RebuildListOfSphericParticles <SphericParticle> (r_model_part.GetCommunicator().GhostMesh().Elements(), mListOfGhostSphericParticles);
+        RebuildListOfSphericParticles <PolyhedronParticle> (polyhedron_model_part.GetCommunicator().LocalMesh().Elements(), mListOfPolyhedronParticles);
+        RebuildListOfSphericParticles <PolyhedronParticle> (polyhedron_model_part.GetCommunicator().GhostMesh().Elements(), mListOfGhostPolyhedronParticles);
 
         mSearchControlVector.resize(mNumberOfThreads);
         for (int i = 0; i < mNumberOfThreads; i++) mSearchControlVector[i] = 0;
 
-        PropertiesProxiesManager().CreatePropertiesProxies(r_model_part, *mpInlet_model_part, *mpCluster_model_part);
-
-        RepairPointersToNormalProperties(mListOfSphericParticles);
-        RepairPointersToNormalProperties(mListOfGhostSphericParticles);
-
-        RebuildPropertiesProxyPointers(mListOfSphericParticles);
-        RebuildPropertiesProxyPointers(mListOfGhostSphericParticles);
-
-        GetSearchControl() = r_process_info[SEARCH_CONTROL];
-
-        InitializeDEMElements();
-        InitializeFEMElements();
-        UpdateMaxIdOfCreatorDestructor();
-        InitializeClusters(); // This adds elements to the balls modelpart
-
-        RebuildListOfSphericParticles <PolyhedronParticle> (r_model_part.GetCommunicator().LocalMesh().Elements(), mListOfPolyhedronParticles);
-        RebuildListOfSphericParticles <PolyhedronParticle> (r_model_part.GetCommunicator().GhostMesh().Elements(), mListOfGhostPolyhedronParticles);
-
-        InitializeSolutionStep();
-        ApplyInitialConditions();
-
-        // Search Neighbors with tolerance (after first repartition process)
-        SetSearchRadiiOnAllParticles(r_model_part, r_process_info[SEARCH_RADIUS_INCREMENT_FOR_BONDS_CREATION], 1.0);
-        SearchNeighbours();
-        MeshRepairOperations();
-        SearchNeighbours();
-
-        RebuildListOfSphericParticles <PolyhedronParticle> (r_model_part.GetCommunicator().LocalMesh().Elements(), mListOfPolyhedronParticles);
-        RebuildListOfSphericParticles <PolyhedronParticle> (r_model_part.GetCommunicator().GhostMesh().Elements(), mListOfGhostPolyhedronParticles);
+        PropertiesProxiesManager().CreatePropertiesProxies(r_model_part, *mpInlet_model_part, *mpCluster_model_part, *mpPolyhedron_model_part);
 
         bool has_mpi = false;
         Check_MPI(has_mpi);
@@ -68,18 +46,42 @@ namespace Kratos {
         if (has_mpi) {
             RepairPointersToNormalProperties(mListOfSphericParticles);
             RepairPointersToNormalProperties(mListOfGhostSphericParticles);
+            RepairPointersToNormalProperties(mListOfPolyhedronParticles);
+            RepairPointersToNormalProperties(mListOfGhostPolyhedronParticles);
         }
 
         RebuildPropertiesProxyPointers(mListOfSphericParticles);
         RebuildPropertiesProxyPointers(mListOfGhostSphericParticles);
+        RebuildPropertiesProxyPointers(mListOfPolyhedronParticles);
+        RebuildPropertiesProxyPointers(mListOfGhostPolyhedronParticles);
 
-        if (has_mpi) {
-            //RebuildListsOfPointersOfEachParticle(); //Serialized pointers are lost, so we rebuild them using Id's
+        GetSearchControl() = r_process_info[SEARCH_CONTROL];
+
+        InitializeDEMElements();
+        InitializeFEMElements();
+        InitializeClusters(); // This adds elements to the balls modelpart
+        InitializePolyhedrons();
+
+        UpdateMaxIdOfCreatorDestructor();
+
+        RebuildListOfSphericParticles <SphericParticle> (r_model_part.GetCommunicator().LocalMesh().Elements(), mListOfSphericParticles);
+        RebuildListOfSphericParticles <SphericParticle> (r_model_part.GetCommunicator().GhostMesh().Elements(), mListOfGhostSphericParticles);
+        RebuildListOfSphericParticles <PolyhedronParticle> (polyhedron_model_part.GetCommunicator().LocalMesh().Elements(), mListOfPolyhedronParticles);
+        RebuildListOfSphericParticles <PolyhedronParticle> (polyhedron_model_part.GetCommunicator().GhostMesh().Elements(), mListOfGhostPolyhedronParticles);
+
+        InitializeSolutionStep();
+        ApplyInitialConditions();
+
+        if (r_model_part.Nodes().size() > 0) {
+            SetSearchRadiiOnAllParticles(*mpDem_model_part, mpDem_model_part->GetProcessInfo()[SEARCH_RADIUS_INCREMENT], 1.0);
+            SearchNeighbours();
+            ComputeNewNeighboursHistoricalData();
         }
 
         if (fem_model_part.Nodes().size() > 0) {
-            SetSearchRadiiWithFemOnAllParticles(r_model_part, mpDem_model_part->GetProcessInfo()[SEARCH_RADIUS_INCREMENT_FOR_WALLS], 1.0);
+            SetSearchRadiiWithFemOnAllParticles(*mpDem_model_part, mpDem_model_part->GetProcessInfo()[SEARCH_RADIUS_INCREMENT_FOR_WALLS], 1.0);
             SearchRigidFaceNeighbours();
+            ComputeNewRigidFaceNeighboursHistoricalData();
         }
 
         if (r_process_info[CONTACT_MESH_OPTION] == 1) {
@@ -95,6 +97,132 @@ namespace Kratos {
         KRATOS_CATCH("")
     }// Initialize()
 
+    void ContactExplicitSolverStrategy::RepairPointersToNormalProperties(std::vector<PolyhedronParticle*>& rCustomListOfPolyhedronParticles) {
+
+        KRATOS_TRY
+
+        bool found = false;
+        // Using IndexPartition should be fine since 'break' affects the internal for loops while the replaced continues only has an effect on the for_each loop.
+        IndexPartition<unsigned int>(rCustomListOfPolyhedronParticles.size()).for_each([&](unsigned int i){
+
+            int own_properties_id = rCustomListOfPolyhedronParticles[i]->GetProperties().Id();
+            for (PropertiesIterator props_it = mpPolyhedron_model_part->GetMesh(0).PropertiesBegin(); props_it != mpPolyhedron_model_part->GetMesh(0).PropertiesEnd(); props_it++) {
+                int model_part_id = props_it->GetId();
+                if (own_properties_id == model_part_id) {
+                    rCustomListOfPolyhedronParticles[i]->SetProperties(*(props_it.base()));
+                    found = true;
+                    break;
+                }
+            }
+            if (found) return;
+
+            KRATOS_ERROR_IF_NOT(found) << "This particle could not find its properties!!" << std::endl;
+        });
+
+        KRATOS_CATCH("")
+    }
+
+    void ContactExplicitSolverStrategy::InitializePolyhedrons() {
+
+        KRATOS_TRY
+
+        ModelPart& r_model_part = GetModelPart();
+        ProcessInfo& r_process_info = r_model_part.GetProcessInfo();
+
+        IndexPartition<unsigned int>(mListOfPolyhedronParticles.size()).for_each([&](unsigned int i){
+            mListOfPolyhedronParticles[i]->Initialize(r_process_info); //TODO: add function!!!
+        });
+
+        KRATOS_CATCH("")
+    }
+
+    void ContactExplicitSolverStrategy::UpdateMaxIdOfCreatorDestructor() {
+
+        KRATOS_TRY
+
+        int max_Id = mpParticleCreatorDestructor->GetCurrentMaxNodeId();
+        ModelPart& r_model_part = GetModelPart();
+        int max_DEM_Id = mpParticleCreatorDestructor->FindMaxNodeIdInModelPart(r_model_part);
+        int max_FEM_Id = mpParticleCreatorDestructor->FindMaxNodeIdInModelPart(*mpFem_model_part);
+        int max_cluster_Id = mpParticleCreatorDestructor->FindMaxNodeIdInModelPart(*mpCluster_model_part);
+        int max_polyhedron_Id = mpParticleCreatorDestructor->FindMaxNodeIdInModelPart(*mpPolyhedron_model_part);
+
+        max_Id = std::max(max_Id, max_DEM_Id);
+        max_Id = std::max(max_Id, max_FEM_Id);
+        max_Id = std::max(max_Id, max_cluster_Id);
+        max_Id = std::max(max_Id, max_polyhedron_Id);
+        mpParticleCreatorDestructor->SetMaxNodeId(max_Id);
+
+        KRATOS_CATCH("")
+    }
+
+    void ContactExplicitSolverStrategy::InitializeSolutionStep() {
+        KRATOS_TRY
+
+        ModelPart& r_model_part = GetModelPart();
+        const ProcessInfo& r_process_info = r_model_part.GetProcessInfo();
+        ElementsArrayType& pElements = r_model_part.GetCommunicator().LocalMesh().Elements();
+
+        ModelPart& r_fem_model_part = GetFemModelPart();
+        const ProcessInfo& r_fem_process_info = r_fem_model_part.GetProcessInfo();
+        ConditionsArrayType& pConditions = r_fem_model_part.GetCommunicator().LocalMesh().Conditions();
+
+        ModelPart& r_polyhedron_model_part = GetPolyhedronModelPart();
+        const ProcessInfo& r_polyhedron_process_info = r_polyhedron_model_part.GetProcessInfo();
+        ElementsArrayType& pPolyElements = r_polyhedron_model_part.GetCommunicator().LocalMesh().Elements();
+
+        RebuildListOfSphericParticles <SphericParticle> (r_model_part.GetCommunicator().LocalMesh().Elements(), mListOfSphericParticles);
+        RebuildListOfSphericParticles <PolyhedronParticle> (polyhedron_model_part.GetCommunicator().LocalMesh().Elements(), mListOfPolyhedronParticles);
+
+        SetNormalRadiiOnAllParticles(*mpDem_model_part);
+
+        #pragma omp parallel
+        {
+            #pragma omp for nowait
+            for (int k = 0; k < (int) pElements.size(); k++) {
+                ElementsArrayType::iterator it = pElements.ptr_begin() + k;
+                (it)->InitializeSolutionStep(r_process_info);
+            }
+
+            #pragma omp for nowait
+            for (int k = 0; k < (int) pConditions.size(); k++) {
+                ConditionsArrayType::iterator it = pConditions.ptr_begin() + k;
+                (it)->InitializeSolutionStep(r_fem_process_info);
+            }
+
+            #pragma omp for nowait
+            for (int k = 0; k < (int) pPolyElements.size(); k++) {
+                ConditionsArrayType::iterator it = pPolyElements.ptr_begin() + k;
+                (it)->InitializeSolutionStep(r_polyhedron_process_info);  //TODO: what should be in this r_polyhedron_process_info
+            }
+        }
+
+        ApplyPrescribedBoundaryConditions();
+        KRATOS_CATCH("")
+    }
+
+    void ContactExplicitSolverStrategy::ApplyPrescribedBoundaryConditions(){
+        
+        KRATOS_TRY
+
+        BaseType::ApplyPrescribedBoundaryConditions();
+
+        //in case i need to add boundary conditions for Polyhedron Partciles
+
+        KRATOS_CATCH("")
+    }
+
+    void ContactExplicitSolverStrategy::ApplyInitialConditions(){
+                
+        KRATOS_TRY
+
+        BaseType::ApplyInitialConditions();
+
+        //in case i need to add initial conditions for Polyhedron Partciles
+
+        KRATOS_CATCH("")
+    }
+    
     double ContactExplicitSolverStrategy::SolveSolutionStep() {
 
         KRATOS_TRY
@@ -309,9 +437,10 @@ namespace Kratos {
         KRATOS_CATCH("")
     } //CreateContactElements
 
-    void ContactExplicitSolverStrategy::SetSearchRadiiOnAllParticles(ModelPart& r_model_part, const double added_search_distance, const double amplification) {
+    //TODO: update this function
+    void ContactExplicitSolverStrategy::SetSearchRadiiOnAllPolyhedronParticles(ModelPart& r_model_part, const double added_search_distance, const double amplification) {
         KRATOS_TRY
-        const int number_of_elements = r_model_part.GetCommunicator().LocalMesh().NumberOfElements();
+        const int number_of_elements = polyhedron_model_part.GetCommunicator().LocalMesh().NumberOfElements();
         if (GetDeltaOption() == 3){
             // In this case, the parameter "added_search_distance" is actually a multiplier for getting the added_search_distance
             const double search_radius_multiplier = added_search_distance;
@@ -326,32 +455,6 @@ namespace Kratos {
                 mListOfPolyhedronParticles[i]->SetSearchRadius(amplification * mListOfPolyhedronParticles[i]->mLocalRadiusAmplificationFactor * (added_search_distance + mListOfPolyhedronParticles[i]->GetRadius()));
             }
         }
-        KRATOS_CATCH("")
-    }
-
-    void ContactExplicitSolverStrategy::MeshRepairOperations() {
-
-        KRATOS_TRY
-
-        const int number_of_particles = (int) mListOfPolyhedronParticles.size();
-        int particle_counter = 0.0;
-
-        #pragma omp parallel for
-        for (int i = 0; i < number_of_particles; i++) {
-            bool result = mListOfPolyhedronParticles[i]->OverlappedParticleRemoval();
-
-            if (result == true) {particle_counter += 1;}
-        }
-
-        GetModelPart().GetCommunicator().SynchronizeElementalFlags();
-
-        //KRATOS_WARNING("DEM") << "Mesh repair complete. In MPI node " <<GetModelPart().GetCommunicator().MyPID()<<". "<< particle_counter << " particles were removed. " << "\n" << std::endl;
-        int total_spheres_removed = GetModelPart().GetCommunicator().GetDataCommunicator().SumAll(particle_counter);
-
-        if(GetModelPart().GetCommunicator().MyPID() == 0 && total_spheres_removed) {
-            KRATOS_WARNING("DEM") << "A total of "<<total_spheres_removed<<" spheres were removed due to excessive overlapping." << std::endl;
-        }
-
         KRATOS_CATCH("")
     }
 

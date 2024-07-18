@@ -39,6 +39,7 @@ namespace Kratos
         virtual ~PolyhedronParticle();
 
         void Initialize(const ProcessInfo& r_process_info) override;
+        void InitializeSolutionStep(const ProcessInfo& r_process_info) override;
         void CustomInitialize(ModelPart& rigid_body_element_sub_model_part) override;
         void ComputeExternalForces(const array_1d<double,3>& gravity) override;
 

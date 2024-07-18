@@ -34,6 +34,25 @@ namespace Kratos {
 
     PolyhedronParticle::~PolyhedronParticle() {}
 
+    void PolyhedronParticle::InitializeSolutionStep(const ProcessInfo& r_process_info)
+    {
+        KRATOS_TRY
+
+        auto& central_node = GetGeometry()[0];
+        mRadius = central_node.FastGetSolutionStepValue(RADIUS); //Just in case someone is overwriting the radius in Python
+        central_node.FastGetSolutionStepValue(REPRESENTATIVE_VOLUME) = CalculateVolume();
+
+        if (this->Is(DEMFlags::HAS_ROTATION)) {
+            if (this->Is(DEMFlags::HAS_ROLLING_FRICTION)) {
+                if (mRollingFrictionModel != nullptr){
+                    mRollingFrictionModel->InitializeSolutionStep();
+                }
+            }
+        }
+
+        KRATOS_CATCH("")
+    }
+
     void PolyhedronParticle::CustomInitialize(ModelPart& rigid_body_element_sub_model_part) {
         
         RigidBodyElement3D::CustomInitialize(rigid_body_element_sub_model_part);

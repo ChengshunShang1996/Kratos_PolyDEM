@@ -115,20 +115,24 @@ namespace Kratos {
         //Destructor.
         virtual ~ContactExplicitSolverStrategy() {}
 
-        virtual void Initialize() override;
-        virtual double SolveSolutionStep() override;
+        void Initialize() override;
         void SearchDEMOperations(ModelPart& r_model_part, bool has_mpi);
         void ComputeNewNeighboursHistoricalData() override;
         void ComputeNewRigidFaceNeighboursHistoricalData() override;
         void CreateContactElements() override;
         double ComputeCoordinationNumber(double& standard_dev) override;
-
+        void RepairPointersToNormalProperties(std::vector<PolyhedronParticle*>& rCustomListOfPolyhedronParticles);
+        void InitializePolyhedrons();
+        void UpdateMaxIdOfCreatorDestructor() override;
+        void ApplyPrescribedBoundaryConditions() override;
         void RebuildListOfPolyhedronParticles() {
             RebuildListOfSphericParticles<PolyhedronParticle>(GetModelPart().GetCommunicator().LocalMesh().Elements(), mListOfPolyhedronParticles);
         }
-
-        void SetSearchRadiiOnAllParticles(ModelPart& r_model_part, const double added_search_distance, const double amplification) override;
+        void SetSearchRadiiOnAllPolyhedronParticles(ModelPart& r_model_part, const double added_search_distance, const double amplification) override;
         virtual void MeshRepairOperations();
+        void InitializeSolutionStep() override;
+        void ApplyInitialConditions() override;
+        double SolveSolutionStep() override;
         void FinalizeSolutionStep() override;
         void FinalizeSolutionStepFEM();
 
