@@ -64,6 +64,8 @@ namespace Kratos
         /// Print object's data.
         virtual void PrintData(std::ostream& rOStream) const override {}
 
+        std::vector<PolyhedronContactElement*> mPolyhedronContactElements;
+        std::vector<SphericParticle*>          mNeighbourElements;
 
     protected:
 

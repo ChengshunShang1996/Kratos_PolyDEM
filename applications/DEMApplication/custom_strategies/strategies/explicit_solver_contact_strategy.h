@@ -128,7 +128,7 @@ namespace Kratos {
         void RebuildListOfPolyhedronParticles() {
             RebuildListOfSphericParticles<PolyhedronParticle>(GetModelPart().GetCommunicator().LocalMesh().Elements(), mListOfPolyhedronParticles);
         }
-        void SetSearchRadiiOnAllPolyhedronParticles(ModelPart& r_model_part, const double added_search_distance, const double amplification) override;
+        virtual void SetSearchRadiiOnAllPolyhedronParticles(ModelPart& polyhedron_model_part, const double added_search_distance, const double amplification);
         virtual void MeshRepairOperations();
         void InitializeSolutionStep() override;
         void ApplyInitialConditions() override;
