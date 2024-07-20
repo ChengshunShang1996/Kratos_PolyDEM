@@ -13,19 +13,32 @@ namespace Kratos
 {
 //************************************************************************************
 //************************************************************************************
-PolyhedronContactElement::PolyhedronContactElement( IndexType NewId, GeometryType::Pointer pGeometry)
+PolyhedronContactElement::PolyhedronContactElement(IndexType NewId, 
+                                                    PolyhedronParticle* PolyhedronParticle1, 
+                                                    PolyhedronParticle* PolyhedronParticle2): 
+mId(NewId),
+mPolyhedronParticle1(PolyhedronParticle1),
+mPolyhedronParticle2(PolyhedronParticle2)
 {
-    //DO NOT ADD DOFS HERE!!!
+
 }
 
-PolyhedronContactElement::PolyhedronContactElement( IndexType NewId, GeometryType::Pointer pGeometry,  PropertiesType::Pointer pProperties)
+PolyhedronContactElement::PolyhedronContactElement(IndexType NewId, 
+                                                    PolyhedronParticle* PolyhedronParticle1, 
+                                                    PolyhedronParticle* PolyhedronParticle2, 
+                                                    PropertiesType::Pointer pProperties):
+mId(NewId),
+mPolyhedronParticle1(PolyhedronParticle1),
+mPolyhedronParticle2(PolyhedronParticle2),
+mpProperties(pProperties)
 {
+
 }
 
 //create contact elements instances.
-PolyhedronContactElement::Pointer PolyhedronContactElement::Create( IndexType NewId, NodesArrayType const& ThisNodes,  PropertiesType::Pointer pProperties ) const
+PolyhedronContactElement::Pointer PolyhedronContactElement::Create(IndexType NewId, PolyhedronParticle* PolyhedronParticle1, PolyhedronParticle* PolyhedronParticle2, PropertiesType::Pointer pProperties) const
 {
-    return PolyhedronContactElement::Pointer ( new PolyhedronContactElement( NewId, GetGeometry().Create( ThisNodes ), pProperties ) );
+    return PolyhedronContactElement::Pointer ( new PolyhedronContactElement(NewId, PolyhedronParticle1, PolyhedronParticle2, pProperties));
 }
 
 PolyhedronContactElement::~PolyhedronContactElement()

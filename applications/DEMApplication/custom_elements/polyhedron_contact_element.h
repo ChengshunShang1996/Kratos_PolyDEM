@@ -33,12 +33,12 @@ namespace Kratos
         
         KRATOS_CLASS_INTRUSIVE_POINTER_DEFINITION(PolyhedronContactElement);
 
-        PolyhedronContactElement(IndexType NewId, GeometryType::Pointer pGeometry);
-        PolyhedronContactElement(IndexType NewId, GeometryType::Pointer pGeometry, PropertiesType::Pointer pProperties);
+        PolyhedronContactElement(IndexType NewId, PolyhedronParticle* PolyhedronParticle1, PolyhedronParticle* PolyhedronParticle2);
+        PolyhedronContactElement(IndexType NewId, PolyhedronParticle* PolyhedronParticle1, PolyhedronParticle* PolyhedronParticle2, PropertiesType::Pointer pProperties);
 
         virtual ~PolyhedronContactElement();
 
-        virtual Pointer Create(IndexType NewId, NodesArrayType const& ThisNodes,  PropertiesType::Pointer pProperties) const;
+        virtual Pointer Create(IndexType NewId, PolyhedronParticle* PolyhedronParticle1, PolyhedronParticle* PolyhedronParticle2, PropertiesType::Pointer pProperties) const;
 
         void Initialize(const ProcessInfo& r_process_info) override;
 
@@ -58,8 +58,11 @@ namespace Kratos
         array_1d<double,3> mElasticLocalRotationalMoment;
         double mContactSigma;
         double mContactTau;
+        IndexType mId;
         PolyhedronParticle* mPolyhedronParticle1;
         PolyhedronParticle* mPolyhedronParticle2;
+        Properties::Pointer mpProperties;
+
 
     protected:
 

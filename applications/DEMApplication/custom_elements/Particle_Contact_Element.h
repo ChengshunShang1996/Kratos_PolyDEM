@@ -60,12 +60,6 @@ public:
 
     void Calculate(const Variable<double>& rVariable, double& Output, const ProcessInfo& r_process_info) override;
 
-    void CalculateRightHandSide(VectorType& rRightHandSideVector, const ProcessInfo& rCurrentProcessInfo) override;
-
-    void GJK();
-
-    void EPA();
-
     void PrepareForPrinting();
 
     void CalculateMeanContactArea(const bool has_mpi);
