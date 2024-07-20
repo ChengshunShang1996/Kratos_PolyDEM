@@ -346,6 +346,9 @@ class DEMAnalysisStage(AnalysisStage):
 
     def GetDEMClustersInputFileTag(self):
         return 'DEM_Clusters'
+    
+    def GetDEMPolyhedronInputFileTag(self):
+        return 'DEM_Polyhedron'
 
     def GetDiscreteElementsInputFilePath(self):
         return self.GetInputFilePath(self.GetDiscreteElementsInputFileTag())
@@ -358,6 +361,9 @@ class DEMAnalysisStage(AnalysisStage):
 
     def GetDEMClustersInputFilePath(self):
         return self.GetInputFilePath(self.GetDEMClustersInputFileTag())
+    
+    def GetDEMPolyhedronInputFilePath(self):
+        return self.GetInputFilePath(self.GetDEMPolyhedronInputFileTag())
 
     def GetMpFilePath(self):
         return GetInputFilePath('DEM')
@@ -370,6 +376,9 @@ class DEMAnalysisStage(AnalysisStage):
 
     def GetClusterFilePath(self):
         return GetInputFilePath('DEM_Clusters')
+    
+    def GetPolyhedronFilePath(self):
+        return GetInputFilePath('DEM_Polyhedron')
 
     def GetInputFilePath(self, file_tag=''):
         return self.GetProblemNameWithPath() + file_tag
@@ -435,6 +444,10 @@ class DEMAnalysisStage(AnalysisStage):
         max_node_id, max_elem_id, max_cond_id = UpdateMaxIds(max_node_id, max_elem_id, max_cond_id, self.cluster_model_part)
 
         ReadModelPart(self.dem_inlet_model_part, self.GetDEMInletInputFileTag(), max_node_id, max_elem_id, max_cond_id)
+
+        max_node_id, max_elem_id, max_cond_id = UpdateMaxIds(max_node_id, max_elem_id, max_cond_id, self.cluster_model_part)
+
+        ReadModelPart(self.polyhedron_model_part, self.GetDEMPolyhedronInputFileTag(), max_node_id, max_elem_id, max_cond_id)
 
     def ReadModelParts(self, max_node_id=0, max_elem_id=0, max_cond_id=0):
 
