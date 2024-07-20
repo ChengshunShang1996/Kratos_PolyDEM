@@ -261,7 +261,7 @@ class DEMAnalysisStage(AnalysisStage):
         self.SetAnalyticWatchers()
 
         # Setting up the buffer size
-        self.procedures.SetUpBufferSizeInAllModelParts(self.spheres_model_part, 1, self.cluster_model_part, 1, self.dem_inlet_model_part, 1, self.rigid_face_model_part, 1)
+        self.procedures.SetUpBufferSizeInAllModelParts(self.spheres_model_part, 1, self.cluster_model_part, 1, self.dem_inlet_model_part, 1, self.rigid_face_model_part, 1, self.polyhedron_model_part, 1)
 
         self.KratosPrintInfo("Initializing Problem...")
 
@@ -509,7 +509,7 @@ class DEMAnalysisStage(AnalysisStage):
             self.DEM_inlet.InitializeDEM_Inlet(self.spheres_model_part, self.creator_destructor, self._GetSolver().continuum_type)
 
     def SetInitialNodalValues(self):
-        self.procedures.SetInitialNodalValues(self.spheres_model_part, self.cluster_model_part, self.dem_inlet_model_part, self.rigid_face_model_part)
+        self.procedures.SetInitialNodalValues(self.spheres_model_part, self.cluster_model_part, self.dem_inlet_model_part, self.rigid_face_model_part, self.polyhedron_model_part)
 
     def InitializeSolutionStep(self):
         super().InitializeSolutionStep()
@@ -606,6 +606,7 @@ class DEMAnalysisStage(AnalysisStage):
         self.model.DeleteModelPart(self.dem_inlet_model_part.Name)
         self.model.DeleteModelPart(self.mapping_model_part.Name)
         self.model.DeleteModelPart(self.spheres_model_part.Name)
+        self.model.DeleteModelPart(self.polyhedron_model_part.Name)
 
     def Finalize(self):
         self.KratosPrintInfo("Finalizing execution...")
@@ -618,12 +619,15 @@ class DEMAnalysisStage(AnalysisStage):
 
         self.CleanUpOperations()
 
+    #TODO: why repeat this function?
+    '''
     def __SafeDeleteModelParts(self):
         self.model.DeleteModelPart(self.cluster_model_part.Name)
         self.model.DeleteModelPart(self.rigid_face_model_part.Name)
         self.model.DeleteModelPart(self.dem_inlet_model_part.Name)
         self.model.DeleteModelPart(self.mapping_model_part.Name)
         self.model.DeleteModelPart(self.spheres_model_part.Name)
+    '''
 
     def CleanUpOperations(self):
 
@@ -651,6 +655,7 @@ class DEMAnalysisStage(AnalysisStage):
         del self.dem_inlet_model_part
         del self.mapping_model_part
         del self.contact_model_part
+        del self.polyhedron_model_part
 
         if self.DEM_parameters["dem_inlet_option"].GetBool():
             del self.DEM_inlet
