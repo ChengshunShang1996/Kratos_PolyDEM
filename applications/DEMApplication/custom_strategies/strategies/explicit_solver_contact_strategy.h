@@ -116,13 +116,14 @@ namespace Kratos {
         virtual ~ContactExplicitSolverStrategy() {}
 
         void Initialize() override;
-        void SearchDEMOperations(ModelPart& r_model_part, bool has_mpi);
-        void ComputeNewNeighboursHistoricalData() override;
-        void ComputeNewRigidFaceNeighboursHistoricalData() override;
+        virtual void SearchPolyhedronOperations(ModelPart& r_model_part, ModelPart& polyhedron_model_part, bool has_mpi);
+        virtual void SearchPolyhedronNeighbours();
+        virtual void ComputePolyhedronNewNeighboursHistoricalData();
         void CreateContactElements() override;
         double ComputeCoordinationNumber(double& standard_dev) override;
         void RepairPointersToNormalProperties(std::vector<PolyhedronParticle*>& rCustomListOfPolyhedronParticles);
         void InitializePolyhedrons();
+        virtual void InitializePolyhedronContactElements();
         void UpdateMaxIdOfCreatorDestructor() override;
         void ApplyPrescribedBoundaryConditions() override;
         void RebuildListOfPolyhedronParticles() {

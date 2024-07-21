@@ -84,6 +84,10 @@ namespace Kratos {
             ComputeNewRigidFaceNeighboursHistoricalData();
         }
 
+        SetSearchRadiiOnAllPolyhedronParticles(*mpPolyhedron_model_part, mpDem_model_part->GetProcessInfo()[SEARCH_RADIUS_INCREMENT_FOR_WALLS], 1.0);
+        SearchPolyhedronNeighbours();
+        ComputePolyhedronNewNeighboursHistoricalData();
+
         if (r_process_info[CONTACT_MESH_OPTION]) {
             // TODO: 
             // I comment this function temperally as there is no sphere particles actually. 
@@ -92,7 +96,7 @@ namespace Kratos {
 
             // CreateContactElements(); //only for spheres
             CreatePolyhedronContactElements();
-            InitializeContactElements();
+            InitializePolyhedronContactElements();
         }
 
         r_model_part.GetCommunicator().SynchronizeElementalNonHistoricalVariable(NEIGHBOUR_IDS);
@@ -252,87 +256,135 @@ namespace Kratos {
 
     }//SolveSolutionStep()
 
-    void ContactExplicitSolverStrategy::SearchDEMOperations(ModelPart& r_model_part, bool has_mpi) {
+    void ContactExplicitSolverStrategy::SearchPolyhedronOperations(ModelPart& r_model_part, ModelPart& polyhedron_model_part, bool has_mpi) {
+
+        KRATOS_TRY
 
         ProcessInfo& r_process_info = r_model_part.GetProcessInfo();
+        int time_step = r_process_info[TIME_STEPS];
+        const double time = r_process_info[TIME];
+        const bool is_time_to_search_neighbours = (time_step + 1) % mNStepSearch == 0 && (time_step > 0); //Neighboring search. Every N times.
+        const bool is_time_to_print_results = r_process_info[IS_TIME_TO_PRINT];
+        const bool is_time_to_mark_and_remove = is_time_to_search_neighbours && (r_process_info[BOUNDING_BOX_OPTION] && time >= r_process_info[BOUNDING_BOX_START_TIME] && time <= r_process_info[BOUNDING_BOX_STOP_TIME]);
+        //BoundingBoxUtility(is_time_to_mark_and_remove);
 
-        if (r_process_info[SEARCH_CONTROL] == 0) {
+        if (is_time_to_search_neighbours) {
+            //if (!is_time_to_mark_and_remove) { //Just in case that some entities were marked as TO_ERASE without a bounding box (manual removal)
+            //    mpParticleCreatorDestructor->DestroyParticles<Cluster3D>(*mpCluster_model_part);
+            //    mpParticleCreatorDestructor->DestroyParticles<SphericParticle>(r_model_part);
+            //}
 
-            ElementsArrayType& rElements = r_model_part.GetCommunicator().LocalMesh().Elements();
-            int some_bond_is_broken = 0;
+            RebuildListOfSphericParticles <PolyhedronParticle> (polyhedron_model_part.GetCommunicator().LocalMesh().Elements(), mListOfPolyhedronParticles);
+            RebuildListOfSphericParticles <PolyhedronParticle> (polyhedron_model_part.GetCommunicator().GhostMesh().Elements(), mListOfGhostPolyhedronParticles);
 
-            block_for_each(rElements, [&](ModelPart::ElementType& rElement) {
+            SearchPolyhedronNeighbours();
 
-                PolyhedronParticle& r_sphere = dynamic_cast<PolyhedronParticle&>(rElement);
+            RebuildListOfSphericParticles <PolyhedronParticle> (polyhedron_model_part.GetCommunicator().LocalMesh().Elements(), mListOfPolyhedronParticles);
+            RebuildListOfSphericParticles <PolyhedronParticle> (polyhedron_model_part.GetCommunicator().GhostMesh().Elements(), mListOfGhostPolyhedronParticles);
+            
+            RepairPointersToNormalProperties(mListOfPolyhedronParticles);
+            RepairPointersToNormalProperties(mListOfGhostPolyhedronParticles);
+            RebuildPropertiesProxyPointers(mListOfPolyhedronParticles);
+            RebuildPropertiesProxyPointers(mListOfGhostPolyhedronParticles);
 
-                for (int j=0; j<(int) r_sphere.mContinuumInitialNeighborsSize; j++) {
-                    if (r_sphere.mIniNeighbourFailureId[j] != 0) {
-                        AtomicAdd(some_bond_is_broken, 1);
+            ComputePolyhedronNewNeighboursHistoricalData();
+
+            mSearchControl = 2; // Search is active and has been performed during this time step
+        } else {
+            mSearchControl = 1; // Search is active but no search has been done this time step;
+        }
+
+        if (is_time_to_print_results && r_process_info[CONTACT_MESH_OPTION] == 1) {
+            CreatePolyhedronContactElements();
+            InitializePolyhedronContactElements();
+        }
+
+        KRATOS_CATCH("")
+    }
+
+    void ContactExplicitSolverStrategy::SearchPolyhedronNeighbours() {
+        KRATOS_TRY
+
+        if (!mDoSearchNeighbourElements) {
+            return;
+        }
+
+        ModelPart& polyhedron_model_part = GetPolyhedronModelPart();
+
+        int number_of_elements = polyhedron_model_part.GetCommunicator().LocalMesh().ElementsArray().end() - polyhedron_model_part.GetCommunicator().LocalMesh().ElementsArray().begin();
+        if (!number_of_elements) return;
+
+        GetResults().resize(number_of_elements);
+        GetResultsDistances().resize(number_of_elements);
+
+        mpSpSearch->SearchElementsInRadiusExclusive(polyhedron_model_part, this->GetArrayOfAmplifiedRadii(), this->GetResults(), this->GetResultsDistances());
+
+        const int number_of_particles = (int) mListOfPolyhedronParticles.size();
+
+        typedef std::map<PolyhedronParticle*,std::vector<PolyhedronParticle*>> ConnectivitiesMap;
+        std::vector<ConnectivitiesMap> thread_maps_of_connectivities;
+        thread_maps_of_connectivities.resize(ParallelUtilities::GetNumThreads());
+
+        #pragma omp parallel for schedule(dynamic, 100)
+        for (int i = 0; i < number_of_particles; i++) {
+            mListOfPolyhedronParticles[i]->mNeighbourElements.clear();
+            for (SpatialSearch::ResultElementsContainerType::iterator neighbour_it = this->GetResults()[i].begin(); neighbour_it != this->GetResults()[i].end(); ++neighbour_it) {
+                Element* p_neighbour_element = (*neighbour_it).get();
+                PolyhedronParticle* p_polyhedron_neighbour_particle = dynamic_cast<PolyhedronParticle*> (p_neighbour_element);
+                //if (mListOfPolyhedronParticles[i]->Is(DEMFlags::BELONGS_TO_A_CLUSTER) && (mListOfPolyhedronParticles[i]->GetClusterId() == p_polyhedron_neighbour_particle->GetClusterId())) continue;
+                //if (mListOfPolyhedronParticles[i]->Is(DEMFlags::POLYHEDRON_SKIN)) continue;
+                mListOfPolyhedronParticles[i]->mNeighbourElements.push_back(p_polyhedron_neighbour_particle);
+                std::vector<PolyhedronParticle*>& neighbours_of_this_neighbour_for_this_thread = thread_maps_of_connectivities[OpenMPUtils::ThisThread()][p_polyhedron_neighbour_particle];
+                neighbours_of_this_neighbour_for_this_thread.push_back(mListOfPolyhedronParticles[i]);
+            }
+            this->GetResults()[i].clear();
+            this->GetResultsDistances()[i].clear();
+        }
+
+        // the next loop ensures consistency in neighbourhood (if A is neighbour of B, B must be neighbour of A)
+        #pragma omp parallel for schedule(dynamic, 100)
+        for (int i = 0; i < number_of_particles; i++) {
+            auto& current_neighbours = mListOfPolyhedronParticles[i]->mNeighbourElements;
+            std::vector<PolyhedronParticle*> neighbours_to_add;
+            for (size_t k = 0; k < thread_maps_of_connectivities.size(); k++){
+                ConnectivitiesMap::iterator it = thread_maps_of_connectivities[k].find(mListOfPolyhedronParticles[i]);
+                if (it != thread_maps_of_connectivities[k].end()) {
+                    neighbours_to_add.insert(neighbours_to_add.end(), it->second.begin(), it->second.end());
+                }
+            }
+            for (size_t l = 0; l < neighbours_to_add.size(); l++) {
+                bool found = false;
+                for (size_t m = 0; m < current_neighbours.size(); m++){
+                    if (neighbours_to_add[l] == current_neighbours[m]) {
+                        found = true;
                         break;
                     }
                 }
-            });
+                if ( found == false ) {
+                    current_neighbours.push_back(neighbours_to_add[l]);
+                }
+            }
+        }
+        KRATOS_CATCH("")
+    }
 
-            if (some_bond_is_broken > 0) {
-                r_process_info[SEARCH_CONTROL] = 1;
-                KRATOS_WARNING("DEM") << "From now on, the search is activated because some failure occurred " << std::endl;
+    void ContactExplicitSolverStrategy::ComputePolyhedronNewNeighboursHistoricalData() {
+
+        KRATOS_TRY
+        const int number_of_particles = (int) mListOfPolyhedronParticles.size();
+
+        #pragma omp parallel
+        {
+            DenseVector<int> temp_neighbours_ids;
+            std::vector<array_1d<double, 3> > temp_neighbour_elastic_contact_forces;
+
+            #pragma omp for
+            for (int i = 0; i < number_of_particles; i++) {
+                mListOfPolyhedronParticles[i]->ComputeNewNeighboursHistoricalData(temp_neighbours_ids, temp_neighbour_elastic_contact_forces);
             }
         }
 
-        const int time_step = r_process_info[TIME_STEPS];
-        const double time = r_process_info[TIME];
-        const bool is_time_to_search_neighbours = (time_step + 1) % GetNStepSearch() == 0 && (time_step > 0); //Neighboring search. Every N times.
-
-        if (r_process_info[SEARCH_CONTROL] > 0) {
-
-            if (is_time_to_search_neighbours) {
-
-                if (r_process_info[BOUNDING_BOX_OPTION] && time >= r_process_info[BOUNDING_BOX_START_TIME] && time <= r_process_info[BOUNDING_BOX_STOP_TIME]) {
-                    BoundingBoxUtility();
-                } else {
-                    GetParticleCreatorDestructor()->DestroyParticles<SphericParticle>(r_model_part);
-                    GetParticleCreatorDestructor()->DestroyContactElements(*mpContact_model_part);
-                }
-
-                RebuildListOfSphericParticles <PolyhedronParticle> (r_model_part.GetCommunicator().LocalMesh().Elements(), mListOfPolyhedronParticles); //These lists are necessary for the loop in SearchNeighbours
-
-                SetSearchRadiiOnAllParticles(r_model_part, r_process_info[SEARCH_RADIUS_INCREMENT], r_process_info[CONTINUUM_SEARCH_RADIUS_AMPLIFICATION_FACTOR]);
-
-                SearchNeighbours(); //the amplification factor has been modified after the first search.
-
-                RebuildListOfSphericParticles <PolyhedronParticle> (r_model_part.GetCommunicator().LocalMesh().Elements(), mListOfPolyhedronParticles); //These lists are necessary because the elements in this partition might have changed.
-                RebuildListOfSphericParticles <PolyhedronParticle> (r_model_part.GetCommunicator().GhostMesh().Elements(), mListOfGhostPolyhedronParticles);
-
-                if (has_mpi) {
-                    RepairPointersToNormalProperties(mListOfSphericParticles);
-                    RepairPointersToNormalProperties(mListOfGhostSphericParticles);
-                }
-
-                RebuildPropertiesProxyPointers(mListOfSphericParticles);
-                RebuildPropertiesProxyPointers(mListOfGhostSphericParticles);
-
-                ComputeNewNeighboursHistoricalData();
-
-                MarkNewSkinParticles();
-
-                r_process_info[SEARCH_CONTROL] = 2;
-            } else {
-                r_process_info[SEARCH_CONTROL] = 1;
-            }
-
-            if (r_process_info[CONTACT_MESH_OPTION]) {
-                // TODO: 
-                // I comment this function temperally as there is no sphere particles actually. 
-                // It is more complex to take into account of different types of particles
-                // in the future, it could be improved
-
-                // CreateContactElements(); //only for spheres
-                CreatePolyhedronContactElements();
-                InitializeContactElements();
-            }
-        }
-        //Synch this var.
-        r_process_info[SEARCH_CONTROL] = r_model_part.GetCommunicator().GetDataCommunicator().MaxAll(r_process_info[SEARCH_CONTROL]);
+        KRATOS_CATCH("")
     }
 
     void ContactExplicitSolverStrategy::CreatePolyhedronContactElements() {
@@ -450,6 +502,20 @@ namespace Kratos {
         } //#pragma omp parallel
         KRATOS_CATCH("")
     } //CreateContactElements
+
+    void ContactExplicitSolverStrategy::InitializePolyhedronContactElements() {
+
+        KRATOS_TRY
+
+        ElementsArrayType& pPolyhedronContactElements = GetAllElements(*mpContact_model_part);
+        const ProcessInfo& r_process_info = GetModelPart().GetProcessInfo();
+
+        block_for_each(pPolyhedronContactElements, [&r_process_info](ModelPart::ElementType& rPolyhedronContactElement) {
+            rPolyhedronContactElement.Initialize(r_process_info);
+        });
+
+        KRATOS_CATCH("")
+    }
 
     //TODO: update this function
     void ContactExplicitSolverStrategy::SetSearchRadiiOnAllPolyhedronParticles(ModelPart& polyhedron_model_part, const double added_search_distance, const double amplification) {

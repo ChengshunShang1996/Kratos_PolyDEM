@@ -13,7 +13,7 @@ set(KRATOS_DEM_APPLICATION_CORE
     ${CMAKE_CURRENT_SOURCE_DIR}/DEM_application.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_strategies/strategies/explicit_solver_strategy.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_strategies/strategies/explicit_solver_continuum.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/custom_strategies/strategies/explicit_solver_ccontact_strategy.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_strategies/strategies/explicit_solver_contact_strategy.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_elements/spheric_particle.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_elements/nanoparticle.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_elements/analytic_spheric_particle.cpp
@@ -22,6 +22,7 @@ set(KRATOS_DEM_APPLICATION_CORE
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_elements/beam_particle.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_elements/bonding_spheric_continuum_particle.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_elements/Particle_Contact_Element.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/custom_elements/polyhedron_contact_element.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_elements/cylinder_particle.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_elements/cylinder_continuum_particle.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/custom_elements/cluster3D.cpp

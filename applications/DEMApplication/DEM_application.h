@@ -25,6 +25,7 @@
 #include "custom_elements/beam_particle.h"
 #include "custom_elements/ice_continuum_particle.h"
 #include "custom_elements/Particle_Contact_Element.h"
+#include "custom_elements/polyhedron_contact_element.h"
 #include "custom_elements/cluster3D.h"
 #include "custom_elements/rigid_body_element.h"
 #include "custom_elements/ship_element.h"
@@ -88,6 +89,7 @@ private:
     const CylinderParticle mCylinderParticle2D;
     const CylinderContinuumParticle mCylinderContinuumParticle2D;
     const SphericParticle mSphericParticle3D;
+    const PolyhedronParticle mPolyhedronParticle3D;
     const NanoParticle mNanoParticle3D;
     const AnalyticSphericParticle mAnalyticSphericParticle3D;
     const SphericContinuumParticle mSphericContinuumParticle3D;
@@ -96,6 +98,7 @@ private:
     const BeamParticle mBeamParticle3D;
     const BondingSphericContinuumParticle mBondingSphericContinuumParticle3D;
     const ParticleContactElement mParticleContactElement;
+    const PolyhedronContactElement mPolyhedronContactElement;
     const SolidFace3D  mSolidFace3D3N;
     const SolidFace3D  mSolidFace3D4N;
     const RigidFace3D  mRigidFace3D2N;

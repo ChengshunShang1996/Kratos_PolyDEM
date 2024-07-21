@@ -17,6 +17,7 @@
 #include "includes/define.h"
 #include "includes/serializer.h"
 #include "includes/element.h"
+#include "discrete_element.h"
 #include "includes/ublas_interface.h"
 #include "includes/variables.h"
 
@@ -30,9 +31,13 @@ namespace Kratos
     public:
 
         using Pointer = PolyhedronContactElement*;
-        
-        KRATOS_CLASS_INTRUSIVE_POINTER_DEFINITION(PolyhedronContactElement);
 
+        typedef Properties PropertiesType;
+        typedef Vector VectorType;
+        
+        //KRATOS_CLASS_INTRUSIVE_POINTER_DEFINITION(PolyhedronContactElement);
+
+        PolyhedronContactElement() {}
         PolyhedronContactElement(IndexType NewId, PolyhedronParticle* PolyhedronParticle1, PolyhedronParticle* PolyhedronParticle2);
         PolyhedronContactElement(IndexType NewId, PolyhedronParticle* PolyhedronParticle1, PolyhedronParticle* PolyhedronParticle2, PropertiesType::Pointer pProperties);
 
@@ -40,19 +45,19 @@ namespace Kratos
 
         virtual Pointer Create(IndexType NewId, PolyhedronParticle* PolyhedronParticle1, PolyhedronParticle* PolyhedronParticle2, PropertiesType::Pointer pProperties) const;
 
-        void Initialize(const ProcessInfo& r_process_info) override;
+        virtual void Initialize(const ProcessInfo& r_process_info);
 
-        void InitializeSolutionStep(const ProcessInfo& r_process_info) override;
+        virtual void InitializeSolutionStep(const ProcessInfo& r_process_info);
 
-        void CalculateRightHandSide(VectorType& rRightHandSideVector, const ProcessInfo& rCurrentProcessInfo) override;
+        virtual void CalculateRightHandSide(VectorType& rRightHandSideVector, const ProcessInfo& rCurrentProcessInfo) ;
 
-        void GJK();
+        virtual void GJK();
 
-        void EPA();
+        virtual void EPA();
 
-        void FinalizeSolutionStep(const ProcessInfo& r_process_info) override;
+        virtual void FinalizeSolutionStep(const ProcessInfo& r_process_info) ;
 
-        void PrepareForPrinting();
+        virtual void PrepareForPrinting();
 
         array_1d<double,3> mLocalContactForce;
         array_1d<double,3> mElasticLocalRotationalMoment;

@@ -19,6 +19,7 @@
 #include "includes/indexed_object.h"
 #include "containers/global_pointers_vector.h"
 #include "custom_elements/rigid_body_element.h"
+#include "custom_elements/polyhedron_contact_element.h"
 
 namespace Kratos
 {
@@ -42,6 +43,7 @@ namespace Kratos
         void InitializeSolutionStep(const ProcessInfo& r_process_info) override;
         void CustomInitialize(ModelPart& rigid_body_element_sub_model_part) override;
         void ComputeExternalForces(const array_1d<double,3>& gravity) override;
+        virtual void ComputeNewNeighboursHistoricalData(DenseVector<int>& temp_neighbours_ids, std::vector<array_1d<double, 3> >& temp_neighbour_elastic_contact_forces);
 
         // 
         double mEnginePower; 
@@ -65,7 +67,7 @@ namespace Kratos
         virtual void PrintData(std::ostream& rOStream) const override {}
 
         std::vector<PolyhedronContactElement*> mPolyhedronContactElements;
-        std::vector<SphericParticle*>          mNeighbourElements;
+        std::vector<PolyhedronParticle*>               mNeighbourElements;
 
     protected:
 

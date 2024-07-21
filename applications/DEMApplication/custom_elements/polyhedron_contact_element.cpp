@@ -45,28 +45,16 @@ PolyhedronContactElement::~PolyhedronContactElement()
 {
 }
 
-std::string PolyhedronContactElement::Info() const
-{
-    std::stringstream buffer;
-    buffer << "Polyhedron Contact Element" << std::endl;
-    return buffer.str();
-}
-
 void PolyhedronContactElement::Initialize(const ProcessInfo& r_process_info) {
     KRATOS_TRY
 
-    mFailureCriterionState = 0.0;
-    mLocalContactForce[0] = 0.0;
-    mLocalContactForce[1] = 0.0;
-    mLocalContactForce[2] = 0.0;
-    mElasticLocalRotationalMoment[0] = 0.0;
-    mElasticLocalRotationalMoment[1] = 0.0;
-    mElasticLocalRotationalMoment[2] = 0.0;
-    mUnidimendionalDamage = 0.0;
-    mContactFailure = 0.0;
-    mContactSigma = 0.0;
-    mContactTau = 0.0;
-    mContactRadius = 0.0;
+    mFailureState = 0.0;
+    mContactForce[0] = 0.0;
+    mContactForce[1] = 0.0;
+    mContactForce[2] = 0.0;
+    mRotationalMoment[0] = 0.0;
+    mRotationalMoment[1] = 0.0;
+    mRotationalMoment[2] = 0.0;
 
     array_1d<double, 3> vector_of_zeros(3,0.0);
     this->SetValue(LOCAL_CONTACT_FORCE, vector_of_zeros);
