@@ -56,15 +56,12 @@ void PolyhedronContactElement::Initialize(const ProcessInfo& r_process_info) {
     mRotationalMoment[1] = 0.0;
     mRotationalMoment[2] = 0.0;
 
-    array_1d<double, 3> vector_of_zeros(3,0.0);
+    /*
+    array_1d<double, 3> vector_of_zeros(3, 0.0);
     this->SetValue(LOCAL_CONTACT_FORCE, vector_of_zeros);
     this->SetValue(ELASTIC_LOCAL_ROTATIONAL_MOMENT, vector_of_zeros);
-    this->SetValue(CONTACT_SIGMA, 0.0);
-    this->SetValue(CONTACT_TAU, 0.0);
-    this->SetValue(CONTACT_FAILURE, 0.0);
     this->SetValue(FAILURE_CRITERION_STATE, 0.0);
-    this->SetValue(UNIDIMENSIONAL_DAMAGE, 0.0);
-    this->SetValue(CONTACT_RADIUS, 0.0);
+    this->SetValue(CONTACT_RADIUS, 0.0);*/
 
     KRATOS_CATCH( "" )
 }
@@ -72,29 +69,27 @@ void PolyhedronContactElement::Initialize(const ProcessInfo& r_process_info) {
 void PolyhedronContactElement::PrepareForPrinting() {
     KRATOS_TRY
 
-    this->GetValue(LOCAL_CONTACT_FORCE)[0] = mLocalContactForce[0];
-    this->GetValue(LOCAL_CONTACT_FORCE)[1] = mLocalContactForce[1];
-    this->GetValue(LOCAL_CONTACT_FORCE)[2] = mLocalContactForce[2];
-    this->GetValue(ELASTIC_LOCAL_ROTATIONAL_MOMENT)[0] = mElasticLocalRotationalMoment[0];
-    this->GetValue(ELASTIC_LOCAL_ROTATIONAL_MOMENT)[1] = mElasticLocalRotationalMoment[1];
-    this->GetValue(ELASTIC_LOCAL_ROTATIONAL_MOMENT)[2] = mElasticLocalRotationalMoment[2];
-    this->GetValue(CONTACT_SIGMA)          = mContactSigma;
-    this->GetValue(CONTACT_TAU)            = mContactTau;
-    this->GetValue(CONTACT_FAILURE)        = mContactFailure;
+    /*
+    this->GetValue(LOCAL_CONTACT_FORCE)[0] = mContactForce[0];
+    this->GetValue(LOCAL_CONTACT_FORCE)[1] = mContactForce[1];
+    this->GetValue(LOCAL_CONTACT_FORCE)[2] = mContactForce[2];
+    this->GetValue(ELASTIC_LOCAL_ROTATIONAL_MOMENT)[0] = mContactForce[0];
+    this->GetValue(ELASTIC_LOCAL_ROTATIONAL_MOMENT)[1] = mRotationalMoment[1];
+    this->GetValue(ELASTIC_LOCAL_ROTATIONAL_MOMENT)[2] = mRotationalMoment[2];
     this->GetValue(FAILURE_CRITERION_STATE)= mFailureCriterionState;
-    this->GetValue(UNIDIMENSIONAL_DAMAGE)  = mUnidimendionalDamage;
-    this->GetValue(CONTACT_RADIUS)         = mContactRadius;
+    this->GetValue(CONTACT_RADIUS)         = mContactRadius;*/
 
     KRATOS_CATCH( "" )
 }
 
 void PolyhedronContactElement::InitializeSolutionStep(const ProcessInfo& r_process_info )
 {
-    mContactTau           = 0.0;
-    mContactSigma         = 0.0;
+    //
 }
 
-void PolyhedronContactElement::FinalizeSolutionStep(const ProcessInfo& r_process_info) {}
+void PolyhedronContactElement::FinalizeSolutionStep(const ProcessInfo& r_process_info) {
+
+}
 
 void PolyhedronContactElement::CalculateRightHandSide(VectorType& rRightHandSideVector,
                                                     const ProcessInfo& rCurrentProcessInfo){

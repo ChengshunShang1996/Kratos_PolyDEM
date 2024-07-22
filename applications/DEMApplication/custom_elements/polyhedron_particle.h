@@ -44,7 +44,7 @@ namespace Kratos
         void CustomInitialize(ModelPart& rigid_body_element_sub_model_part) override;
         void ComputeExternalForces(const array_1d<double,3>& gravity) override;
         virtual void ComputeNewNeighboursHistoricalData(DenseVector<int>& temp_neighbours_ids, std::vector<array_1d<double, 3> >& temp_neighbour_elastic_contact_forces);
-
+        double CalculateVolume();
         // 
         double mEnginePower; 
 
@@ -68,6 +68,12 @@ namespace Kratos
 
         std::vector<PolyhedronContactElement*> mPolyhedronContactElements;
         std::vector<PolyhedronParticle*>               mNeighbourElements;
+        std::vector<array_1d<double, 3> > mNeighbourRigidFacesTotalContactForce;
+        std::vector<array_1d<double, 3> > mNeighbourRigidFacesElasticContactForce;
+        std::vector<array_1d<double, 3> > mNeighbourElasticContactForces;
+        std::vector<array_1d<double, 3> > mNeighbourElasticExtraContactForces;
+        double mRadius;
+
 
     protected:
 

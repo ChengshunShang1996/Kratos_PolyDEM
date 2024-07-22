@@ -197,7 +197,7 @@ namespace Kratos {
 
         void RebuildPropertiesProxyPointers(std::vector<SphericParticle*>& rCustomListOfSphericParticles);
         void SendProcessInfoToClustersModelPart();
-        void UpdateMaxIdOfCreatorDestructor();
+        virtual void UpdateMaxIdOfCreatorDestructor();
         void RepairPointersToNormalProperties(std::vector<SphericParticle*>& rCustomListOfSphericParticles);
         virtual void Initialize();
         virtual void AttachSpheresToStickyWalls();
@@ -213,7 +213,7 @@ namespace Kratos {
         void GetForce();
         void FastGetForce();
         virtual void PerformTimeIntegrationOfMotion(int StepFlag = 0);
-        void InitializeSolutionStep();
+        virtual void InitializeSolutionStep();
         virtual void BoundingBoxUtility(bool is_time_to_mark_and_remove = true);
         virtual void FinalizeSolutionStep();
         void InitializeElements();
@@ -230,8 +230,8 @@ namespace Kratos {
         void SetFlagAndVariableToNodes(const Kratos::Flags& r_flag_name, ComponentOf3ComponentsVariableType& r_variable_to_set, const double value, NodesArrayType& r_nodes_array);
         void SetVariableToNodes(ComponentOf3ComponentsVariableType& r_variable_to_set, const double value, NodesArrayType& r_nodes_array);
         void ResetPrescribedMotionFlagsRespectingImposedDofs();
-        void ApplyPrescribedBoundaryConditions();
-        void ApplyInitialConditions();
+        virtual void ApplyPrescribedBoundaryConditions();
+        virtual void ApplyInitialConditions();
         virtual void SetSearchRadiiOnAllParticles(ModelPart& r_model_part, const double added_search_distance = 0.0, const double amplification = 1.0);
         void SetNormalRadiiOnAllParticles(ModelPart& r_model_part);
         virtual void SetSearchRadiiWithFemOnAllParticles(ModelPart& r_model_part, const double added_search_distance = 0.0, const double amplification = 1.0);

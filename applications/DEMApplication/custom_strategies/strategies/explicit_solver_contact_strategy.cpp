@@ -46,8 +46,8 @@ namespace Kratos {
         if (has_mpi) {
             RepairPointersToNormalProperties(mListOfSphericParticles);
             RepairPointersToNormalProperties(mListOfGhostSphericParticles);
-            RepairPointersToNormalProperties(mListOfPolyhedronParticles);
-            RepairPointersToNormalProperties(mListOfGhostPolyhedronParticles);
+            RepairPointersToNormalPropertiesOfPolyhedron(mListOfPolyhedronParticles);
+            RepairPointersToNormalPropertiesOfPolyhedron(mListOfGhostPolyhedronParticles);
         }
 
         RebuildPropertiesProxyPointers(mListOfSphericParticles);
@@ -107,7 +107,7 @@ namespace Kratos {
         KRATOS_CATCH("")
     }// Initialize()
 
-    void ContactExplicitSolverStrategy::RepairPointersToNormalProperties(std::vector<PolyhedronParticle*>& rCustomListOfPolyhedronParticles) {
+    void ContactExplicitSolverStrategy::RepairPointersToNormalPropertiesOfPolyhedron(std::vector<PolyhedronParticle*>& rCustomListOfPolyhedronParticles) {
 
         KRATOS_TRY
 
@@ -282,8 +282,8 @@ namespace Kratos {
             RebuildListOfSphericParticles <PolyhedronParticle> (polyhedron_model_part.GetCommunicator().LocalMesh().Elements(), mListOfPolyhedronParticles);
             RebuildListOfSphericParticles <PolyhedronParticle> (polyhedron_model_part.GetCommunicator().GhostMesh().Elements(), mListOfGhostPolyhedronParticles);
             
-            RepairPointersToNormalProperties(mListOfPolyhedronParticles);
-            RepairPointersToNormalProperties(mListOfGhostPolyhedronParticles);
+            RepairPointersToNormalPropertiesOfPolyhedron(mListOfPolyhedronParticles);
+            RepairPointersToNormalPropertiesOfPolyhedron(mListOfGhostPolyhedronParticles);
             RebuildPropertiesProxyPointers(mListOfPolyhedronParticles);
             RebuildPropertiesProxyPointers(mListOfGhostPolyhedronParticles);
 

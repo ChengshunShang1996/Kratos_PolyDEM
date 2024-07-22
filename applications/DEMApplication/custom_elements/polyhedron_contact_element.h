@@ -59,18 +59,16 @@ namespace Kratos
 
         virtual void PrepareForPrinting();
 
-        array_1d<double,3> mLocalContactForce;
-        array_1d<double,3> mElasticLocalRotationalMoment;
-        double mContactSigma;
-        double mContactTau;
+        array_1d<double, 3> mContactForce;
+        array_1d<double, 3> mRotationalMoment;
+        double mFailureState;
+        double mContactRadius;
         IndexType mId;
         PolyhedronParticle* mPolyhedronParticle1;
         PolyhedronParticle* mPolyhedronParticle2;
         Properties::Pointer mpProperties;
 
-
     protected:
-
 
     private:
 

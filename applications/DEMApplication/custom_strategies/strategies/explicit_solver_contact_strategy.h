@@ -9,6 +9,7 @@
 #define  KRATOS_CONTACT_EXPLICIT_SOLVER_STRATEGY
 #include "custom_strategies/strategies/explicit_solver_strategy.h"
 #include "custom_elements/polyhedron_particle.h"
+#include "custom_utilities/create_and_destroy.h"
 
 namespace Kratos {
 
@@ -121,7 +122,7 @@ namespace Kratos {
         virtual void ComputePolyhedronNewNeighboursHistoricalData();
         void CreateContactElements() override;
         double ComputeCoordinationNumber(double& standard_dev) override;
-        void RepairPointersToNormalProperties(std::vector<PolyhedronParticle*>& rCustomListOfPolyhedronParticles);
+        virtual void RepairPointersToNormalPropertiesOfPolyhedron(std::vector<PolyhedronParticle*>& rCustomListOfPolyhedronParticles);
         void InitializePolyhedrons();
         virtual void InitializePolyhedronContactElements();
         void UpdateMaxIdOfCreatorDestructor() override;
