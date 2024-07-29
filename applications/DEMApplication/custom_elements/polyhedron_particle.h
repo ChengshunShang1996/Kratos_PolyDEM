@@ -66,6 +66,10 @@ namespace Kratos
         /// Print object's data.
         virtual void PrintData(std::ostream& rOStream) const override {}
 
+        PropertiesProxy* GetFastProperties();
+        void   SetFastProperties(PropertiesProxy* pProps);
+        void   SetFastProperties(std::vector<PropertiesProxy>& list_of_proxies);
+
         std::vector<PolyhedronContactElement*> mPolyhedronContactElements;
         std::vector<PolyhedronParticle*>               mNeighbourElements;
         std::vector<array_1d<double, 3> > mNeighbourRigidFacesTotalContactForce;
@@ -73,6 +77,7 @@ namespace Kratos
         std::vector<array_1d<double, 3> > mNeighbourElasticContactForces;
         std::vector<array_1d<double, 3> > mNeighbourElasticExtraContactForces;
         double mRadius;
+        PropertiesProxy* mFastProperties;
 
 
     protected:

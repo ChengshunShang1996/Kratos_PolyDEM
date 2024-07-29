@@ -53,6 +53,8 @@ namespace Kratos {
         using BaseType::mListOfGhostSphericParticles;
         using BaseType::SearchNeighbours;
 
+        using PolyhedronContactElementContainer = std::vector<PolyhedronContactElement::Pointer>;
+
         //Pointer definition of ExplicitSolverStrategy
         KRATOS_CLASS_POINTER_DEFINITION(ContactExplicitSolverStrategy);
 
@@ -117,9 +119,11 @@ namespace Kratos {
         virtual ~ContactExplicitSolverStrategy() {}
 
         void Initialize() override;
+        void RebuildPropertiesProxyPointersForPolyhedron(std::vector<PolyhedronParticle*>& rCustomListOfPolyhedronParticles);
         virtual void SearchPolyhedronOperations(ModelPart& r_model_part, ModelPart& polyhedron_model_part, bool has_mpi);
         virtual void SearchPolyhedronNeighbours();
         virtual void ComputePolyhedronNewNeighboursHistoricalData();
+        void CreatePolyhedronContactElements();
         void CreateContactElements() override;
         double ComputeCoordinationNumber(double& standard_dev) override;
         virtual void RepairPointersToNormalPropertiesOfPolyhedron(std::vector<PolyhedronParticle*>& rCustomListOfPolyhedronParticles);
@@ -169,6 +173,7 @@ namespace Kratos {
         std::vector<PolyhedronParticle*> mListOfGhostPolyhedronParticles;
         DenseVector<int> mSearchControlVector;
         ModelPart *mpPolyhedron_model_part;
+        PolyhedronContactElementContainer mContactElements;
 
     }; //Class ContactExplicitSolverStrategy
 

@@ -124,4 +124,15 @@ namespace Kratos {
         return 4.0 * Globals::Pi / 3.0 * mRadius * mRadius * mRadius; 
     }
 
+    PropertiesProxy* PolyhedronParticle::GetFastProperties()                                     { return mFastProperties;   }
+    void   PolyhedronParticle::SetFastProperties(PropertiesProxy* pProps)                        { mFastProperties = pProps; }
+    void   PolyhedronParticle::SetFastProperties(std::vector<PropertiesProxy>& list_of_proxies)  {
+        for (unsigned int j = 0; j < list_of_proxies.size(); j++){
+            if (list_of_proxies[j].GetId() == GetProperties().Id()) {
+                SetFastProperties(&list_of_proxies[j]);
+                return;
+            }
+        }
+    }
+
 }  // namespace Kratos

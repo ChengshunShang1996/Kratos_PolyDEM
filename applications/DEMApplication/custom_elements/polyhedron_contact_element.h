@@ -68,6 +68,8 @@ namespace Kratos
         PolyhedronParticle* mPolyhedronParticle2;
         Properties::Pointer mpProperties;
 
+        void SetId(IndexType NewId);
+
     protected:
 
     private:

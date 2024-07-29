@@ -119,6 +119,8 @@ void PolyhedronContactElement::EPA() {
     KRATOS_CATCH( "" )
 }
 
+void SetId(IndexType NewId) { mId = NewId;}
+
 } // Namespace Kratos
 
 
