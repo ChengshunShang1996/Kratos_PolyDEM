@@ -34,6 +34,17 @@ namespace Kratos {
 
     PolyhedronParticle::~PolyhedronParticle() {}
 
+    void PolyhedronParticle::Initialize(const ProcessInfo& r_process_info) {
+
+        KRATOS_TRY
+
+        RigidBodyElement3D::Initialize(r_process_info);
+
+        SetRadius(0.1); //TODO: UPDATE!!
+
+        KRATOS_CATCH("")
+    }
+
     void PolyhedronParticle::InitializeSolutionStep(const ProcessInfo& r_process_info)
     {
         KRATOS_TRY
@@ -41,27 +52,6 @@ namespace Kratos {
         auto& central_node = GetGeometry()[0];
         mRadius = central_node.FastGetSolutionStepValue(RADIUS); //Just in case someone is overwriting the radius in Python
         central_node.FastGetSolutionStepValue(REPRESENTATIVE_VOLUME) = CalculateVolume();
-
-        KRATOS_CATCH("")
-    }
-
-    void PolyhedronParticle::CustomInitialize(ModelPart& rigid_body_element_sub_model_part) {
-        
-        KRATOS_TRY
-        
-        RigidBodyElement3D::CustomInitialize(rigid_body_element_sub_model_part);
-        
-        /*
-        mEnginePower = rigid_body_element_sub_model_part[DEM_ENGINE_POWER];
-        mMaxEngineForce = rigid_body_element_sub_model_part[DEM_MAX_ENGINE_FORCE];
-        mThresholdVelocity = rigid_body_element_sub_model_part[DEM_THRESHOLD_VELOCITY];
-        mEnginePerformance = rigid_body_element_sub_model_part[DEM_ENGINE_PERFORMANCE];
-        
-        mDragConstantVector = ZeroVector(3);
-        mDragConstantVector[0] = rigid_body_element_sub_model_part[DEM_DRAG_CONSTANT_X];
-        mDragConstantVector[1] = rigid_body_element_sub_model_part[DEM_DRAG_CONSTANT_Y];
-        mDragConstantVector[2] = rigid_body_element_sub_model_part[DEM_DRAG_CONSTANT_Z];
-        */
 
         KRATOS_CATCH("")
     }
@@ -119,10 +109,11 @@ namespace Kratos {
         KRATOS_CATCH("")
     }
 
-    double PolyhedronParticle::CalculateVolume() 
-    { 
-        return 4.0 * Globals::Pi / 3.0 * mRadius * mRadius * mRadius; 
-    }
+    double PolyhedronParticle::CalculateVolume()                                                 { return 4.0 * Globals::Pi / 3.0 * mRadius * mRadius * mRadius; }
+    double PolyhedronParticle::GetRadius()                                                       { return mRadius;         }
+    void   PolyhedronParticle::SetRadius(double radius)                                          { mRadius = radius;       }
+    double PolyhedronParticle::GetSearchRadius()                                                 { return mSearchRadius;   }
+    void   PolyhedronParticle::SetSearchRadius(const double radius)                              { mSearchRadius = radius; }
 
     PropertiesProxy* PolyhedronParticle::GetFastProperties()                                     { return mFastProperties;   }
     void   PolyhedronParticle::SetFastProperties(PropertiesProxy* pProps)                        { mFastProperties = pProps; }

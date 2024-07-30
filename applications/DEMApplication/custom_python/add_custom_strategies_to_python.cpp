@@ -194,6 +194,7 @@ void  AddCustomStrategiesToPython(pybind11::module& m)
         .def(py::init< ContactExplicitSolverSettings&, double, int, double, int, ParticleCreatorDestructor::Pointer,DEM_FEM_Search::Pointer, SpatialSearch::Pointer, Parameters>())
         .def("ComputeCoordinationNumber", &ContactExplicitSolverStrategy::ComputeCoordinationNumber)
         .def("RebuildListOfPolyhedronParticles", &ContactExplicitSolverStrategy::RebuildListOfPolyhedronParticles)
+        .def("CreateContactElements", &ContactExplicitSolverStrategy::CreateContactElements)
         ;
 
     py::class_<IterativeSolverStrategy, IterativeSolverStrategy::Pointer, ExplicitSolverStrategy>(m, "IterativeSolverStrategy")

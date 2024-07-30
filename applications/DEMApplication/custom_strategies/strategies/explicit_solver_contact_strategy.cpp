@@ -155,7 +155,7 @@ namespace Kratos {
         ProcessInfo& r_process_info = r_model_part.GetProcessInfo();
 
         IndexPartition<unsigned int>(mListOfPolyhedronParticles.size()).for_each([&](unsigned int i){
-            mListOfPolyhedronParticles[i]->Initialize(r_process_info); //TODO: add function!!!
+            mListOfPolyhedronParticles[i]->Initialize(r_process_info);
         });
 
         KRATOS_CATCH("")
@@ -408,7 +408,8 @@ namespace Kratos {
 
         std::string ElementName;
         ElementName = std::string("PolyhedronContactElement");
-        const PolyhedronContactElement& rReferenceElement = KratosComponents<PolyhedronContactElement>::Get(ElementName);
+        //const PolyhedronContactElement& rReferenceElement = KratosComponents<PolyhedronContactElement>::Get(ElementName);
+        PolyhedronContactElement rReferenceElement(ElementName);
 
         //Here we are going to create contact elements when we are on a target particle and we see a neighbor whose id is higher than ours.
         //We create also a pointer from the node to the element, after creating it.
@@ -569,23 +570,17 @@ namespace Kratos {
 
     void ContactExplicitSolverStrategy::GetPolyhedronForce() {
         KRATOS_TRY
-        CalculateConditionsRHSAndAdd();
-        ProcessInfo& r_process_info = GetModelPart().GetProcessInfo(); //Getting the Process Info of the Balls ModelPart!
+
+        ProcessInfo& r_process_info = GetModelPart().GetProcessInfo();
+        double dt = r_process_info[DELTA_TIME];
         const array_1d<double, 3>& gravity = r_process_info[GRAVITY];
-        ModelPart& polyhedron_model_part = GetPolyhedronModelPart();
-        ElementsArrayType& pElements = polyhedron_model_part.GetCommunicator().LocalMesh().Elements();
-        const int number_of_rigid_body_elements = pElements.size();
 
-        //DO NOT PARALLELIZE THIS LOOP, IT IS PARALLELIZED INSIDE
-        for (int k = 0; k < number_of_rigid_body_elements; k++) {
+        const int number_of_polyhedron_contact_elements = (int) mListOfSphericParticles.size();
 
-            ElementsArrayType::iterator it = pElements.ptr_begin() + k;
-            RigidBodyElement3D& rigid_body_element = dynamic_cast<Kratos::RigidBodyElement3D&> (*it);
-            rigid_body_element.GetGeometry()[0].FastGetSolutionStepValue(TOTAL_FORCES).clear();
-            rigid_body_element.GetGeometry()[0].FastGetSolutionStepValue(PARTICLE_MOMENT).clear();
-            rigid_body_element.GetRigidBodyElementsForce(gravity);
-
-        } // loop over rigid body elements
+        #pragma omp parallel for schedule(dynamic, 100)
+        for (int i = 0; i < number_of_polyhedron_contact_elements; i++) {
+            mContactElements[i]->CalculateRightHandSide(r_process_info, dt, gravity);
+        }
 
         KRATOS_CATCH("")
     }

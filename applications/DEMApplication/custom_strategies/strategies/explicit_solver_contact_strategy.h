@@ -9,6 +9,7 @@
 #define  KRATOS_CONTACT_EXPLICIT_SOLVER_STRATEGY
 #include "custom_strategies/strategies/explicit_solver_strategy.h"
 #include "custom_elements/polyhedron_particle.h"
+#include "custom_elements/polyhedron_contact_element.h"
 #include "custom_utilities/create_and_destroy.h"
 
 namespace Kratos {
@@ -124,8 +125,6 @@ namespace Kratos {
         virtual void SearchPolyhedronNeighbours();
         virtual void ComputePolyhedronNewNeighboursHistoricalData();
         void CreatePolyhedronContactElements();
-        void CreateContactElements() override;
-        double ComputeCoordinationNumber(double& standard_dev) override;
         virtual void RepairPointersToNormalPropertiesOfPolyhedron(std::vector<PolyhedronParticle*>& rCustomListOfPolyhedronParticles);
         void InitializePolyhedrons();
         virtual void InitializePolyhedronContactElements();
@@ -135,10 +134,11 @@ namespace Kratos {
             RebuildListOfSphericParticles<PolyhedronParticle>(GetModelPart().GetCommunicator().LocalMesh().Elements(), mListOfPolyhedronParticles);
         }
         virtual void SetSearchRadiiOnAllPolyhedronParticles(ModelPart& polyhedron_model_part, const double added_search_distance, const double amplification);
-        virtual void MeshRepairOperations();
         void InitializeSolutionStep() override;
         void ApplyInitialConditions() override;
         double SolveSolutionStep() override;
+        void ForceOperations(ModelPart& r_model_part) override;
+        void GetPolyhedronForce();
         void FinalizeSolutionStep() override;
         void FinalizeSolutionStepFEM();
 

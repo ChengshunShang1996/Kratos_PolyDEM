@@ -38,6 +38,7 @@ namespace Kratos
         //KRATOS_CLASS_INTRUSIVE_POINTER_DEFINITION(PolyhedronContactElement);
 
         PolyhedronContactElement() {}
+        PolyhedronContactElement(std::string ElementName) {}
         PolyhedronContactElement(IndexType NewId, PolyhedronParticle* PolyhedronParticle1, PolyhedronParticle* PolyhedronParticle2);
         PolyhedronContactElement(IndexType NewId, PolyhedronParticle* PolyhedronParticle1, PolyhedronParticle* PolyhedronParticle2, PropertiesType::Pointer pProperties);
 
@@ -49,7 +50,7 @@ namespace Kratos
 
         virtual void InitializeSolutionStep(const ProcessInfo& r_process_info);
 
-        virtual void CalculateRightHandSide(VectorType& rRightHandSideVector, const ProcessInfo& rCurrentProcessInfo) ;
+        virtual void CalculateRightHandSide(const ProcessInfo& r_process_info, double dt, const array_1d<double, 3>& gravity);
 
         virtual void GJK();
 
@@ -59,6 +60,8 @@ namespace Kratos
 
         virtual void PrepareForPrinting();
 
+        void SetId(IndexType NewId);
+
         array_1d<double, 3> mContactForce;
         array_1d<double, 3> mRotationalMoment;
         double mFailureState;
@@ -67,8 +70,6 @@ namespace Kratos
         PolyhedronParticle* mPolyhedronParticle1;
         PolyhedronParticle* mPolyhedronParticle2;
         Properties::Pointer mpProperties;
-
-        void SetId(IndexType NewId);
 
     protected:
 

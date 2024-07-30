@@ -91,8 +91,7 @@ void PolyhedronContactElement::FinalizeSolutionStep(const ProcessInfo& r_process
 
 }
 
-void PolyhedronContactElement::CalculateRightHandSide(VectorType& rRightHandSideVector,
-                                                    const ProcessInfo& rCurrentProcessInfo){
+void PolyhedronContactElement::CalculateRightHandSide(const ProcessInfo& r_process_info, double dt, const array_1d<double, 3>& gravity) {
     KRATOS_TRY
 
 
@@ -105,7 +104,7 @@ void PolyhedronContactElement::CalculateRightHandSide(VectorType& rRightHandSide
 
 
     KRATOS_CATCH( "" )
-    }
+}
 
 void PolyhedronContactElement::GJK() {
     KRATOS_TRY
@@ -119,7 +118,7 @@ void PolyhedronContactElement::EPA() {
     KRATOS_CATCH( "" )
 }
 
-void SetId(IndexType NewId) { mId = NewId;}
+void PolyhedronContactElement::SetId(IndexType NewId) { mId = NewId;}
 
 } // Namespace Kratos
 

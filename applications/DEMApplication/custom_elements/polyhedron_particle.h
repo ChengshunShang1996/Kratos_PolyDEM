@@ -41,10 +41,13 @@ namespace Kratos
 
         void Initialize(const ProcessInfo& r_process_info) override;
         void InitializeSolutionStep(const ProcessInfo& r_process_info) override;
-        void CustomInitialize(ModelPart& rigid_body_element_sub_model_part) override;
         void ComputeExternalForces(const array_1d<double,3>& gravity) override;
         virtual void ComputeNewNeighboursHistoricalData(DenseVector<int>& temp_neighbours_ids, std::vector<array_1d<double, 3> >& temp_neighbour_elastic_contact_forces);
         double CalculateVolume();
+        virtual double GetRadius();
+        virtual void   SetRadius(double radius);
+        virtual double GetSearchRadius();
+        virtual void SetSearchRadius(const double radius);
         // 
         double mEnginePower; 
 
@@ -77,6 +80,7 @@ namespace Kratos
         std::vector<array_1d<double, 3> > mNeighbourElasticContactForces;
         std::vector<array_1d<double, 3> > mNeighbourElasticExtraContactForces;
         double mRadius;
+        double mSearchRadius;
         PropertiesProxy* mFastProperties;
 
 
