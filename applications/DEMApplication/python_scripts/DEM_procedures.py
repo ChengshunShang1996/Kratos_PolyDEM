@@ -408,6 +408,7 @@ class Procedures():
         cluster_model_part = all_model_parts.Get('ClusterPart')
         dem_inlet_model_part = all_model_parts.Get('DEMInletPart')
         rigid_face_model_part = all_model_parts.Get('RigidFacePart')
+        polyhedron_model_part = all_model_parts.Get('PolyhedronPart')
 
         self.solver = weakref.proxy(solver)
         self.translational_scheme = weakref.proxy(translational_scheme)
@@ -425,6 +426,7 @@ class Procedures():
         self.AddCommonVariables(rigid_face_model_part, DEM_parameters)
         self.AddRigidFaceVariables(rigid_face_model_part, DEM_parameters)
         self.AddMpiVariables(rigid_face_model_part)
+        self.AddPolyhedronVariables(polyhedron_model_part, DEM_parameters)
 
     def AddCommonVariables(self, model_part, DEM_parameters):
         model_part.AddNodalSolutionStepVariable(VELOCITY)
@@ -594,6 +596,9 @@ class Procedures():
         # LOCAL AXIS
         if DEM_parameters["PostEulerAngles"].GetBool():
             model_part.AddNodalSolutionStepVariable(EULER_ANGLES)
+
+    def AddPolyhedronVariables(self, model_part, DEM_parameters):
+        model_part.AddNodalSolutionStepVariable(RADIUS)
 
     def AddMpiVariables(self, model_part):
         pass
