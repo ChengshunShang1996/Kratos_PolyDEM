@@ -111,6 +111,8 @@ class DEMAnalysisStage(AnalysisStage):
         self.SetFinalTime()
         self.AddVariables()
 
+        self.poly_output_cnt = 0
+
         super().__init__(model, self.DEM_parameters)
 
     def CreateModelParts(self):
@@ -712,7 +714,8 @@ class DEMAnalysisStage(AnalysisStage):
         if "post_polyhedron_vtk_option" in self.DEM_parameters.keys():
             if self.DEM_parameters["post_polyhedron_vtk_option"].GetBool():
                 self.demio.ShowPrintingPolyhedronResultsOnScreen(self.all_model_parts, 'POLYHEDRON VTK')
-                self.polyhedron_vtk_output.WriteResults(self.time)
+                self.polyhedron_vtk_output.WriteResults(self.poly_output_cnt)
+                self.poly_output_cnt += 1
 
         self.file_msh = self.demio.GetMultiFileListName(self.problem_name + "_" + "%.12g"%time + ".post.msh")
         self.file_res = self.demio.GetMultiFileListName(self.problem_name + "_" + "%.12g"%time + ".post.res")

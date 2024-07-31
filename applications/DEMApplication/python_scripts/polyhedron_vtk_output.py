@@ -49,7 +49,7 @@ class PolyhedronVtkOutput():
         self.polygon_origins.append(np.array([[-1, -1, -1], [1, -1, -1], [1, 1, -1], [-1, 1, -1], [-1, -1, 1], [1, -1, 1], [1, 1, 1], [-1, 1, 1]]))
         self.polygon_origins.append(np.array([[-1, -1, -1], [1, -1, -1], [1, 1, -1], [-1, 1, -1], [-1, -1, 1], [1, -1, 1], [1, 1, 1], [-1, 1, 1]]))
     
-    def WriteResults(self, time):
+    def WriteResults(self, poly_output_cnt):
 
         self.DataPreparation()
         
@@ -96,7 +96,7 @@ class PolyhedronVtkOutput():
         grid.SetCells(vtk.VTK_POLYGON, cells_vtk)
 
         writer = vtk.vtkXMLUnstructuredGridWriter()
-        file_path = os.path.join(self.vtk_post_path_directory, "polyhedron_{}.vtu".format(time))
+        file_path = os.path.join(self.vtk_post_path_directory, "polyhedron_{}.vtu".format(poly_output_cnt))
         writer.SetFileName(file_path)
         writer.SetInputData(grid)
         writer.Write()
