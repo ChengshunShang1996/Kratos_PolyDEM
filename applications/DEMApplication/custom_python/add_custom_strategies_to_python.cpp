@@ -195,6 +195,11 @@ void  AddCustomStrategiesToPython(pybind11::module& m)
         .def("RebuildListOfPolyhedronParticles", &ContactExplicitSolverStrategy::RebuildListOfPolyhedronParticles)
         .def("CreateContactElements", &ContactExplicitSolverStrategy::CreateContactElements)
         .def("SetNormalRadiiOnAllParticles", &ContactExplicitSolverStrategy::SetNormalRadiiOnAllParticles)
+        .def("ResetPrescribedMotionFlagsRespectingImposedDofsForPolyhedron", &ContactExplicitSolverStrategy::ResetPrescribedMotionFlagsRespectingImposedDofsForPolyhedron)
+        .def("SolveSolutionStep", &ContactExplicitSolverStrategy::SolveSolutionStep)
+        .def("Initialize", &ContactExplicitSolverStrategy::Initialize)
+        .def("InitializeSolutionStep", &ContactExplicitSolverStrategy::InitializeSolutionStep)
+        .def("FinalizeSolutionStep", &ContactExplicitSolverStrategy::FinalizeSolutionStep)
         ;
 
     py::class_<IterativeSolverStrategy, IterativeSolverStrategy::Pointer, ExplicitSolverStrategy>(m, "IterativeSolverStrategy")

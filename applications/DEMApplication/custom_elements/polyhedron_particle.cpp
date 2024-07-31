@@ -42,10 +42,6 @@ namespace Kratos {
 
         SetRadius();
         SetMass(GetDensity() * CalculateVolume());
-
-        KRATOS_WATCH(GetDensity())
-        KRATOS_WATCH(CalculateVolume())
-        KRATOS_WATCH(GetMass())
         
         //SetRadius(0.1); //TODO: UPDATE!!
 
@@ -67,7 +63,7 @@ namespace Kratos {
 
         KRATOS_TRY
 
-        noalias(GetGeometry()[0].FastGetSolutionStepValue(TOTAL_FORCES)) += RigidBodyElement3D::GetMass() * gravity;
+        noalias(GetGeometry()[0].FastGetSolutionStepValue(TOTAL_FORCES)) += GetMass() * gravity;
         
         const array_1d<double, 3> external_applied_torque = GetGeometry()[0].FastGetSolutionStepValue(EXTERNAL_APPLIED_MOMENT);
         noalias(GetGeometry()[0].FastGetSolutionStepValue(PARTICLE_MOMENT)) += external_applied_torque;

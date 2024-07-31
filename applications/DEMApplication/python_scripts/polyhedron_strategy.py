@@ -82,6 +82,15 @@ class ExplicitStrategy(BaseExplicitStrategy):
                 VariableUtils().AddDof(variable, model_part)
             self.Procedures.KratosPrintInfo("DOFs for the DEM solution added correctly")
 
+    def InitializeSolutionStep(self):
+        time = self.spheres_model_part.ProcessInfo[TIME]
+        self.FixDOFsManually(time)
+        self.cplusplus_strategy.ResetPrescribedMotionFlagsRespectingImposedDofs()
+        self.cplusplus_strategy.ResetPrescribedMotionFlagsRespectingImposedDofsForPolyhedron()
+        self.FixExternalForcesManually(time)
+
+        self.cplusplus_strategy.InitializeSolutionStep()
+
     def RebuildListOfPolyhedronParticles(self):
         self.cplusplus_strategy.RebuildListOfPolyhedronParticles()
 

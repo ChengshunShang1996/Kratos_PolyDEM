@@ -251,6 +251,7 @@ namespace Kratos {
         RebuildListOfSphericParticles <PolyhedronParticle> (r_polyhedron_model_part.GetCommunicator().LocalMesh().Elements(), mListOfPolyhedronParticles);
 
         SetNormalRadiiOnAllParticles(*mpDem_model_part);
+        //TODO: do I need it?
 
         #pragma omp parallel
         {
@@ -283,8 +284,57 @@ namespace Kratos {
 
         BaseType::ApplyPrescribedBoundaryConditions();
 
-        //in case i need to add boundary conditions for Polyhedron Partciles
+        ApplyPrescribedBoundaryConditionsForPolyhedron();
 
+        KRATOS_CATCH("")
+    }
+
+    void ContactExplicitSolverStrategy::ApplyPrescribedBoundaryConditionsForPolyhedron() {
+
+        KRATOS_TRY
+
+        ModelPart& r_model_part = GetModelPart();
+        const ProcessInfo& r_process_info = GetModelPart().GetProcessInfo();
+        const double time = r_process_info[TIME];
+
+        ModelPart& polyhedron_model_part = GetPolyhedronModelPart();
+
+        unsigned int polyhedron_elements_counter = 0;
+
+        for (ModelPart::SubModelPartsContainerType::iterator sub_model_part = polyhedron_model_part.SubModelPartsBegin(); sub_model_part != polyhedron_model_part.SubModelPartsEnd(); ++sub_model_part) {
+
+            double vel_start = 0.0, vel_stop = std::numeric_limits<double>::max();
+            if ((*sub_model_part).Has(VELOCITY_START_TIME)) {
+                vel_start = (*sub_model_part)[VELOCITY_START_TIME];
+            }
+            if ((*sub_model_part).Has(VELOCITY_STOP_TIME)) {
+                vel_stop = (*sub_model_part)[VELOCITY_STOP_TIME];
+            }
+
+            if (time < vel_start || time > vel_stop) continue;
+
+            NodesArrayType& pNodes = sub_model_part->Nodes();
+
+            if ((*sub_model_part).Has(IMPOSED_VELOCITY_X_VALUE)) {
+                SetFlagAndVariableToNodes(DEMFlags::FIXED_VEL_X, VELOCITY_X, (*sub_model_part)[IMPOSED_VELOCITY_X_VALUE], pNodes);
+            }
+            if ((*sub_model_part).Has(IMPOSED_VELOCITY_Y_VALUE)) {
+                SetFlagAndVariableToNodes(DEMFlags::FIXED_VEL_Y, VELOCITY_Y, (*sub_model_part)[IMPOSED_VELOCITY_Y_VALUE], pNodes);
+            }
+            if ((*sub_model_part).Has(IMPOSED_VELOCITY_Z_VALUE)) {
+                SetFlagAndVariableToNodes(DEMFlags::FIXED_VEL_Z, VELOCITY_Z, (*sub_model_part)[IMPOSED_VELOCITY_Z_VALUE], pNodes);
+            }
+            if ((*sub_model_part).Has(IMPOSED_ANGULAR_VELOCITY_X_VALUE)) {
+                SetFlagAndVariableToNodes(DEMFlags::FIXED_ANG_VEL_X, ANGULAR_VELOCITY_X, (*sub_model_part)[IMPOSED_ANGULAR_VELOCITY_X_VALUE], pNodes);
+            }
+            if ((*sub_model_part).Has(IMPOSED_ANGULAR_VELOCITY_Y_VALUE)) {
+                SetFlagAndVariableToNodes(DEMFlags::FIXED_ANG_VEL_Y, ANGULAR_VELOCITY_Y, (*sub_model_part)[IMPOSED_ANGULAR_VELOCITY_Y_VALUE], pNodes);
+            }
+            if ((*sub_model_part).Has(IMPOSED_ANGULAR_VELOCITY_Z_VALUE)) {
+                SetFlagAndVariableToNodes(DEMFlags::FIXED_ANG_VEL_Z, ANGULAR_VELOCITY_Z, (*sub_model_part)[IMPOSED_ANGULAR_VELOCITY_Z_VALUE], pNodes);
+            }
+        } // for each mesh
+        
         KRATOS_CATCH("")
     }
 
@@ -328,6 +378,57 @@ namespace Kratos {
 
         ApplyInitialConditionsPolyhedron();
 
+        KRATOS_CATCH("")
+    }
+
+    void ContactExplicitSolverStrategy::ResetPrescribedMotionFlagsRespectingImposedDofsForPolyhedron() {
+        KRATOS_TRY
+        ModelPart& polyhedron_model_part = GetPolyhedronModelPart();
+
+        NodesArrayType& polyhedron_model_part_nodes = polyhedron_model_part.Nodes();
+
+        if (!polyhedron_model_part_nodes.size()) return;
+
+        const unsigned int vel_x_dof_position = (polyhedron_model_part.NodesBegin())->GetDofPosition(VELOCITY_X);
+        const unsigned int ang_vel_x_dof_position = (polyhedron_model_part.NodesBegin())->GetDofPosition(ANGULAR_VELOCITY_X);
+
+
+        block_for_each(polyhedron_model_part_nodes, [&](ModelPart::NodeType& rNode) {
+
+            if (rNode.Is(BLOCKED)) return;
+            Node& node = rNode;
+
+            if (node.GetDof(VELOCITY_X, vel_x_dof_position).IsFixed()) {
+                node.Set(DEMFlags::FIXED_VEL_X, true);
+            } else {
+                node.Set(DEMFlags::FIXED_VEL_X, false);
+            }
+            if (node.GetDof(VELOCITY_Y, vel_x_dof_position + 1).IsFixed()) {
+                node.Set(DEMFlags::FIXED_VEL_Y, true);
+            } else {
+                node.Set(DEMFlags::FIXED_VEL_Y, false);
+            }
+            if (node.GetDof(VELOCITY_Z, vel_x_dof_position + 2).IsFixed()) {
+                node.Set(DEMFlags::FIXED_VEL_Z, true);
+            } else {
+                node.Set(DEMFlags::FIXED_VEL_Z, false);
+            }
+            if (node.GetDof(ANGULAR_VELOCITY_X, ang_vel_x_dof_position).IsFixed()) {
+                node.Set(DEMFlags::FIXED_ANG_VEL_X, true);
+            } else {
+                node.Set(DEMFlags::FIXED_ANG_VEL_X, false);
+            }
+            if (node.GetDof(ANGULAR_VELOCITY_Y, ang_vel_x_dof_position + 1).IsFixed()) {
+                node.Set(DEMFlags::FIXED_ANG_VEL_Y, true);
+            } else {
+                node.Set(DEMFlags::FIXED_ANG_VEL_Y, false);
+            }
+            if (node.GetDof(ANGULAR_VELOCITY_Z, ang_vel_x_dof_position + 2).IsFixed()) {
+                node.Set(DEMFlags::FIXED_ANG_VEL_Z, true);
+            } else {
+                node.Set(DEMFlags::FIXED_ANG_VEL_Z, false);
+            }
+        });
         KRATOS_CATCH("")
     }
     
@@ -735,13 +836,6 @@ namespace Kratos {
         double dt = r_process_info[DELTA_TIME];
         const array_1d<double, 3>& gravity = r_process_info[GRAVITY];
 
-        const int number_of_polyhedron_contact_elements = (int) mListOfSphericParticles.size();
-
-        #pragma omp parallel for schedule(dynamic, 100)
-        for (int i = 0; i < number_of_polyhedron_contact_elements; i++) {
-            mContactElements[i]->CalculateRightHandSide(r_process_info, dt, gravity);
-        }
-
         ModelPart& polyhedron_model_part = GetPolyhedronModelPart();
         ElementsArrayType& pElements = polyhedron_model_part.GetCommunicator().LocalMesh().Elements();
         const int number_of_polyhedron_elements = pElements.size();
@@ -751,9 +845,18 @@ namespace Kratos {
 
             ElementsArrayType::iterator it = pElements.ptr_begin() + k;
             PolyhedronParticle& polyhedron_element = dynamic_cast<Kratos::PolyhedronParticle&> (*it);
+            polyhedron_element.GetGeometry()[0].FastGetSolutionStepValue(TOTAL_FORCES).clear();
+            polyhedron_element.GetGeometry()[0].FastGetSolutionStepValue(PARTICLE_MOMENT).clear();
             polyhedron_element.ComputeExternalForces(gravity);
 
         } 
+
+        const int number_of_polyhedron_contact_elements = (int) mListOfSphericParticles.size();
+
+        #pragma omp parallel for schedule(dynamic, 100)
+        for (int i = 0; i < number_of_polyhedron_contact_elements; i++) {
+            mContactElements[i]->CalculateRightHandSide(r_process_info, dt, gravity);
+        }
 
         KRATOS_CATCH("")
     }
