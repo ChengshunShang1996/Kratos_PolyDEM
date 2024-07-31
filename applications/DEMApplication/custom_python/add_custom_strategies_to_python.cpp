@@ -159,7 +159,7 @@ void  AddCustomStrategiesToPython(pybind11::module& m)
         .def_readwrite("fem_model_part",&ContactExplicitSolverSettings::fem_model_part)
         .def_readwrite("cluster_model_part",&ContactExplicitSolverSettings::cluster_model_part)
         .def_readwrite("inlet_model_part",&ContactExplicitSolverSettings::inlet_model_part)
-        .def_readwrite("polyhedron_model_part",&ContactExplicitSolverSettings::inlet_model_part)
+        .def_readwrite("polyhedron_model_part",&ContactExplicitSolverSettings::polyhedron_model_part)
         ;
 
     py::class_<ExplicitSolverStrategy, ExplicitSolverStrategy::Pointer>(m, "ExplicitSolverStrategy")
@@ -192,9 +192,9 @@ void  AddCustomStrategiesToPython(pybind11::module& m)
 
     py::class_<ContactExplicitSolverStrategy, ContactExplicitSolverStrategy::Pointer, ExplicitSolverStrategy>(m, "ContactExplicitSolverStrategy")
         .def(py::init< ContactExplicitSolverSettings&, double, int, double, int, ParticleCreatorDestructor::Pointer,DEM_FEM_Search::Pointer, SpatialSearch::Pointer, Parameters>())
-        .def("ComputeCoordinationNumber", &ContactExplicitSolverStrategy::ComputeCoordinationNumber)
         .def("RebuildListOfPolyhedronParticles", &ContactExplicitSolverStrategy::RebuildListOfPolyhedronParticles)
         .def("CreateContactElements", &ContactExplicitSolverStrategy::CreateContactElements)
+        .def("SetNormalRadiiOnAllParticles", &ContactExplicitSolverStrategy::SetNormalRadiiOnAllParticles)
         ;
 
     py::class_<IterativeSolverStrategy, IterativeSolverStrategy::Pointer, ExplicitSolverStrategy>(m, "IterativeSolverStrategy")

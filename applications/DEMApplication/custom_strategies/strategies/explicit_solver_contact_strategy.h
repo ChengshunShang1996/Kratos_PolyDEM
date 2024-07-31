@@ -141,6 +141,9 @@ namespace Kratos {
         void GetPolyhedronForce();
         void FinalizeSolutionStep() override;
         void FinalizeSolutionStepFEM();
+        VectorResultElementsContainerType& GetResults() { return (mResults);}
+        VectorDistanceType& GetResultsDistances() { return (mResultsDistances);}
+        RadiusArrayType& GetArrayOfAmplifiedRadii() { return (mArrayOfAmplifiedRadii);}
 
         ModelPart& GetPolyhedronModelPart() { return (*mpPolyhedron_model_part);}
 
@@ -174,6 +177,9 @@ namespace Kratos {
         DenseVector<int> mSearchControlVector;
         ModelPart *mpPolyhedron_model_part;
         PolyhedronContactElementContainer mContactElements;
+        VectorResultElementsContainerType mResults;
+        VectorDistanceType mResultsDistances;
+        RadiusArrayType mArrayOfAmplifiedRadii;
 
     }; //Class ContactExplicitSolverStrategy
 

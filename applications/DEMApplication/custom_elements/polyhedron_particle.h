@@ -46,6 +46,7 @@ namespace Kratos
         double CalculateVolume();
         virtual double GetRadius();
         virtual void   SetRadius(double radius);
+        virtual void   SetRadius();
         virtual double GetSearchRadius();
         virtual void SetSearchRadius(const double radius);
         // 

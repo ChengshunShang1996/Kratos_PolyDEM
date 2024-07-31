@@ -114,8 +114,8 @@ namespace Kratos {
             InitializePolyhedronContactElements();
         }
 
-        r_model_part.GetCommunicator().SynchronizeElementalNonHistoricalVariable(NEIGHBOUR_IDS);
-        r_model_part.GetCommunicator().SynchronizeElementalNonHistoricalVariable(NEIGHBOURS_CONTACT_AREAS);
+        //r_model_part.GetCommunicator().SynchronizeElementalNonHistoricalVariable(NEIGHBOUR_IDS);
+        //r_model_part.GetCommunicator().SynchronizeElementalNonHistoricalVariable(NEIGHBOURS_CONTACT_AREAS);
 
         ComputeNodalArea();
 
@@ -124,6 +124,7 @@ namespace Kratos {
 
     void ContactExplicitSolverStrategy::RepairPointersToNormalPropertiesOfPolyhedron(std::vector<PolyhedronParticle*>& rCustomListOfPolyhedronParticles) {
 
+        /*
         KRATOS_TRY
 
         bool found = false;
@@ -139,7 +140,57 @@ namespace Kratos {
                     break;
                 }
             }
+
+            KRATOS_ERROR_IF_NOT(found) << "This particle could not find its properties!!" << std::endl;
+        });
+
+        KRATOS_CATCH("")
+        */
+        KRATOS_TRY
+
+        bool found = false;
+        // Using IndexPartition should be fine since 'break' affects the internal for loops while the replaced continues only has an effect on the for_each loop.
+        IndexPartition<unsigned int>(rCustomListOfPolyhedronParticles.size()).for_each([&](unsigned int i){
+
+            int own_properties_id = rCustomListOfPolyhedronParticles[i]->GetProperties().Id();
+            for (PropertiesIterator props_it = mpDem_model_part->GetMesh(0).PropertiesBegin(); props_it != mpDem_model_part->GetMesh(0).PropertiesEnd(); props_it++) {
+                int model_part_id = props_it->GetId();
+                if (own_properties_id == model_part_id) {
+                    rCustomListOfPolyhedronParticles[i]->SetProperties(*(props_it.base()));
+                    found = true;
+                    break;
+                }
+            }
             if (found) return;
+
+            for (PropertiesIterator props_it = mpInlet_model_part->GetMesh(0).PropertiesBegin(); props_it != mpInlet_model_part->GetMesh(0).PropertiesEnd(); props_it++) {
+                int model_part_id = props_it->GetId();
+                if (own_properties_id == model_part_id) {
+                    rCustomListOfPolyhedronParticles[i]->SetProperties(*(props_it.base()));
+                    found = true;
+                    break;
+                }
+            }
+            if (found) return;
+
+            for (PropertiesIterator props_it = mpCluster_model_part->GetMesh(0).PropertiesBegin(); props_it != mpCluster_model_part->GetMesh(0).PropertiesEnd(); props_it++) {
+                int model_part_id = props_it->GetId();
+                if (own_properties_id == model_part_id) {
+                    rCustomListOfPolyhedronParticles[i]->SetProperties(*(props_it.base()));
+                    found = true;
+                    break;
+                }
+            }
+            if (found) return;
+
+            for (PropertiesIterator props_it = mpPolyhedron_model_part->GetMesh(0).PropertiesBegin(); props_it != mpPolyhedron_model_part->GetMesh(0).PropertiesEnd(); props_it++) {
+                int model_part_id = props_it->GetId();
+                if (own_properties_id == model_part_id) {
+                    rCustomListOfPolyhedronParticles[i]->SetProperties(*(props_it.base()));
+                    found = true;
+                    break;
+                }
+            }
 
             KRATOS_ERROR_IF_NOT(found) << "This particle could not find its properties!!" << std::endl;
         });
@@ -333,7 +384,7 @@ namespace Kratos {
         GetResults().resize(number_of_elements);
         GetResultsDistances().resize(number_of_elements);
 
-        mpSpSearch->SearchElementsInRadiusExclusive(polyhedron_model_part, this->GetArrayOfAmplifiedRadii(), this->GetResults(), this->GetResultsDistances());
+        //mpSpSearch->SearchElementsInRadiusExclusive(polyhedron_model_part, this->GetArrayOfAmplifiedRadii(), this->GetResults(), this->GetResultsDistances());
 
         const int number_of_particles = (int) mListOfPolyhedronParticles.size();
 

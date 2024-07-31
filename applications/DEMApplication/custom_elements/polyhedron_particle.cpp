@@ -73,6 +73,7 @@ namespace Kratos {
     {
         KRATOS_TRY
 
+        /*
         std::vector<array_1d<double, 3> > temp_neighbour_elastic_extra_contact_forces;
         unsigned int new_size = mNeighbourElements.size();
         array_1d<double, 3> vector_of_zeros = ZeroVector(3);
@@ -105,13 +106,16 @@ namespace Kratos {
         vector_of_ids_of_neighbours.swap(temp_neighbours_ids);
         mNeighbourElasticContactForces.swap(temp_neighbour_elastic_contact_forces);
         mNeighbourElasticExtraContactForces.swap(temp_neighbour_elastic_extra_contact_forces);
+        */
 
         KRATOS_CATCH("")
     }
 
+    //TODO: need to be updated
     double PolyhedronParticle::CalculateVolume()                                                 { return 4.0 * Globals::Pi / 3.0 * mRadius * mRadius * mRadius; }
     double PolyhedronParticle::GetRadius()                                                       { return mRadius;         }
     void   PolyhedronParticle::SetRadius(double radius)                                          { mRadius = radius;       }
+    void   PolyhedronParticle::SetRadius()                                                       { mRadius = GetGeometry()[0].FastGetSolutionStepValue(RADIUS);       }
     double PolyhedronParticle::GetSearchRadius()                                                 { return mSearchRadius;   }
     void   PolyhedronParticle::SetSearchRadius(const double radius)                              { mSearchRadius = radius; }
 

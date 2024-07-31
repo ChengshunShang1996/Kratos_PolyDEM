@@ -68,8 +68,23 @@ class ExplicitStrategy(BaseExplicitStrategy):
         #spheres_model_part.AddNodalSolutionStepVariable(COHESIVE_GROUP) 
         pass
 
+    def AddDofs(self):
+        # this can safely be called also for restarts, it is internally checked if the dofs exist already
+        spheres_model_part = self.all_model_parts.Get("SpheresPart")
+        dem_inlet_model_part = self.all_model_parts.Get("DEMInletPart")
+        cluster_model_part = self.all_model_parts.Get("ClusterPart")
+        polyhedron_model_part = self.all_model_parts.Get("PolyhedronPart")
+
+        model_part_list = [spheres_model_part, cluster_model_part, dem_inlet_model_part, polyhedron_model_part]
+        variable_list = [VELOCITY_X, VELOCITY_Y, VELOCITY_Z, ANGULAR_VELOCITY_X, ANGULAR_VELOCITY_Y, ANGULAR_VELOCITY_Z]
+        for model_part in model_part_list:
+            for variable in variable_list:
+                VariableUtils().AddDof(variable, model_part)
+            self.Procedures.KratosPrintInfo("DOFs for the DEM solution added correctly")
+
     def RebuildListOfPolyhedronParticles(self):
         self.cplusplus_strategy.RebuildListOfPolyhedronParticles()
 
     def SetNormalRadiiOnAllParticles(self):
-        self.cplusplus_strategy.SetNormalRadiiOnAllParticles(self.polyhedron_model_part)
+        #self.cplusplus_strategy.SetNormalRadiiOnAllParticles(self.polyhedron_model_part)
+        pass

@@ -426,6 +426,7 @@ class Procedures():
         self.AddCommonVariables(rigid_face_model_part, DEM_parameters)
         self.AddRigidFaceVariables(rigid_face_model_part, DEM_parameters)
         self.AddMpiVariables(rigid_face_model_part)
+        self.AddCommonVariables(polyhedron_model_part, DEM_parameters)
         self.AddPolyhedronVariables(polyhedron_model_part, DEM_parameters)
 
     def AddCommonVariables(self, model_part, DEM_parameters):
@@ -599,18 +600,21 @@ class Procedures():
 
     def AddPolyhedronVariables(self, model_part, DEM_parameters):
         model_part.AddNodalSolutionStepVariable(RADIUS)
+        model_part.AddNodalSolutionStepVariable(ANGULAR_VELOCITY)
+        model_part.AddNodalSolutionStepVariable(REPRESENTATIVE_VOLUME)
 
     def AddMpiVariables(self, model_part):
         pass
 
-    def SetInitialNodalValues(self, spheres_model_part, cluster_model_part, dem_inlet_model_part, rigid_face_model_part):
+    def SetInitialNodalValues(self, spheres_model_part, cluster_model_part, dem_inlet_model_part, rigid_face_model_part, polyhedron_model_part):
         pass
 
-    def SetUpBufferSizeInAllModelParts(self, spheres_model_part, spheres_b_size, cluster_model_part, clusters_b_size, dem_inlet_model_part, inlet_b_size, rigid_face_model_part, rigid_b_size):
+    def SetUpBufferSizeInAllModelParts(self, spheres_model_part, spheres_b_size, cluster_model_part, clusters_b_size, dem_inlet_model_part, inlet_b_size, rigid_face_model_part, rigid_b_size, polyhedron_model_part, polyhedron_b_size):
         spheres_model_part.SetBufferSize(spheres_b_size)
         cluster_model_part.SetBufferSize(clusters_b_size)
         dem_inlet_model_part.SetBufferSize(inlet_b_size)
         rigid_face_model_part.SetBufferSize(rigid_b_size)
+        polyhedron_model_part.SetBufferSize(polyhedron_b_size)
 
     def FindMaxNodeIdAccrossModelParts(self, creator_destructor, all_model_parts):
 
@@ -619,6 +623,7 @@ class Procedures():
         max_candidates.append(creator_destructor.FindMaxElementIdInModelPart(all_model_parts.Get("SpheresPart")))
         max_candidates.append(creator_destructor.FindMaxNodeIdInModelPart(all_model_parts.Get("RigidFacePart")))
         max_candidates.append(creator_destructor.FindMaxNodeIdInModelPart(all_model_parts.Get("ClusterPart")))
+        max_candidates.append(creator_destructor.FindMaxNodeIdInModelPart(all_model_parts.Get("PolyhedronPart")))
 
         return max(max_candidates)
 
