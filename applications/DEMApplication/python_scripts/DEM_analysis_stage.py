@@ -678,6 +678,9 @@ class DEMAnalysisStage(AnalysisStage):
         if self.DEM_parameters["post_vtk_option"].GetBool():
             import KratosMultiphysics.DEMApplication.dem_vtk_output as dem_vtk_output
             self.vtk_output = dem_vtk_output.VtkOutput(self.main_path, self.problem_name, self.spheres_model_part, self.contact_model_part, self.rigid_face_model_part, self.DEM_parameters)
+        if self.DEM_parameters["post_polyhedron_vtk_option"].GetBool():
+            import KratosMultiphysics.DEMApplication.polyhedron_vtk_output as polyhedron_vtk_output
+            self.polyhedron_vtk_output = polyhedron_vtk_output.PolyhedronVtkOutput(self.main_path, self.problem_name, self.spheres_model_part, self.contact_model_part, self.rigid_face_model_part, self.polyhedron_model_part, self.DEM_parameters)
 
     def GraphicalOutputInitialize(self):
         if self.do_print_results_option:
@@ -705,6 +708,11 @@ class DEMAnalysisStage(AnalysisStage):
             if self.DEM_parameters["post_vtk_option"].GetBool():
                 self.demio.ShowPrintingResultsOnScreen(self.all_model_parts, 'VTK')
                 self.vtk_output.WriteResults(self.time)
+
+        if "post_polyhedron_vtk_option" in self.DEM_parameters.keys():
+            if self.DEM_parameters["post_polyhedron_vtk_option"].GetBool():
+                self.demio.ShowPrintingPolyhedronResultsOnScreen(self.all_model_parts, 'POLYHEDRON VTK')
+                self.polyhedron_vtk_output.WriteResults(self.time)
 
         self.file_msh = self.demio.GetMultiFileListName(self.problem_name + "_" + "%.12g"%time + ".post.msh")
         self.file_res = self.demio.GetMultiFileListName(self.problem_name + "_" + "%.12g"%time + ".post.res")

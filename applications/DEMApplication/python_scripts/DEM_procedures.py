@@ -1417,6 +1417,12 @@ class DEMIo():
         self.KratosPrintInfo("                        (" + str(all_model_parts.Get("SpheresPart").NumberOfNodes(0)) + " nodes)")
         self.KratosPrintInfo("")
 
+    def ShowPrintingPolyhedronResultsOnScreen(self, all_model_parts, format_name):
+        self.KratosPrintInfo("*******************  PRINTING RESULTS FOR {}  ***************************".format(format_name))
+        self.KratosPrintInfo("                        (" + str(all_model_parts.Get("PolyhedronPart").NumberOfElements(0)) + " elements)")
+        self.KratosPrintInfo("                        (" + str(all_model_parts.Get("PolyhedronPart").NumberOfNodes(0)) + " nodes)")
+        self.KratosPrintInfo("")
+
     def Initialize(self, DEM_parameters):
         self.AddGlobalVariables()
         self.AddGlobalNonHistoricalNodalVariables()
