@@ -135,9 +135,11 @@ namespace Kratos {
         }
         virtual void SetSearchRadiiOnAllPolyhedronParticles(ModelPart& polyhedron_model_part, const double added_search_distance, const double amplification);
         void InitializeSolutionStep() override;
+        void ApplyInitialConditionsPolyhedron();
         void ApplyInitialConditions() override;
         double SolveSolutionStep() override;
-        void ForceOperations(ModelPart& r_model_part) override;
+        void PerformTimeIntegrationOfMotion(int StepFlag = 0) override;
+        virtual void ForceOperations(ModelPart& r_model_part, ModelPart& r_polyhedron_model_part);
         void GetPolyhedronForce();
         void FinalizeSolutionStep() override;
         void FinalizeSolutionStepFEM();

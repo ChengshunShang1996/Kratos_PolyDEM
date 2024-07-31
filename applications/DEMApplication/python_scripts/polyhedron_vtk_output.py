@@ -43,11 +43,11 @@ class PolyhedronVtkOutput():
 
         i = 0
         for node in self.polyhedron_model_part.Nodes:
-            self.polygon_centers[i] = np.array([node.X, node.Y, node.Z])
+            self.polygon_centers[i] = [node.X, node.Y, node.Z]
             i += 1
         
         self.polygon_origins.append(np.array([[-1, -1, -1], [1, -1, -1], [1, 1, -1], [-1, 1, -1], [-1, -1, 1], [1, -1, 1], [1, 1, 1], [-1, 1, 1]]))
-        self.polygon_origins.append(np.array([[-1, 0, -1], [0, -1, -1], [1, 0, -1], [0, 1, -1], [-1.0, 0, 1], [0, -1, 1], [1, 0, 1], [0, 1, 1]]))
+        self.polygon_origins.append(np.array([[-1, -1, -1], [1, -1, -1], [1, 1, -1], [-1, 1, -1], [-1, -1, 1], [1, -1, 1], [1, 1, 1], [-1, 1, 1]]))
     
     def WriteResults(self, time):
 
@@ -59,7 +59,7 @@ class PolyhedronVtkOutput():
         polyhedron_points = []
         i = 0
         for polygon_center in self.polygon_centers:
-            polygon = polygon_center[i] + self.polygon_origins[i]
+            polygon = polygon_center + self.polygon_origins[i]
             for poly in polygon:
                 polyhedron_points.append(poly)
             i += 1
@@ -73,7 +73,8 @@ class PolyhedronVtkOutput():
             vertices = list(map(int, face.strip('()').split(',')))
             adjusted_vertices = [v + offset for v in vertices]
             polyhedron_faces.append(adjusted_vertices)
-            offset += 1
+        
+        offset += 8
 
         for face in faces:
             vertices = list(map(int, face.strip('()').split(',')))

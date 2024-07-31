@@ -288,13 +288,45 @@ namespace Kratos {
         KRATOS_CATCH("")
     }
 
+    void ContactExplicitSolverStrategy::ApplyInitialConditionsPolyhedron() {
+
+        KRATOS_TRY
+        ModelPart& polyhedron_model_part = GetPolyhedronModelPart();
+
+        for (ModelPart::SubModelPartsContainerType::iterator sub_model_part = polyhedron_model_part.SubModelPartsBegin(); sub_model_part != polyhedron_model_part.SubModelPartsEnd(); ++sub_model_part) {
+
+            NodesArrayType& pNodes = sub_model_part->Nodes();
+
+            if ((*sub_model_part).Has(INITIAL_VELOCITY_X_VALUE)) {
+                SetVariableToNodes(VELOCITY_X, (*sub_model_part)[INITIAL_VELOCITY_X_VALUE], pNodes);
+            }
+            if ((*sub_model_part).Has(INITIAL_VELOCITY_Y_VALUE)) {
+                SetVariableToNodes(VELOCITY_Y, (*sub_model_part)[INITIAL_VELOCITY_Y_VALUE], pNodes);
+            }
+            if ((*sub_model_part).Has(INITIAL_VELOCITY_Z_VALUE)) {
+                SetVariableToNodes(VELOCITY_Z, (*sub_model_part)[INITIAL_VELOCITY_Z_VALUE], pNodes);
+            }
+            if ((*sub_model_part).Has(INITIAL_ANGULAR_VELOCITY_X_VALUE)) {
+                SetVariableToNodes(ANGULAR_VELOCITY_X, (*sub_model_part)[INITIAL_ANGULAR_VELOCITY_X_VALUE], pNodes);
+            }
+            if ((*sub_model_part).Has(INITIAL_ANGULAR_VELOCITY_Y_VALUE)) {
+                SetVariableToNodes(ANGULAR_VELOCITY_Y, (*sub_model_part)[INITIAL_ANGULAR_VELOCITY_Y_VALUE], pNodes);
+            }
+            if ((*sub_model_part).Has(INITIAL_ANGULAR_VELOCITY_Z_VALUE)) {
+                SetVariableToNodes(ANGULAR_VELOCITY_Z, (*sub_model_part)[INITIAL_ANGULAR_VELOCITY_Z_VALUE], pNodes);
+            }
+        } // for each mesh
+
+        KRATOS_CATCH("")
+    }
+
     void ContactExplicitSolverStrategy::ApplyInitialConditions(){
                 
         KRATOS_TRY
 
         BaseType::ApplyInitialConditions();
 
-        //in case i need to add initial conditions for Polyhedron Partciles
+        ApplyInitialConditionsPolyhedron();
 
         KRATOS_CATCH("")
     }
@@ -314,7 +346,7 @@ namespace Kratos {
         SearchFEMOperations(r_model_part, has_mpi);
         SearchPolyhedronOperations(r_model_part, r_polyhedron_model_part, has_mpi);
 
-        ForceOperations(r_model_part);
+        ForceOperations(r_model_part, r_polyhedron_model_part);
         PerformTimeIntegrationOfMotion();
 
         KRATOS_CATCH("")
@@ -322,6 +354,82 @@ namespace Kratos {
         return 0.0;
 
     }//SolveSolutionStep()
+
+    void ContactExplicitSolverStrategy::PerformTimeIntegrationOfMotion(int StepFlag) {
+
+        KRATOS_TRY
+
+        ProcessInfo& r_process_info = GetModelPart().GetProcessInfo();
+        double delta_t = r_process_info[DELTA_TIME];
+        double virtual_mass_coeff = r_process_info[NODAL_MASS_COEFF]; //TODO: change the name of this variable to FORCE_REDUCTION_FACTOR
+        bool virtual_mass_option = (bool) r_process_info[VIRTUAL_MASS_OPTION];
+        double force_reduction_factor = 1.0;
+        if (virtual_mass_option) {
+            force_reduction_factor = virtual_mass_coeff;
+            KRATOS_ERROR_IF((force_reduction_factor > 1.0) || (force_reduction_factor < 0.0)) << "The force reduction factor is either larger than 1 or negative: FORCE_REDUCTION_FACTOR= "<< virtual_mass_coeff << std::endl;
+        }
+
+        bool rotation_option = r_process_info[ROTATION_OPTION];
+
+        const int number_of_particles       = (int) mListOfSphericParticles.size();
+        const int number_of_ghost_particles = (int) mListOfGhostSphericParticles.size();
+        const int number_of_polyhedron_particles       = (int) mListOfPolyhedronParticles.size();
+        const int number_of_ghost_polyhedron_particles = (int) mListOfGhostPolyhedronParticles.size();
+
+        ModelPart& r_clusters_model_part  = *mpCluster_model_part;
+        ElementsArrayType& pLocalClusters = r_clusters_model_part.GetCommunicator().LocalMesh().Elements();
+        ElementsArrayType& pGhostClusters = r_clusters_model_part.GetCommunicator().GhostMesh().Elements();
+        ModelPart& r_fem_model_part  = *mpFem_model_part;
+        ElementsArrayType& pFemElements = r_fem_model_part.GetCommunicator().LocalMesh().Elements();
+
+        #pragma omp parallel
+        {
+            #pragma omp for nowait
+            for (int i = 0; i < number_of_particles; i++) {
+                mListOfSphericParticles[i]->Move(delta_t, rotation_option, force_reduction_factor, StepFlag);
+            }
+
+            #pragma omp for nowait
+            for (int i = 0; i < number_of_ghost_particles; i++) {
+                mListOfGhostSphericParticles[i]->Move(delta_t, rotation_option, force_reduction_factor, StepFlag);
+            }
+
+            #pragma omp for nowait
+            for (int k = 0; k < (int) pLocalClusters.size(); k++) {
+                ElementsArrayType::iterator it = pLocalClusters.ptr_begin() + k;
+                Cluster3D& cluster_element = dynamic_cast<Kratos::Cluster3D&> (*it);
+                cluster_element.RigidBodyElement3D::Move(delta_t, rotation_option, force_reduction_factor, StepFlag);
+            }
+
+            #pragma omp for nowait
+            for (int k = 0; k < (int) pGhostClusters.size(); k++) {
+                ElementsArrayType::iterator it = pGhostClusters.ptr_begin() + k;
+                Cluster3D& cluster_element = dynamic_cast<Kratos::Cluster3D&> (*it);
+                cluster_element.RigidBodyElement3D::Move(delta_t, rotation_option, force_reduction_factor, StepFlag);
+            }
+
+            #pragma omp for nowait
+            for (int k = 0; k < (int) pFemElements.size(); k++) {
+                ElementsArrayType::iterator it = pFemElements.ptr_begin() + k;
+                RigidBodyElement3D& rigid_body_element = dynamic_cast<Kratos::RigidBodyElement3D&> (*it);
+                rigid_body_element.Move(delta_t, rotation_option, force_reduction_factor, StepFlag);
+            }
+
+            #pragma omp for nowait
+            for (int i = 0; i < number_of_polyhedron_particles; i++) {
+                mListOfPolyhedronParticles[i]->Move(delta_t, rotation_option, force_reduction_factor, StepFlag);
+            }
+
+            #pragma omp for nowait
+            for (int i = 0; i < number_of_ghost_polyhedron_particles; i++) {
+                mListOfGhostPolyhedronParticles[i]->Move(delta_t, rotation_option, force_reduction_factor, StepFlag);
+            }
+        }
+
+        //GetScheme()->Calculate(GetModelPart(), StepFlag);
+        //GetScheme()->Calculate(*mpCluster_model_part, StepFlag);
+        KRATOS_CATCH("")
+    }
 
     void ContactExplicitSolverStrategy::SearchPolyhedronOperations(ModelPart& r_model_part, ModelPart& polyhedron_model_part, bool has_mpi) {
 
@@ -598,7 +706,7 @@ namespace Kratos {
         KRATOS_CATCH("")
     }
 
-    void ContactExplicitSolverStrategy::ForceOperations(ModelPart& r_model_part) {
+    void ContactExplicitSolverStrategy::ForceOperations(ModelPart& r_model_part, ModelPart& r_polyhedron_model_part) {
         KRATOS_TRY
 
         //TODO: those force operations are still based on particle loop
@@ -615,6 +723,7 @@ namespace Kratos {
 
         // Synchronize (should be just FORCE and TORQUE)
         SynchronizeRHS(r_model_part);
+        SynchronizeRHS(r_polyhedron_model_part);
 
         KRATOS_CATCH("")
     }//ForceOperations;
@@ -632,6 +741,19 @@ namespace Kratos {
         for (int i = 0; i < number_of_polyhedron_contact_elements; i++) {
             mContactElements[i]->CalculateRightHandSide(r_process_info, dt, gravity);
         }
+
+        ModelPart& polyhedron_model_part = GetPolyhedronModelPart();
+        ElementsArrayType& pElements = polyhedron_model_part.GetCommunicator().LocalMesh().Elements();
+        const int number_of_polyhedron_elements = pElements.size();
+
+        #pragma omp parallel for schedule(dynamic, 100)
+        for (int k = 0; k < number_of_polyhedron_elements; k++) {
+
+            ElementsArrayType::iterator it = pElements.ptr_begin() + k;
+            PolyhedronParticle& polyhedron_element = dynamic_cast<Kratos::PolyhedronParticle&> (*it);
+            polyhedron_element.ComputeExternalForces(gravity);
+
+        } 
 
         KRATOS_CATCH("")
     }

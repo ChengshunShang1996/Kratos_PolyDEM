@@ -48,7 +48,11 @@ namespace Kratos
         virtual void   SetRadius(double radius);
         virtual void   SetRadius();
         virtual double GetSearchRadius();
-        virtual void SetSearchRadius(const double radius);
+        virtual void   SetSearchRadius(const double radius);
+        double         GetMass() override;
+        void           SetMass(double real_mass);
+        double         GetDensity();
+
         // 
         double mEnginePower; 
 
@@ -82,6 +86,7 @@ namespace Kratos
         std::vector<array_1d<double, 3> > mNeighbourElasticExtraContactForces;
         double mRadius;
         double mSearchRadius;
+        double mRealMass;
         PropertiesProxy* mFastProperties;
 
 

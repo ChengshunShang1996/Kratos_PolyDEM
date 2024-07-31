@@ -40,7 +40,14 @@ namespace Kratos {
 
         RigidBodyElement3D::Initialize(r_process_info);
 
-        SetRadius(0.1); //TODO: UPDATE!!
+        SetRadius();
+        SetMass(GetDensity() * CalculateVolume());
+
+        KRATOS_WATCH(GetDensity())
+        KRATOS_WATCH(CalculateVolume())
+        KRATOS_WATCH(GetMass())
+        
+        //SetRadius(0.1); //TODO: UPDATE!!
 
         KRATOS_CATCH("")
     }
@@ -111,13 +118,16 @@ namespace Kratos {
         KRATOS_CATCH("")
     }
 
+    double PolyhedronParticle::GetMass()                                                         { return mRealMass;       }
+    void   PolyhedronParticle::SetMass(double real_mass)                                         { mRealMass = real_mass;  GetGeometry()[0].FastGetSolutionStepValue(NODAL_MASS) = real_mass;}
     //TODO: need to be updated
     double PolyhedronParticle::CalculateVolume()                                                 { return 4.0 * Globals::Pi / 3.0 * mRadius * mRadius * mRadius; }
     double PolyhedronParticle::GetRadius()                                                       { return mRadius;         }
     void   PolyhedronParticle::SetRadius(double radius)                                          { mRadius = radius;       }
-    void   PolyhedronParticle::SetRadius()                                                       { mRadius = GetGeometry()[0].FastGetSolutionStepValue(RADIUS);       }
+    void   PolyhedronParticle::SetRadius()                                                       { mRadius = GetGeometry()[0].FastGetSolutionStepValue(RADIUS); }
     double PolyhedronParticle::GetSearchRadius()                                                 { return mSearchRadius;   }
     void   PolyhedronParticle::SetSearchRadius(const double radius)                              { mSearchRadius = radius; }
+    double PolyhedronParticle::GetDensity()                                                      { return GetFastProperties()->GetDensity();                  }
 
     PropertiesProxy* PolyhedronParticle::GetFastProperties()                                     { return mFastProperties;   }
     void   PolyhedronParticle::SetFastProperties(PropertiesProxy* pProps)                        { mFastProperties = pProps; }
