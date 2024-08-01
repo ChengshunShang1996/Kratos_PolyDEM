@@ -54,6 +54,7 @@ namespace Kratos
         double         GetDensity();
         double         SlowGetDensity();
         std::vector<array_1d<double, 3>> GetListOfVertices();
+        std::vector<std::vector<int>> GetListOfFaces();
 
         // 
         double mEnginePower; 
@@ -91,6 +92,7 @@ namespace Kratos
         double mRealMass;
         PropertiesProxy* mFastProperties;
         std::vector<array_1d<double, 3>> mListOfVertices;
+        std::vector<std::vector<int>> mListOfFaces;
 
     protected:
 

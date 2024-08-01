@@ -55,10 +55,10 @@ namespace Kratos {
 
 	    KRATOS_ERROR_IF_NOT(GetProperties().Has(POLYHEDRON_INFORMATION))<<"Something went wrong. Properties do not contain POLYHEDRON_INFORMATION.";
         const PolyhedronInformation& poly_info = GetProperties()[POLYHEDRON_INFORMATION];
+        const std::vector<array_1d<double,3> >& reference_list_of_vertices = poly_info.mListOfVertices;
+        const std::vector<std::vector<int>>& reference_list_of_faces = poly_info.mListOfFaces;
         const double reference_size = poly_info.mSize;
         const double reference_volume = poly_info.mVolume;
-        const std::vector<std::vector<int>>& reference_list_of_faces = poly_info.mListOfFaces;
-        const std::vector<array_1d<double,3> >& reference_list_of_vertices = poly_info.mListOfVertices;
 
         const unsigned int number_of_vertices = reference_list_of_vertices.size();
 
@@ -70,6 +70,19 @@ namespace Kratos {
             mListOfVertices[i][0] = scaling_factor * reference_list_of_vertices[i][0];
             mListOfVertices[i][1] = scaling_factor * reference_list_of_vertices[i][1];
             mListOfVertices[i][2] = scaling_factor * reference_list_of_vertices[i][2];
+        }
+
+        const unsigned int number_of_faces = reference_list_of_faces.size();
+
+        mListOfFaces.resize(number_of_faces);
+
+        for (int i = 0; i < (int)number_of_faces; i++) {
+            const unsigned int number_of_face = reference_list_of_faces[i].size();
+            mListOfFaces[i].resize(number_of_face);
+            for (int j = 0; j < (int)number_of_face; j++){
+                mListOfFaces[i][j] = reference_list_of_faces[i][j];
+            }
+                
         }
 
         const double particle_density = this->SlowGetDensity();
@@ -163,6 +176,7 @@ namespace Kratos {
     double PolyhedronParticle::GetDensity()                                                      { return GetFastProperties()->GetDensity();}
     double PolyhedronParticle::SlowGetDensity()                                                  { return GetProperties()[PARTICLE_DENSITY];}
     std::vector<array_1d<double, 3>> PolyhedronParticle::GetListOfVertices()                     { return mListOfVertices;}
+    std::vector<std::vector<int>> PolyhedronParticle::GetListOfFaces()                           { return mListOfFaces;}
 
     PropertiesProxy* PolyhedronParticle::GetFastProperties()                                     { return mFastProperties;   }
     void   PolyhedronParticle::SetFastProperties(PropertiesProxy* pProps)                        { mFastProperties = pProps; }

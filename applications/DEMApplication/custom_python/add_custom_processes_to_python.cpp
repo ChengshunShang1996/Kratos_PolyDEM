@@ -57,6 +57,7 @@ void  AddCustomProcessesToPython(pybind11::module& m)
     py::class_<PolyhedronParticle, PolyhedronParticle::Pointer, Element>(m, "PolyhedronParticle")
         .def(py::init<>())
         .def("GetListOfVertices", &PolyhedronParticle::GetListOfVertices)
+        .def("GetListOfFaces", &PolyhedronParticle::GetListOfFaces)
         ;
 
 }

@@ -40,6 +40,7 @@ class PolyhedronVtkOutput():
 
         self.polygon_centers = np.zeros((number_of_nodes, 3))
         self.polygon_origins = []
+        self.polyhedron_faces = []
 
         i = 0
         for node in self.polyhedron_model_part.Nodes:
@@ -52,6 +53,16 @@ class PolyhedronVtkOutput():
             for vertex in vertices:
                 temp_vertices_list.append([vertex[0], vertex[1], vertex[2]])
             self.polygon_origins.append(temp_vertices_list)
+
+        for element in self.polyhedron_model_part.Elements:
+            faces = element.GetListOfFaces()
+            temp_faces_list = []
+            for face in faces:
+                temp_face_sub = []
+                for face_sub in face:
+                    temp_face_sub.append(face_sub)
+                temp_faces_list.append(temp_face_sub)
+            self.polyhedron_faces.append(temp_faces_list)
     
     def WriteResults(self, poly_output_cnt):
 
@@ -69,21 +80,15 @@ class PolyhedronVtkOutput():
             i += 1
 
         polyhedron_faces = []
-        faces_origin = "(0,1,2,3) (1,5,6,2) (5,6,7,4) (4,7,3,0) (3,2,6,7) (0,1,5,4)"
-        faces = faces_origin.strip().split()
-        
+        i = 0
         offset = 0
-        for face in faces:
-            vertices = list(map(int, face.strip('()').split(',')))
-            adjusted_vertices = [v + offset for v in vertices]
-            polyhedron_faces.append(adjusted_vertices)
-        
-        offset += 8
-
-        for face in faces:
-            vertices = list(map(int, face.strip('()').split(',')))
-            adjusted_vertices = [v + offset for v in vertices]
-            polyhedron_faces.append(adjusted_vertices)
+        for polyhedron_face in self.polyhedron_faces:
+            if i > 0:
+                offset += len(self.polygon_origins[i-1])
+            for face in polyhedron_face:
+                adjusted_face = [v + offset for v in face]
+                polyhedron_faces.append(adjusted_face)
+            i += 1
         
         for point_coord in polyhedron_points:
             points_vtk.InsertNextPoint(point_coord)
