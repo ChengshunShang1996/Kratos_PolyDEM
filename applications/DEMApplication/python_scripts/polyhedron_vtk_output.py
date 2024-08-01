@@ -46,15 +46,12 @@ class PolyhedronVtkOutput():
             self.polygon_centers[i] = [node.X, node.Y, node.Z]
             i += 1
 
-        i = 0
         for element in self.polyhedron_model_part.Elements:
-            #Vertices = element.GetListOfVertices()
-            #print(Vertices)
-            #self.polygon_centers[i] = [node.X, node.Y, node.Z]
-            i += 1
-        
-        self.polygon_origins.append(np.array([[-1, -1, -1], [1, -1, -1], [1, 1, -1], [-1, 1, -1], [-1, -1, 1], [1, -1, 1], [1, 1, 1], [-1, 1, 1]]))
-        self.polygon_origins.append(np.array([[-1, -1, -1], [1, -1, -1], [1, 1, -1], [-1, 1, -1], [-1, -1, 1], [1, -1, 1], [1, 1, 1], [-1, 1, 1]]))
+            vertices = element.GetListOfVertices()
+            temp_vertices_list = []
+            for vertex in vertices:
+                temp_vertices_list.append([vertex[0], vertex[1], vertex[2]])
+            self.polygon_origins.append(temp_vertices_list)
     
     def WriteResults(self, poly_output_cnt):
 

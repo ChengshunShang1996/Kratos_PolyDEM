@@ -52,9 +52,6 @@ namespace Kratos {
         auto& central_node = GetGeometry()[0];
 
         SetRadius();
-        
-        KRATOS_WATCH(GetProperties().Id());
-        KRATOS_WATCH(GetProperties().Has(POLYHEDRON_INFORMATION));
 
 	    KRATOS_ERROR_IF_NOT(GetProperties().Has(POLYHEDRON_INFORMATION))<<"Something went wrong. Properties do not contain POLYHEDRON_INFORMATION.";
         const PolyhedronInformation& poly_info = GetProperties()[POLYHEDRON_INFORMATION];
@@ -165,7 +162,7 @@ namespace Kratos {
     void   PolyhedronParticle::SetSearchRadius(const double radius)                              { mSearchRadius = radius; }
     double PolyhedronParticle::GetDensity()                                                      { return GetFastProperties()->GetDensity();}
     double PolyhedronParticle::SlowGetDensity()                                                  { return GetProperties()[PARTICLE_DENSITY];}
-    std::vector<array_1d<double, 3>> PolyhedronParticle::GetListOfVertices()                     {return mListOfVertices;}
+    std::vector<array_1d<double, 3>> PolyhedronParticle::GetListOfVertices()                     { return mListOfVertices;}
 
     PropertiesProxy* PolyhedronParticle::GetFastProperties()                                     { return mFastProperties;   }
     void   PolyhedronParticle::SetFastProperties(PropertiesProxy* pProps)                        { mFastProperties = pProps; }

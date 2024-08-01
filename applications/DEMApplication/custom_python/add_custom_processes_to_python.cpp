@@ -24,6 +24,7 @@
 #include "custom_processes/apply_forces_and_moments_process.hpp"
 #include "custom_processes/control_module_2d_process.hpp"
 #include "custom_processes/automatic_dt_process.hpp"
+#include "custom_elements/polyhedron_particle.h" //TODO: IT IS NOT GOOD PUTTING IT HERE
 
 namespace Kratos
 {
@@ -52,6 +53,11 @@ void  AddCustomProcessesToPython(pybind11::module& m)
     py::class_<AutomaticDTProcess, AutomaticDTProcess::Pointer, Process>
     (m, "AutomaticDTProcess")
     .def( py::init< ModelPart&, Parameters>());
+
+    py::class_<PolyhedronParticle, PolyhedronParticle::Pointer, Element>(m, "PolyhedronParticle")
+        .def(py::init<>())
+        .def("GetListOfVertices", &PolyhedronParticle::GetListOfVertices)
+        ;
 
 }
 
