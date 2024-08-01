@@ -45,6 +45,13 @@ class PolyhedronVtkOutput():
         for node in self.polyhedron_model_part.Nodes:
             self.polygon_centers[i] = [node.X, node.Y, node.Z]
             i += 1
+
+        i = 0
+        for element in self.polyhedron_model_part.Elements:
+            #Vertices = element.GetListOfVertices()
+            #print(Vertices)
+            #self.polygon_centers[i] = [node.X, node.Y, node.Z]
+            i += 1
         
         self.polygon_origins.append(np.array([[-1, -1, -1], [1, -1, -1], [1, 1, -1], [-1, 1, -1], [-1, -1, 1], [1, -1, 1], [1, 1, 1], [-1, 1, 1]]))
         self.polygon_origins.append(np.array([[-1, -1, -1], [1, -1, -1], [1, 1, -1], [-1, 1, -1], [-1, -1, 1], [1, -1, 1], [1, 1, 1], [-1, 1, 1]]))

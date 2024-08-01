@@ -20,13 +20,22 @@ namespace Kratos {
     PolyhedronParticle::PolyhedronParticle() : RigidBodyElement3D() {}
 
     PolyhedronParticle::PolyhedronParticle(IndexType NewId, GeometryType::Pointer pGeometry)
-    : RigidBodyElement3D(NewId, pGeometry) {}
+    : RigidBodyElement3D(NewId, pGeometry) {
+        mRadius = 0;
+        mRealMass = 0;
+    }
 
     PolyhedronParticle::PolyhedronParticle(IndexType NewId, GeometryType::Pointer pGeometry, PropertiesType::Pointer pProperties)
-    : RigidBodyElement3D(NewId, pGeometry, pProperties) {}
+    : RigidBodyElement3D(NewId, pGeometry, pProperties) {
+        mRadius = 0;
+        mRealMass = 0;
+    }
 
     PolyhedronParticle::PolyhedronParticle(IndexType NewId, NodesArrayType const& ThisNodes)
-    : RigidBodyElement3D(NewId, ThisNodes) {}
+    : RigidBodyElement3D(NewId, ThisNodes) {
+        mRadius = 0;
+        mRealMass = 0;
+    }
 
     Element::Pointer PolyhedronParticle::Create(IndexType NewId, NodesArrayType const& ThisNodes, PropertiesType::Pointer pProperties) const {
         return Element::Pointer(new PolyhedronParticle(NewId, GetGeometry().Create(ThisNodes), pProperties));
@@ -40,10 +49,41 @@ namespace Kratos {
 
         RigidBodyElement3D::Initialize(r_process_info);
 
+        auto& central_node = GetGeometry()[0];
+
         SetRadius();
-        SetMass(GetDensity() * CalculateVolume());
         
-        //SetRadius(0.1); //TODO: UPDATE!!
+        KRATOS_WATCH(GetProperties().Id());
+        KRATOS_WATCH(GetProperties().Has(POLYHEDRON_INFORMATION));
+
+	    KRATOS_ERROR_IF_NOT(GetProperties().Has(POLYHEDRON_INFORMATION))<<"Something went wrong. Properties do not contain POLYHEDRON_INFORMATION.";
+        const PolyhedronInformation& poly_info = GetProperties()[POLYHEDRON_INFORMATION];
+        const double reference_size = poly_info.mSize;
+        const double reference_volume = poly_info.mVolume;
+        const std::vector<std::vector<int>>& reference_list_of_faces = poly_info.mListOfFaces;
+        const std::vector<array_1d<double,3> >& reference_list_of_vertices = poly_info.mListOfVertices;
+
+        const unsigned int number_of_vertices = reference_list_of_vertices.size();
+
+        mListOfVertices.resize(number_of_vertices);
+
+        const double scaling_factor = (mRadius * 2.0) / reference_size;
+
+        for (int i = 0; i < (int)number_of_vertices; i++) {
+            mListOfVertices[i][0] = scaling_factor * reference_list_of_vertices[i][0];
+            mListOfVertices[i][1] = scaling_factor * reference_list_of_vertices[i][1];
+            mListOfVertices[i][2] = scaling_factor * reference_list_of_vertices[i][2];
+        }
+
+        const double particle_density = this->SlowGetDensity();
+        const double polyhedron_volume = reference_volume * scaling_factor * scaling_factor * scaling_factor;
+        const double polyhedron_mass = particle_density * polyhedron_volume;
+
+        central_node.FastGetSolutionStepValue(NODAL_MASS) = polyhedron_mass;
+        //central_node.FastGetSolutionStepValue(POLYHEDRON_VOLUME) = polyhedron_volume;
+
+        //SetMass(GetDensity() * CalculateVolume());
+        SetMass(polyhedron_mass);
 
         KRATOS_CATCH("")
     }
@@ -123,7 +163,9 @@ namespace Kratos {
     void   PolyhedronParticle::SetRadius()                                                       { mRadius = GetGeometry()[0].FastGetSolutionStepValue(RADIUS); }
     double PolyhedronParticle::GetSearchRadius()                                                 { return mSearchRadius;   }
     void   PolyhedronParticle::SetSearchRadius(const double radius)                              { mSearchRadius = radius; }
-    double PolyhedronParticle::GetDensity()                                                      { return GetFastProperties()->GetDensity();                  }
+    double PolyhedronParticle::GetDensity()                                                      { return GetFastProperties()->GetDensity();}
+    double PolyhedronParticle::SlowGetDensity()                                                  { return GetProperties()[PARTICLE_DENSITY];}
+    std::vector<array_1d<double, 3>> PolyhedronParticle::GetListOfVertices()                     {return mListOfVertices;}
 
     PropertiesProxy* PolyhedronParticle::GetFastProperties()                                     { return mFastProperties;   }
     void   PolyhedronParticle::SetFastProperties(PropertiesProxy* pProps)                        { mFastProperties = pProps; }

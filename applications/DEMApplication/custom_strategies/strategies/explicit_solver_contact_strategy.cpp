@@ -17,7 +17,7 @@ namespace Kratos {
         KRATOS_TRY
 
 
-        std::vector<PropertiesProxy>& vector_of_properties_proxies = PropertiesProxiesManager().GetPropertiesProxies(*mpDem_model_part);
+        std::vector<PropertiesProxy>& vector_of_properties_proxies = PropertiesProxiesManager().GetPropertiesProxies(*mpPolyhedron_model_part);
 
         IndexPartition<unsigned int>(rCustomListOfPolyhedronParticles.size()).for_each([&](unsigned int i){
             rCustomListOfPolyhedronParticles[i]->SetFastProperties(vector_of_properties_proxies);
@@ -334,7 +334,7 @@ namespace Kratos {
                 SetFlagAndVariableToNodes(DEMFlags::FIXED_ANG_VEL_Z, ANGULAR_VELOCITY_Z, (*sub_model_part)[IMPOSED_ANGULAR_VELOCITY_Z_VALUE], pNodes);
             }
         } // for each mesh
-        
+
         KRATOS_CATCH("")
     }
 

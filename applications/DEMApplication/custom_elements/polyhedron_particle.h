@@ -52,6 +52,8 @@ namespace Kratos
         double         GetMass() override;
         void           SetMass(double real_mass);
         double         GetDensity();
+        double         SlowGetDensity();
+        std::vector<array_1d<double, 3>> GetListOfVertices();
 
         // 
         double mEnginePower; 
@@ -88,7 +90,7 @@ namespace Kratos
         double mSearchRadius;
         double mRealMass;
         PropertiesProxy* mFastProperties;
-
+        std::vector<array_1d<double, 3>> mListOfVertices;
 
     protected:
 

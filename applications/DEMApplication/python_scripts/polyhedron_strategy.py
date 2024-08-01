@@ -10,6 +10,8 @@ from KratosMultiphysics.DEMApplication import *
 import KratosMultiphysics.DEMApplication.sphere_strategy as SolverStrategy
 BaseExplicitStrategy = SolverStrategy.ExplicitStrategy
 
+import KratosMultiphysics.DEMApplication.polyhedron_file_reader as polyhedron_file_reader
+
 import math
 
 class ExplicitStrategy(BaseExplicitStrategy):
@@ -17,7 +19,8 @@ class ExplicitStrategy(BaseExplicitStrategy):
     def __init__(self, all_model_parts, creator_destructor, dem_fem_search, DEM_parameters, procedures):
 
         BaseExplicitStrategy.__init__(self, all_model_parts, creator_destructor, dem_fem_search, DEM_parameters, procedures)
-
+        
+        #self.DEM_parameters = DEM_parameters
         #if "PostSkinSphere" in DEM_parameters.keys():
         #    self.print_skin_sphere = DEM_parameters["PostSkinSphere"].GetBool()
         self.polyhedron_model_part = all_model_parts.Get("PolyhedronPart")
@@ -27,6 +30,13 @@ class ExplicitStrategy(BaseExplicitStrategy):
 
         BaseExplicitStrategy.SetVariablesAndOptions(self)
 
+        if "PolyhedronFileName" in self.DEM_parameters.keys():
+            polyhedron_file_name = self.DEM_parameters["PolyhedronFileName"].GetString()
+            [name, list_of_vertices, list_of_faces, size, volume] = polyhedron_file_reader.ReadPolyhedronFile(polyhedron_file_name)
+            pre_utils = PreUtilities()
+            for properties in self.spheres_model_part.Properties:
+                pre_utils.SetPolyhedronInformationInProperties(name, list_of_vertices, list_of_faces, size, volume, properties)
+        
         self.settings = ContactExplicitSolverSettings()
         self.settings.r_model_part = self.spheres_model_part
         self.settings.contact_model_part = self.contact_model_part
@@ -97,3 +107,32 @@ class ExplicitStrategy(BaseExplicitStrategy):
     def SetNormalRadiiOnAllParticles(self):
         #self.cplusplus_strategy.SetNormalRadiiOnAllParticles(self.polyhedron_model_part)
         pass
+
+    def AdvanceInTime(self, time):
+        """This function updates and return the current simulation time
+        """
+        time += self.dt
+        self._UpdateTimeInModelParts(time)
+
+        return time
+
+    def _UpdateTimeInModelParts(self, time, is_time_to_print = False):
+        spheres_model_part = self.all_model_parts.Get("SpheresPart")
+        cluster_model_part = self.all_model_parts.Get("ClusterPart")
+        dem_inlet_model_part = self.all_model_parts.Get("DEMInletPart")
+        rigid_face_model_part = self.all_model_parts.Get("RigidFacePart")
+        polyhedron_model_part = self.all_model_parts.Get("PolyhedronPart")
+
+        self._UpdateTimeInOneModelPart(spheres_model_part, time, self.dt, is_time_to_print)
+        self._UpdateTimeInOneModelPart(cluster_model_part, time, self.dt, is_time_to_print)
+        self._UpdateTimeInOneModelPart(dem_inlet_model_part, time, self.dt, is_time_to_print)
+        self._UpdateTimeInOneModelPart(rigid_face_model_part, time, self.dt, is_time_to_print)
+        self._UpdateTimeInOneModelPart(polyhedron_model_part, time, self.dt, is_time_to_print)
+
+    @classmethod
+    def _UpdateTimeInOneModelPart(self, model_part, time, dt, is_time_to_print = False):
+        ''' This method is redirected to its cpp version with improved speed.
+        It also has been updated to classmethod and args so it can be called from external App
+        '''
+
+        AuxiliaryUtilities().UpdateTimeInOneModelPart(model_part, time, dt, is_time_to_print)

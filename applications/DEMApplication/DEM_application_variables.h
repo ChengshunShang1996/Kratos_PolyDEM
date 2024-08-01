@@ -14,6 +14,7 @@
 #include "includes/condition.h"
 #include "utilities/quaternion.h"
 #include "custom_utilities/cluster_information.h"
+#include "custom_utilities/polyhedron_information.h"
 #include "custom_strategies/schemes/dem_integration_scheme.h"
 #include "custom_utilities/properties_proxies.h"
 
@@ -91,6 +92,7 @@ namespace Kratos
   KRATOS_DEFINE_APPLICATION_VARIABLE(DEM_APPLICATION, int, COMPUTE_FEM_RESULTS_OPTION)
   KRATOS_DEFINE_APPLICATION_VARIABLE(DEM_APPLICATION, bool, BREAKABLE_CLUSTER)
   KRATOS_DEFINE_APPLICATION_VARIABLE(DEM_APPLICATION, ClusterInformation, CLUSTER_INFORMATION)
+  KRATOS_DEFINE_APPLICATION_VARIABLE(DEM_APPLICATION, PolyhedronInformation, POLYHEDRON_INFORMATION)
   KRATOS_DEFINE_APPLICATION_VARIABLE(DEM_APPLICATION, std::string, CLUSTER_FILE_NAME)
   KRATOS_DEFINE_APPLICATION_VARIABLE(DEM_APPLICATION, std::string, INJECTOR_ELEMENT_TYPE)
   KRATOS_DEFINE_APPLICATION_VARIABLE(DEM_APPLICATION, int, CONTINUUM_OPTION)

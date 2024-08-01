@@ -313,6 +313,7 @@ void AddCustomUtilitiesToPython(pybind11::module& m) {
         .def("MeasureTopHeigh", Aux_MeasureTopHeight)
         .def("MeasureBotHeigh", Aux_MeasureBotHeight)
         .def("SetClusterInformationInProperties", &PreUtilities::SetClusterInformationInProperties)
+        .def("SetPolyhedronInformationInProperties", &PreUtilities::SetPolyhedronInformationInProperties)
         .def("CreateCartesianSpecimenMdpa", &PreUtilities::CreateCartesianSpecimenMdpa)
         .def("BreakBondUtility", &PreUtilities::BreakBondUtility)
         .def("FillAnalyticSubModelPartUtility", &PreUtilities::FillAnalyticSubModelPartUtility)
