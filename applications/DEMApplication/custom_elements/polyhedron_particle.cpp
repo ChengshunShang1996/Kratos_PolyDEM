@@ -91,6 +91,7 @@ namespace Kratos {
 
         central_node.FastGetSolutionStepValue(NODAL_MASS) = polyhedron_mass;
         //central_node.FastGetSolutionStepValue(POLYHEDRON_VOLUME) = polyhedron_volume;
+        central_node.FastGetSolutionStepValue(REPRESENTATIVE_VOLUME) = polyhedron_volume;
 
         //SetMass(GetDensity() * CalculateVolume());
         SetMass(polyhedron_mass);
@@ -104,7 +105,6 @@ namespace Kratos {
 
         auto& central_node = GetGeometry()[0];
         mRadius = central_node.FastGetSolutionStepValue(RADIUS); //Just in case someone is overwriting the radius in Python
-        central_node.FastGetSolutionStepValue(REPRESENTATIVE_VOLUME) = CalculateVolume();
 
         KRATOS_CATCH("")
     }
@@ -163,6 +163,26 @@ namespace Kratos {
 
         KRATOS_CATCH("")
     }
+
+    Vector3 PolyhedronParticle::GetFurthestPoint(Vector3 direction){
+        
+        KRATOS_TRY
+
+        double max_distance = -1e20;
+        Vector3 max_point;
+        for (int i = 0; i < mListOfVertices.size(); ++i) {
+            Vector3 vertex_point(mListOfVertices[i][0], mListOfVertices[i][1], mListOfVertices[i][2]);
+            double distance = Vector3::Dot(vertex_point, direction);
+            if (distance > max_distance){
+                max_distance = distance;
+                max_point = vertex_point;
+            }
+        }
+        return max_point;
+
+        KRATOS_CATCH("")
+    }
+        
 
     double PolyhedronParticle::GetMass()                                                         { return mRealMass;       }
     void   PolyhedronParticle::SetMass(double real_mass)                                         { mRealMass = real_mass;  GetGeometry()[0].FastGetSolutionStepValue(NODAL_MASS) = real_mass;}

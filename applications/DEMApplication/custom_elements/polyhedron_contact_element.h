@@ -20,11 +20,33 @@
 #include "discrete_element.h"
 #include "includes/ublas_interface.h"
 #include "includes/variables.h"
+#include "custom_utilities/GeometryFunctions.h"
+#include "custom_elements/polyhedron_particle.h"
+#include "custom_utilities/vector3.h"
 
 namespace Kratos
 {
 
     class PolyhedronParticle;
+    
+    class PolyPlane {
+    public:
+        
+        Vector3 normal;
+        double d;
+
+        PolyPlane(const Vector3& normal, double d) : normal(normal), d(d) {}
+
+        static PolyPlane PlaneFromTri(const Vector3& p0, const Vector3& p1, const Vector3& p2) {
+            Vector3 normal = (Vector3::Cross(p1 - p0, p2 - p0)).Normalised();
+            return PolyPlane(normal, -Vector3::Dot(p0, normal));
+        }
+
+        Vector3 ProjectPointOntoPlane(const Vector3& point) const {
+            double distance = Vector3::Dot(point, normal) + d;
+            return point - (normal * distance);
+        }
+    };
     
     class KRATOS_API(DEM_APPLICATION) PolyhedronContactElement {
 
@@ -34,6 +56,17 @@ namespace Kratos
 
         typedef Properties PropertiesType;
         typedef Vector VectorType;
+        struct Point {
+                Vector3 p; //Conserve Minkowski Difference
+                Vector3 a; //Result coordinate of object A's support function 
+                Vector3 b; //Result coordinate of object B's support function 
+            };
+
+        #define GJK_MAX_NUM_ITERATIONS 64
+        #define EPA_TOLERANCE 0.0001
+        #define EPA_MAX_NUM_FACES 64
+        #define EPA_MAX_NUM_LOOSE_EDGES 32
+        #define EPA_MAX_NUM_ITERATIONS 64
         
         //KRATOS_CLASS_INTRUSIVE_POINTER_DEFINITION(PolyhedronContactElement);
 
@@ -52,9 +85,13 @@ namespace Kratos
 
         virtual void CalculateRightHandSide(const ProcessInfo& r_process_info, double dt, const array_1d<double, 3>& gravity);
 
-        virtual void GJK();
-
-        virtual void EPA();
+        bool GJK(Point& a, Point& b, Point& c, Point& d);
+        void update_simplex3(Point& a, Point& b, Point& c, Point& d, int& simp_dim, Vector3& search_dir);
+        bool update_simplex4(Point& a, Point& b, Point& c, Point& d, int& simp_dim, Vector3& search_dir);
+        //Expanding Polytope Algorithm. 
+        void EPA(Point& a, Point& b, Point& c, Point& d);
+        void CalculateSearchPoint(Point& point, Vector3& search_dir);
+        void Barycentric(const Vector3 & a, const Vector3 & b, const Vector3 & c, const Vector3 & p, double& u, double& v, double& w);
 
         virtual void FinalizeSolutionStep(const ProcessInfo& r_process_info) ;
 
@@ -70,6 +107,9 @@ namespace Kratos
         PolyhedronParticle* mPolyhedronParticle1;
         PolyhedronParticle* mPolyhedronParticle2;
         Properties::Pointer mpProperties;
+        Vector3 mOverlapVector;
+        Vector3 mContactPoint1;
+        Vector3 mContactPoint2;
 
     protected:
 

@@ -20,10 +20,12 @@
 #include "containers/global_pointers_vector.h"
 #include "custom_elements/rigid_body_element.h"
 #include "custom_elements/polyhedron_contact_element.h"
+#include "custom_utilities/vector3.h"
 
 namespace Kratos
 {
     class Element;
+    class PolyhedronContactElement;
     class KRATOS_API(DEM_APPLICATION) PolyhedronParticle : public RigidBodyElement3D {
 
     public:
@@ -55,6 +57,7 @@ namespace Kratos
         double         SlowGetDensity();
         std::vector<array_1d<double, 3>> GetListOfVertices();
         std::vector<std::vector<int>> GetListOfFaces();
+        Vector3 GetFurthestPoint(Vector3 direction);
 
         // 
         double mEnginePower; 

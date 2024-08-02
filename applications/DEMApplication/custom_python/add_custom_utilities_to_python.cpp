@@ -21,6 +21,7 @@
 #include "custom_utilities/pre_utilities.h"
 #include "custom_utilities/post_utilities.h"
 #include "custom_utilities/search_utilities.h"
+#include "custom_utilities/vector3.h"
 #include "custom_utilities/omp_dem_search.h"
 #include "custom_utilities/dem_fem_search.h"
 #include "custom_utilities/dem_fem_utilities.h"
