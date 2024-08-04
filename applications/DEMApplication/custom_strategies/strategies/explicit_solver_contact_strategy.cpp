@@ -590,11 +590,10 @@ namespace Kratos {
         int number_of_elements = polyhedron_model_part.GetCommunicator().LocalMesh().ElementsArray().end() - polyhedron_model_part.GetCommunicator().LocalMesh().ElementsArray().begin();
         if (!number_of_elements) return;
 
-        GetResults().resize(number_of_elements);
-        GetResultsDistances().resize(number_of_elements);
+        GetResultsPoly().resize(number_of_elements);
+        GetResultsDistancesPoly().resize(number_of_elements);
 
-        //mpSpSearch->SearchElementsInRadiusExclusive(polyhedron_model_part, this->GetArrayOfAmplifiedRadii(), this->GetResults(), this->GetResultsDistances());
-
+        mpSpSearch->SearchElementsInRadiusExclusive(polyhedron_model_part, this->GetArrayOfAmplifiedRadiiPoly(), this->GetResultsPoly(), this->GetResultsDistancesPoly());
         const int number_of_particles = (int) mListOfPolyhedronParticles.size();
 
         typedef std::map<PolyhedronParticle*,std::vector<PolyhedronParticle*>> ConnectivitiesMap;
@@ -604,7 +603,7 @@ namespace Kratos {
         #pragma omp parallel for schedule(dynamic, 100)
         for (int i = 0; i < number_of_particles; i++) {
             mListOfPolyhedronParticles[i]->mNeighbourElements.clear();
-            for (SpatialSearch::ResultElementsContainerType::iterator neighbour_it = this->GetResults()[i].begin(); neighbour_it != this->GetResults()[i].end(); ++neighbour_it) {
+            for (SpatialSearch::ResultElementsContainerType::iterator neighbour_it = this->GetResultsPoly()[i].begin(); neighbour_it != this->GetResultsPoly()[i].end(); ++neighbour_it) {
                 Element* p_neighbour_element = (*neighbour_it).get();
                 PolyhedronParticle* p_polyhedron_neighbour_particle = dynamic_cast<PolyhedronParticle*> (p_neighbour_element);
                 //if (mListOfPolyhedronParticles[i]->Is(DEMFlags::BELONGS_TO_A_CLUSTER) && (mListOfPolyhedronParticles[i]->GetClusterId() == p_polyhedron_neighbour_particle->GetClusterId())) continue;
@@ -613,8 +612,8 @@ namespace Kratos {
                 std::vector<PolyhedronParticle*>& neighbours_of_this_neighbour_for_this_thread = thread_maps_of_connectivities[OpenMPUtils::ThisThread()][p_polyhedron_neighbour_particle];
                 neighbours_of_this_neighbour_for_this_thread.push_back(mListOfPolyhedronParticles[i]);
             }
-            this->GetResults()[i].clear();
-            this->GetResultsDistances()[i].clear();
+            this->GetResultsPoly()[i].clear();
+            this->GetResultsDistancesPoly()[i].clear();
         }
 
         // the next loop ensures consistency in neighbourhood (if A is neighbour of B, B must be neighbour of A)

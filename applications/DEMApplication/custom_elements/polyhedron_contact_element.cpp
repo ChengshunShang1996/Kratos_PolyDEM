@@ -98,7 +98,52 @@ void PolyhedronContactElement::CalculateRightHandSide(const ProcessInfo& r_proce
     if (GJK(a, b, c, d)) {
         EPA(a, b, c, d);
         Vector3 contact_m = (mContactPoint1 + mContactPoint2)/2;
+        KRATOS_INFO("-------1");
     }
+    KRATOS_INFO("-----------------------0");
+    Vector3 contact_force(0.0, 0.0, 0.0);
+    Vector3 contact_moment(0.0, 0.0, 0.0);
+
+    double kn = 100000.0;
+    contact_force = mOverlapVector * kn;
+
+    auto& central_node_1 = mPolyhedronParticle1->GetGeometry()[0];
+    auto& central_node_2 = mPolyhedronParticle2->GetGeometry()[0];
+
+    array_1d<double,3>& total_forces_1 = central_node_1.FastGetSolutionStepValue(TOTAL_FORCES);
+    array_1d<double,3>& total_moment_1 = central_node_1.FastGetSolutionStepValue(PARTICLE_MOMENT);
+
+    Vector3 total_force_vector_1(total_forces_1[0], total_forces_1[1], total_forces_1[2]);
+    Vector3 total_moment_vector_1(total_moment_1[0], total_moment_1[1], total_moment_1[2]);
+
+    total_force_vector_1 = contact_force;
+    total_moment_vector_1 = contact_moment;
+
+    array_1d<double,3>& total_forces_2 = central_node_2.FastGetSolutionStepValue(TOTAL_FORCES);
+    array_1d<double,3>& total_moment_2 = central_node_2.FastGetSolutionStepValue(PARTICLE_MOMENT);
+
+    Vector3 total_force_vector_2(total_forces_2[0], total_forces_2[1], total_forces_2[2]);
+    Vector3 total_moment_vector_2(total_moment_2[0], total_moment_2[1], total_moment_2[2]);
+
+    total_force_vector_2 = -contact_force;
+    total_moment_vector_2 = -contact_moment;
+    /*
+    total_forces[0] = contact_force[0] + additional_forces[0];
+    total_forces[1] = contact_force[1] + additional_forces[1];
+    total_forces[2] = contact_force[2] + additional_forces[2];
+
+    total_moment[0] = mContactMoment[0] + additionally_applied_moment[0];
+    total_moment[1] = mContactMoment[1] + additionally_applied_moment[1];
+    total_moment[2] = mContactMoment[2] + additionally_applied_moment[2];*/
+
+    //ApplyGlobalDampingToContactForcesAndMoments(total_forces, total_moment);
+
+    #ifdef KRATOS_DEBUG
+    DemDebugFunctions::CheckIfNan(total_forces_1, "NAN in Total Forces in RHS of Ball");
+    DemDebugFunctions::CheckIfNan(total_forces_2, "NAN in Total Torque in RHS of Ball");
+    DemDebugFunctions::CheckIfNan(total_moment_1, "NAN in Total Forces in RHS of Ball");
+    DemDebugFunctions::CheckIfNan(total_moment_2, "NAN in Total Torque in RHS of Ball");
+    #endif
 
     KRATOS_CATCH( "" )
 }
