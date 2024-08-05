@@ -17,28 +17,28 @@
 
 namespace Kratos {
 
-    PolyhedronParticle::PolyhedronParticle() : RigidBodyElement3D() {}
+    PolyhedronParticle::PolyhedronParticle() : SphericParticle() {}
 
     PolyhedronParticle::PolyhedronParticle(IndexType NewId, GeometryType::Pointer pGeometry)
-    : RigidBodyElement3D(NewId, pGeometry) {
+    : SphericParticle(NewId, pGeometry) {
         mRadius = 0;
         mRealMass = 0;
     }
 
     PolyhedronParticle::PolyhedronParticle(IndexType NewId, GeometryType::Pointer pGeometry, PropertiesType::Pointer pProperties)
-    : RigidBodyElement3D(NewId, pGeometry, pProperties) {
+    : SphericParticle(NewId, pGeometry, pProperties) {
         mRadius = 0;
         mRealMass = 0;
     }
 
     PolyhedronParticle::PolyhedronParticle(IndexType NewId, NodesArrayType const& ThisNodes)
-    : RigidBodyElement3D(NewId, ThisNodes) {
+    : SphericParticle(NewId, ThisNodes) {
         mRadius = 0;
         mRealMass = 0;
     }
 
     Element::Pointer PolyhedronParticle::Create(IndexType NewId, NodesArrayType const& ThisNodes, PropertiesType::Pointer pProperties) const {
-        return Element::Pointer(new PolyhedronParticle(NewId, GetGeometry().Create(ThisNodes), pProperties));
+        return SphericParticle::Pointer(new PolyhedronParticle(NewId, GetGeometry().Create(ThisNodes), pProperties));
     }
 
     PolyhedronParticle::~PolyhedronParticle() {}
@@ -47,9 +47,11 @@ namespace Kratos {
 
         KRATOS_TRY
 
-        RigidBodyElement3D::Initialize(r_process_info);
+        SphericParticle::Initialize(r_process_info);
 
         auto& central_node = GetGeometry()[0];
+
+        central_node.GetSolutionStepValue(PARTICLE_MATERIAL) = GetParticleMaterial();
 
         SetRadius();
 
@@ -193,11 +195,17 @@ namespace Kratos {
     void   PolyhedronParticle::SetRadius()                                                       { mRadius = GetGeometry()[0].FastGetSolutionStepValue(RADIUS); }
     double PolyhedronParticle::GetSearchRadius()                                                 { return mSearchRadius;   }
     void   PolyhedronParticle::SetSearchRadius(const double radius)                              { mSearchRadius = radius; }
-    double PolyhedronParticle::GetDensity()                                                      { return GetFastProperties()->GetDensity();}
+    //double PolyhedronParticle::GetDensity()                                                      { return GetFastProperties()->GetDensity();}
+    double PolyhedronParticle::GetDensity()                                                      { return GetProperties()[PARTICLE_DENSITY];}
     double PolyhedronParticle::SlowGetDensity()                                                  { return GetProperties()[PARTICLE_DENSITY];}
     std::vector<array_1d<double, 3>> PolyhedronParticle::GetListOfVertices()                     { return mListOfVertices;}
     std::vector<std::vector<int>> PolyhedronParticle::GetListOfFaces()                           { return mListOfFaces;}
 
+    void   PolyhedronParticle::SetYoungFromProperties(double* young)                             { GetFastProperties()->SetYoungFromProperties( young);                                            }
+    void   PolyhedronParticle::SetPoissonFromProperties(double* poisson)                         { GetFastProperties()->SetPoissonFromProperties( poisson);                                        }
+    void   PolyhedronParticle::SetDensityFromProperties(double* density)                         { GetFastProperties()->SetDensityFromProperties( density);                                        }
+    void   PolyhedronParticle::SetParticleMaterialFromProperties(int* particle_material)         { GetFastProperties()->SetParticleMaterialFromProperties( particle_material);                     }
+    
     PropertiesProxy* PolyhedronParticle::GetFastProperties()                                     { return mFastProperties;   }
     void   PolyhedronParticle::SetFastProperties(PropertiesProxy* pProps)                        { mFastProperties = pProps; }
     void   PolyhedronParticle::SetFastProperties(std::vector<PropertiesProxy>& list_of_proxies)  {

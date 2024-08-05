@@ -150,6 +150,10 @@ void CreatePropertiesProxies2(PropertiesProxiesManager& r_properties_proxy_manag
     r_properties_proxy_manager.CreatePropertiesProxies(r_modelpart, r_inlet_modelpart, r_clusters_modelpart);
 }
 
+void CreatePropertiesProxies3(PropertiesProxiesManager& r_properties_proxy_manager, ModelPart& r_modelpart, ModelPart& r_inlet_modelpart, ModelPart& r_clusters_modelpart, ModelPart& r_polyhedron_modelpart) {
+    r_properties_proxy_manager.CreatePropertiesProxies(r_modelpart, r_inlet_modelpart, r_clusters_modelpart, r_polyhedron_modelpart);
+}
+
 namespace py = pybind11;
 
 void AddCustomUtilitiesToPython(pybind11::module& m) {
@@ -370,6 +374,7 @@ void AddCustomUtilitiesToPython(pybind11::module& m) {
         .def(py::init<>())
         .def("CreatePropertiesProxies", CreatePropertiesProxies1)
         .def("CreatePropertiesProxies", CreatePropertiesProxies2)
+        .def("CreatePropertiesProxies", CreatePropertiesProxies3)
         ;
 
     py::class_<ExcavatorUtility, ExcavatorUtility::Pointer >(m, "ExcavatorUtility")

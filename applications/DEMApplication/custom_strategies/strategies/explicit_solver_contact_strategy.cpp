@@ -53,7 +53,7 @@ namespace Kratos {
         mSearchControlVector.resize(mNumberOfThreads);
         for (int i = 0; i < mNumberOfThreads; i++) mSearchControlVector[i] = 0;
 
-        PropertiesProxiesManager().CreatePropertiesProxies(r_model_part, *mpInlet_model_part, *mpCluster_model_part, *mpPolyhedron_model_part);
+        PropertiesProxiesManager().CreatePropertiesProxies(*mpDem_model_part, *mpInlet_model_part, *mpCluster_model_part, *mpPolyhedron_model_part);
 
         bool has_mpi = false;
         Check_MPI(has_mpi);

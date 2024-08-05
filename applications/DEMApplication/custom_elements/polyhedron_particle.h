@@ -18,7 +18,8 @@
 #include "includes/properties.h"
 #include "includes/indexed_object.h"
 #include "containers/global_pointers_vector.h"
-#include "custom_elements/rigid_body_element.h"
+//#include "custom_elements/rigid_body_element.h"
+#include "custom_elements/spheric_particle.h"
 #include "custom_elements/polyhedron_contact_element.h"
 #include "custom_utilities/vector3.h"
 
@@ -26,7 +27,7 @@ namespace Kratos
 {
     class Element;
     class PolyhedronContactElement;
-    class KRATOS_API(DEM_APPLICATION) PolyhedronParticle : public RigidBodyElement3D {
+    class KRATOS_API(DEM_APPLICATION) PolyhedronParticle : public SphericParticle {
 
     public:
         /// Pointer definition of PolyhedronParticle
@@ -43,21 +44,25 @@ namespace Kratos
 
         void Initialize(const ProcessInfo& r_process_info) override;
         void InitializeSolutionStep(const ProcessInfo& r_process_info) override;
-        void ComputeExternalForces(const array_1d<double,3>& gravity) override;
+        void ComputeExternalForces(const array_1d<double,3>& gravity);
         virtual void ComputeNewNeighboursHistoricalData(DenseVector<int>& temp_neighbours_ids, std::vector<array_1d<double, 3> >& temp_neighbour_elastic_contact_forces);
-        double CalculateVolume();
-        virtual double GetRadius();
-        virtual void   SetRadius(double radius);
-        virtual void   SetRadius();
-        virtual double GetSearchRadius();
-        virtual void   SetSearchRadius(const double radius);
+        double CalculateVolume() override;
+        virtual double GetRadius() override;
+        virtual void   SetRadius(double radius) override;
+        virtual void   SetRadius() override;
+        virtual double GetSearchRadius() override;
+        virtual void   SetSearchRadius(const double radius) override;
         double         GetMass() override;
-        void           SetMass(double real_mass);
-        double         GetDensity();
+        void           SetMass(double real_mass) override;
+        double         GetDensity() override;
         double         SlowGetDensity();
         std::vector<array_1d<double, 3>> GetListOfVertices();
         std::vector<std::vector<int>> GetListOfFaces();
         Vector3 GetFurthestPoint(Vector3 direction);
+        void   SetYoungFromProperties(double* young);
+        void   SetPoissonFromProperties(double* poisson);
+        void   SetDensityFromProperties(double* density);
+        void   SetParticleMaterialFromProperties(int* particle_material);
 
         // 
         double mEnginePower; 
@@ -103,8 +108,8 @@ namespace Kratos
     private:
 
         friend class Serializer;
-        virtual void save(Serializer& rSerializer) const override{ KRATOS_SERIALIZE_SAVE_BASE_CLASS(rSerializer, RigidBodyElement3D); }
-        virtual void load(Serializer& rSerializer) override{ KRATOS_SERIALIZE_LOAD_BASE_CLASS(rSerializer, RigidBodyElement3D); }
+        virtual void save(Serializer& rSerializer) const override{ KRATOS_SERIALIZE_SAVE_BASE_CLASS(rSerializer, SphericParticle); }
+        virtual void load(Serializer& rSerializer) override{ KRATOS_SERIALIZE_LOAD_BASE_CLASS(rSerializer, SphericParticle); }
 
     }; // Class PolyhedronParticle
 

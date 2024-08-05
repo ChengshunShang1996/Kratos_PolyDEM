@@ -199,13 +199,13 @@ virtual double GetMass();
 virtual void   SetMass(double real_mass);
 virtual double   CalculateMomentOfInertia();
 virtual double GetYoung();
-void   SetYoungFromProperties(double* young);
+virtual void   SetYoungFromProperties(double* young);
 virtual double GetPoisson();
-void   SetPoissonFromProperties(double* poisson);
+virtual void   SetPoissonFromProperties(double* poisson);
 virtual double GetDensity();
-void   SetDensityFromProperties(double* density);
+virtual void   SetDensityFromProperties(double* density);
 virtual int    GetParticleMaterial();
-void   SetParticleMaterialFromProperties(int* particle_material);
+virtual void   SetParticleMaterialFromProperties(int* particle_material);
 
 
 array_1d<double, 3>& GetForce();
