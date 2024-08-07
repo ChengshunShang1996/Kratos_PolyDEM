@@ -62,11 +62,11 @@ namespace Kratos
                 Vector3 b; //Result coordinate of object B's support function 
             };
 
-        #define GJK_MAX_NUM_ITERATIONS 64
-        #define EPA_TOLERANCE 0.0001
+        #define GJK_MAX_NUM_ITERATIONS 100
+        #define EPA_TOLERANCE 1e-6
         #define EPA_MAX_NUM_FACES 64
         #define EPA_MAX_NUM_LOOSE_EDGES 32
-        #define EPA_MAX_NUM_ITERATIONS 64
+        #define EPA_MAX_NUM_ITERATIONS 100
         
         //KRATOS_CLASS_INTRUSIVE_POINTER_DEFINITION(PolyhedronContactElement);
 
@@ -85,7 +85,7 @@ namespace Kratos
 
         virtual void CalculateRightHandSide(const ProcessInfo& r_process_info, double dt, const array_1d<double, 3>& gravity);
 
-        bool GJK(Point& a, Point& b, Point& c, Point& d);
+        bool GJK();
         void update_simplex3(Point& a, Point& b, Point& c, Point& d, int& simp_dim, Vector3& search_dir);
         bool update_simplex4(Point& a, Point& b, Point& c, Point& d, int& simp_dim, Vector3& search_dir);
         //Expanding Polytope Algorithm. 
@@ -98,6 +98,8 @@ namespace Kratos
         virtual void PrepareForPrinting();
 
         void SetId(IndexType NewId);
+        virtual void SetPolyElement1(PolyhedronParticle* custom_poly_element);
+        virtual void SetPolyElement2(PolyhedronParticle* custom_poly_element);
 
         array_1d<double, 3> mContactForce;
         array_1d<double, 3> mRotationalMoment;

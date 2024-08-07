@@ -570,10 +570,10 @@ namespace Kratos {
             mSearchControl = 1; // Search is active but no search has been done this time step;
         }
 
-        if (is_time_to_print_results && r_process_info[CONTACT_MESH_OPTION] == 1) {
-            CreatePolyhedronContactElements();
-            InitializePolyhedronContactElements();
-        }
+        //if (is_time_to_print_results && r_process_info[CONTACT_MESH_OPTION] == 1) {
+        CreatePolyhedronContactElements();
+        InitializePolyhedronContactElements();
+        //}
 
         KRATOS_CATCH("")
     }
@@ -704,31 +704,27 @@ namespace Kratos {
 
                     #pragma omp critical
                     {
-                        if (used_contacts_counter < (int) mContactElements.size()) {
+                        if (used_contacts_counter < (int) mPolyhedronContactElements.size()) {
                             add_new_bond = false;
                             private_counter = used_contacts_counter;
                             used_contacts_counter++;
                         }
                     }
                     if (!add_new_bond) {
-                        PolyhedronContactElement::Pointer& p_old_contact_element = mContactElements[private_counter];
-                        //TODO: design again!!!!
-                        //p_old_contact_element->GetGeometry()(0) = mListOfPolyhedronParticles[i]->GetGeometry()(0);
-                        //p_old_contact_element->GetGeometry()(1) = neighbour_element->GetGeometry()(0);
-                        //p_old_contact_element->SetId(used_contacts_counter);
+                        PolyhedronContactElement::Pointer& p_old_contact_element = mPolyhedronContactElements[private_counter];
+                        p_old_contact_element->SetPolyElement1(mListOfPolyhedronParticles[i]);
+                        p_old_contact_element->SetPolyElement2(neighbour_element);
+                        p_old_contact_element->SetId(used_contacts_counter);
                         //p_old_contact_element->SetProperties(mListOfPolyhedronParticles[i]->pGetProperties());
                         PolyhedronContactElement* p_bond = dynamic_cast<PolyhedronContactElement*> (p_old_contact_element);
                         mListOfPolyhedronParticles[i]->mPolyhedronContactElements[j] = p_bond;
                     } else {
-                        Geometry<Node >::PointsArrayType NodeArray(2);
-                        NodeArray.GetContainer()[0] = mListOfPolyhedronParticles[i]->GetGeometry()(0);
-                        NodeArray.GetContainer()[1] = neighbour_element->GetGeometry()(0);
                         const Properties::Pointer& properties = mListOfPolyhedronParticles[i]->pGetProperties();
                         p_new_contact_element = rReferenceElement.Create(used_contacts_counter + 1, mListOfPolyhedronParticles[i], neighbour_element, properties);
 
                         #pragma omp critical
                         {
-                            mContactElements.push_back(p_new_contact_element);
+                            mPolyhedronContactElements.push_back(p_new_contact_element);
                             used_contacts_counter++;
                         }
                         PolyhedronContactElement* p_bond = dynamic_cast<PolyhedronContactElement*> (p_new_contact_element);
@@ -740,8 +736,8 @@ namespace Kratos {
 
             #pragma omp single
             {
-                if ((int) mContactElements.size() > used_contacts_counter) {
-                    mContactElements.erase(mContactElements.begin() + used_contacts_counter, mContactElements.end());
+                if ((int) mPolyhedronContactElements.size() > used_contacts_counter) {
+                    mPolyhedronContactElements.erase(mPolyhedronContactElements.begin() + used_contacts_counter, mPolyhedronContactElements.end());
                 }
             }
 
@@ -772,8 +768,8 @@ namespace Kratos {
 
             //Renumbering the Id's of the bonds to make them unique and consecutive (otherwise the Id's are repeated)
             #pragma omp for
-            for(int i=0; i<(int) mContactElements.size(); i++) {
-                mContactElements[i]->SetId(i+1);
+            for(int i=0; i<(int) mPolyhedronContactElements.size(); i++) {
+                mPolyhedronContactElements[i]->SetId(i+1);
             }
 
         } //#pragma omp parallel
@@ -784,12 +780,12 @@ namespace Kratos {
 
         KRATOS_TRY
 
-        ElementsArrayType& pPolyhedronContactElements = GetAllElements(*mpContact_model_part);
         const ProcessInfo& r_process_info = GetModelPart().GetProcessInfo();
 
-        block_for_each(pPolyhedronContactElements, [&r_process_info](ModelPart::ElementType& rPolyhedronContactElement) {
-            rPolyhedronContactElement.Initialize(r_process_info);
-        });
+        #pragma omp for
+        for(int i=0; i<(int) mPolyhedronContactElements.size(); i++) {
+            mPolyhedronContactElements[i]->Initialize(r_process_info);
+        }
 
         KRATOS_CATCH("")
     }
@@ -850,11 +846,18 @@ namespace Kratos {
 
         } 
 
-        const int number_of_polyhedron_contact_elements = (int) mListOfSphericParticles.size();
+        /*
+        ElementsArrayType& pPolyhedronContactElements = GetAllElements(*mpPolyhedron_contact_model_part);
+        const int number_of_polyhedron_contact_elements = (int) pPolyhedronContactElements.size();
 
         #pragma omp parallel for schedule(dynamic, 100)
         for (int i = 0; i < number_of_polyhedron_contact_elements; i++) {
-            mContactElements[i]->CalculateRightHandSide(r_process_info, dt, gravity);
+            mPolyhedronContactElements[i]->CalculateRightHandSide(r_process_info, dt, gravity);
+        }*/
+
+        #pragma omp parallel for schedule(dynamic, 100)
+        for(int i=0; i<(int) mPolyhedronContactElements.size(); i++) {
+            mPolyhedronContactElements[i]->CalculateRightHandSide(r_process_info, dt, gravity);;
         }
 
         KRATOS_CATCH("")

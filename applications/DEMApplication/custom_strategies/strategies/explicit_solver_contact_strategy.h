@@ -180,7 +180,7 @@ namespace Kratos {
         std::vector<PolyhedronParticle*> mListOfGhostPolyhedronParticles;
         DenseVector<int> mSearchControlVector;
         ModelPart *mpPolyhedron_model_part;
-        PolyhedronContactElementContainer mContactElements;
+        PolyhedronContactElementContainer mPolyhedronContactElements;
         VectorResultElementsContainerType mResultsPoly;
         VectorDistanceType mResultsDistancesPoly;
         RadiusArrayType mArrayOfAmplifiedRadiiPoly;

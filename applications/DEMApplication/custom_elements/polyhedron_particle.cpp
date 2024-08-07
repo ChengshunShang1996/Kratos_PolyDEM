@@ -47,11 +47,29 @@ namespace Kratos {
 
         KRATOS_TRY
 
-        SphericParticle::Initialize(r_process_info);
-
         auto& central_node = GetGeometry()[0];
 
-        central_node.GetSolutionStepValue(PARTICLE_MATERIAL) = GetParticleMaterial();
+        if (central_node.GetDof(VELOCITY_X).IsFixed())          central_node.Set(DEMFlags::FIXED_VEL_X, true);
+        else                                                        central_node.Set(DEMFlags::FIXED_VEL_X, false);
+        if (central_node.GetDof(VELOCITY_Y).IsFixed())          central_node.Set(DEMFlags::FIXED_VEL_Y, true);
+        else                                                        central_node.Set(DEMFlags::FIXED_VEL_Y, false);
+        if (central_node.GetDof(VELOCITY_Z).IsFixed())          central_node.Set(DEMFlags::FIXED_VEL_Z, true);
+        else                                                        central_node.Set(DEMFlags::FIXED_VEL_Z, false);
+        if (central_node.GetDof(ANGULAR_VELOCITY_X).IsFixed())  central_node.Set(DEMFlags::FIXED_ANG_VEL_X, true);
+        else                                                        central_node.Set(DEMFlags::FIXED_ANG_VEL_X, false);
+        if (central_node.GetDof(ANGULAR_VELOCITY_Y).IsFixed())  central_node.Set(DEMFlags::FIXED_ANG_VEL_Y, true);
+        else                                                        central_node.Set(DEMFlags::FIXED_ANG_VEL_Y, false);
+        if (central_node.GetDof(ANGULAR_VELOCITY_Z).IsFixed())  central_node.Set(DEMFlags::FIXED_ANG_VEL_Z, true);
+        else                                                        central_node.Set(DEMFlags::FIXED_ANG_VEL_Z, false);
+
+        DEMIntegrationScheme::Pointer& translational_integration_scheme = GetProperties()[DEM_TRANSLATIONAL_INTEGRATION_SCHEME_POINTER];
+        DEMIntegrationScheme::Pointer& rotational_integration_scheme = GetProperties()[DEM_ROTATIONAL_INTEGRATION_SCHEME_POINTER];
+        SetIntegrationScheme(translational_integration_scheme, rotational_integration_scheme);
+        //SphericParticle::Initialize(r_process_info);
+
+        //auto& central_node = GetGeometry()[0];
+
+        ///central_node.GetSolutionStepValue(PARTICLE_MATERIAL) = GetParticleMaterial();
 
         SetRadius();
 
@@ -171,9 +189,10 @@ namespace Kratos {
         KRATOS_TRY
 
         double max_distance = -1e20;
+        auto& central_node = GetGeometry()[0];
         Vector3 max_point;
         for (int i = 0; i < mListOfVertices.size(); ++i) {
-            Vector3 vertex_point(mListOfVertices[i][0], mListOfVertices[i][1], mListOfVertices[i][2]);
+            Vector3 vertex_point(mListOfVertices[i][0] + central_node[0], mListOfVertices[i][1] + central_node[1], mListOfVertices[i][2] + central_node[2]);
             double distance = Vector3::Dot(vertex_point, direction);
             if (distance > max_distance){
                 max_distance = distance;

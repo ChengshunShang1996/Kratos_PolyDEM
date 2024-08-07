@@ -18,7 +18,7 @@ namespace Kratos
             double array[3];
         };
     public:
-        constexpr Vector3(void) : x(0.0f), y(0.0f), z(0.0f) {}
+        constexpr Vector3(void) : x(0.0), y(0.0), z(0.0) {}
 
         constexpr Vector3(double xVal, double yVal, double zVal) : x(xVal), y(yVal), z(zVal) {}
 
@@ -33,8 +33,8 @@ namespace Kratos
         void			Normalise() {
             double length = Length();
 
-            if (length != 0.0f) {
-                length = 1.0f / length;
+            if (length != 0.0) {
+                length = 1.0 / length;
                 x = x * length;
                 y = y * length;
                 z = z * length;

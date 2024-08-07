@@ -94,65 +94,65 @@ void PolyhedronContactElement::FinalizeSolutionStep(const ProcessInfo& r_process
 void PolyhedronContactElement::CalculateRightHandSide(const ProcessInfo& r_process_info, double dt, const array_1d<double, 3>& gravity) {
     KRATOS_TRY
 
-    Point a, b, c, d; //Simplex: just a set of points (a is always most recently added)
-    if (GJK(a, b, c, d)) {
-        EPA(a, b, c, d);
+    if (GJK()) {
         Vector3 contact_m = (mContactPoint1 + mContactPoint2)/2;
-        KRATOS_INFO("-------1");
+
+		Vector3 contact_force(0.0, 0.0, 0.0);
+		Vector3 contact_moment(0.0, 0.0, 0.0);
+
+		double kn = 10000000.0;
+		contact_force = mOverlapVector * kn;
+
+		auto& central_node_1 = mPolyhedronParticle1->GetGeometry()[0];
+		auto& central_node_2 = mPolyhedronParticle2->GetGeometry()[0];
+
+		array_1d<double,3>& total_forces_1 = central_node_1.FastGetSolutionStepValue(TOTAL_FORCES);
+		array_1d<double,3>& total_moment_1 = central_node_1.FastGetSolutionStepValue(PARTICLE_MOMENT);
+
+		total_forces_1[0] = contact_force[0];
+		total_forces_1[1] = contact_force[1];
+		total_forces_1[2] = contact_force[2];
+
+		total_moment_1[0] = contact_moment[0];
+		total_moment_1[1] = contact_moment[1];
+		total_moment_1[2] = contact_moment[2];
+
+		array_1d<double,3>& total_forces_2 = central_node_2.FastGetSolutionStepValue(TOTAL_FORCES);
+		array_1d<double,3>& total_moment_2 = central_node_2.FastGetSolutionStepValue(PARTICLE_MOMENT);
+
+		total_forces_2[0] = -contact_force[0];
+		total_forces_2[1] = -contact_force[1];
+		total_forces_2[2] = -contact_force[2];
+
+		total_moment_2[0] = -contact_moment[0];
+		total_moment_2[1] = -contact_moment[1];
+		total_moment_2[2] = -contact_moment[2];
+
+		/*
+		total_forces[0] = contact_force[0] + additional_forces[0];
+		total_forces[1] = contact_force[1] + additional_forces[1];
+		total_forces[2] = contact_force[2] + additional_forces[2];
+
+		total_moment[0] = mContactMoment[0] + additionally_applied_moment[0];
+		total_moment[1] = mContactMoment[1] + additionally_applied_moment[1];
+		total_moment[2] = mContactMoment[2] + additionally_applied_moment[2];*/
+
+		//ApplyGlobalDampingToContactForcesAndMoments(total_forces, total_moment);
+
+		#ifdef KRATOS_DEBUG
+		DemDebugFunctions::CheckIfNan(total_forces_1, "NAN in Total Forces in RHS of Ball");
+		DemDebugFunctions::CheckIfNan(total_forces_2, "NAN in Total Torque in RHS of Ball");
+		DemDebugFunctions::CheckIfNan(total_moment_1, "NAN in Total Forces in RHS of Ball");
+		DemDebugFunctions::CheckIfNan(total_moment_2, "NAN in Total Torque in RHS of Ball");
+		#endif
     }
-    KRATOS_INFO("-----------------------0");
-    Vector3 contact_force(0.0, 0.0, 0.0);
-    Vector3 contact_moment(0.0, 0.0, 0.0);
-
-    double kn = 100000.0;
-    contact_force = mOverlapVector * kn;
-
-    auto& central_node_1 = mPolyhedronParticle1->GetGeometry()[0];
-    auto& central_node_2 = mPolyhedronParticle2->GetGeometry()[0];
-
-    array_1d<double,3>& total_forces_1 = central_node_1.FastGetSolutionStepValue(TOTAL_FORCES);
-    array_1d<double,3>& total_moment_1 = central_node_1.FastGetSolutionStepValue(PARTICLE_MOMENT);
-
-    Vector3 total_force_vector_1(total_forces_1[0], total_forces_1[1], total_forces_1[2]);
-    Vector3 total_moment_vector_1(total_moment_1[0], total_moment_1[1], total_moment_1[2]);
-
-    total_force_vector_1 = contact_force;
-    total_moment_vector_1 = contact_moment;
-
-    array_1d<double,3>& total_forces_2 = central_node_2.FastGetSolutionStepValue(TOTAL_FORCES);
-    array_1d<double,3>& total_moment_2 = central_node_2.FastGetSolutionStepValue(PARTICLE_MOMENT);
-
-    Vector3 total_force_vector_2(total_forces_2[0], total_forces_2[1], total_forces_2[2]);
-    Vector3 total_moment_vector_2(total_moment_2[0], total_moment_2[1], total_moment_2[2]);
-
-    total_force_vector_2 = -contact_force;
-    total_moment_vector_2 = -contact_moment;
-    /*
-    total_forces[0] = contact_force[0] + additional_forces[0];
-    total_forces[1] = contact_force[1] + additional_forces[1];
-    total_forces[2] = contact_force[2] + additional_forces[2];
-
-    total_moment[0] = mContactMoment[0] + additionally_applied_moment[0];
-    total_moment[1] = mContactMoment[1] + additionally_applied_moment[1];
-    total_moment[2] = mContactMoment[2] + additionally_applied_moment[2];*/
-
-    //ApplyGlobalDampingToContactForcesAndMoments(total_forces, total_moment);
-
-    #ifdef KRATOS_DEBUG
-    DemDebugFunctions::CheckIfNan(total_forces_1, "NAN in Total Forces in RHS of Ball");
-    DemDebugFunctions::CheckIfNan(total_forces_2, "NAN in Total Torque in RHS of Ball");
-    DemDebugFunctions::CheckIfNan(total_moment_1, "NAN in Total Forces in RHS of Ball");
-    DemDebugFunctions::CheckIfNan(total_moment_2, "NAN in Total Torque in RHS of Ball");
-    #endif
 
     KRATOS_CATCH( "" )
 }
 
-bool PolyhedronContactElement::GJK(Point& a, Point& b, Point& c, Point& d)
+bool PolyhedronContactElement::GJK()
 {
 	KRATOS_TRY
-
-	Vector3* mtv;
 
 	auto& central_node_1 = mPolyhedronParticle1->GetGeometry()[0];
     auto& central_node_2 = mPolyhedronParticle2->GetGeometry()[0];
@@ -161,6 +161,7 @@ bool PolyhedronContactElement::GJK(Point& a, Point& b, Point& c, Point& d)
     Vector3 coll2Pos = {central_node_2[0], central_node_2[1], central_node_2[2]};
 
 	Vector3 search_dir = coll1Pos - coll2Pos; //initial search direction between colliders
+	Point a, b, c, d; //Simplex: just a set of points (a is always most recently added)
 
 	//Get initial point for simplex
 	//Point c;
@@ -176,12 +177,14 @@ bool PolyhedronContactElement::GJK(Point& a, Point& b, Point& c, Point& d)
 	}//we didn't reach the origin, won't enclose it
 
 	search_dir = Vector3::Cross(Vector3::Cross(c.p - b.p, -b.p), c.p - b.p); //search perpendicular to line segment towards origin
-	if (search_dir == Vector3(0, 0, 0)) { //origin is on this line segment
+	if (search_dir == Vector3(0.0, 0.0, 0.0)) { //origin is on this line segment
 		//Apparently any normal search vector will do?
-		search_dir = Vector3::Cross(c.p - b.p, Vector3(1, 0, 0)); //normal with x-axis
-		if (search_dir == Vector3(0, 0, 0))
-			search_dir = Vector3::Cross(c.p - b.p, Vector3(0, 0, -1)); //normal with z-axis
+		search_dir = Vector3::Cross(c.p - b.p, Vector3(1.0, 0.0, 0.0)); //normal with x-axis
+		if (search_dir == Vector3(0.0, 0.0, 0.0)){
+			search_dir = Vector3::Cross(c.p - b.p, Vector3(0.0, 0.0, -1.0)); //normal with z-axis
+		}
 	}
+			
 	int simp_dim = 2; //simplex dimension
 
 	for (int iterations = 0; iterations < GJK_MAX_NUM_ITERATIONS; iterations++)
@@ -198,6 +201,7 @@ bool PolyhedronContactElement::GJK(Point& a, Point& b, Point& c, Point& d)
 			update_simplex3(a, b, c, d, simp_dim, search_dir);
 		}
 		else if (update_simplex4(a, b, c, d, simp_dim, search_dir)) {
+			EPA(a, b, c, d);
 			return true;
 		}
 	}//endfor
@@ -234,14 +238,12 @@ void PolyhedronContactElement::update_simplex3(Point& a, Point& b, Point& c, Poi
 		d = c;
 		c = b;
 		b = a;
-		//simp_dim = 3;
 		search_dir = n;
 		return;
 	}
 	//else //Below triangle
 	d = b;
 	b = a;
-	//simp_dim = 3;
 	search_dir = -n;
 	return;
 
@@ -349,6 +351,7 @@ void PolyhedronContactElement::EPA(Point& a, Point& b, Point& c, Point& d)
 			mContactPoint1 = faces[closest_face][0].a * u + faces[closest_face][1].a * v + faces[closest_face][2].a * w;
 			mContactPoint2 = faces[closest_face][0].b * u + faces[closest_face][1].b * v + faces[closest_face][2].b * w;
             mOverlapVector = mContactPoint2 - mContactPoint1;
+			KRATOS_WATCH(mOverlapVector);
 			//Vector3 normal = (mContactPoint1 - mContactPoint2).Normalised();
             //Vector3 contact_normal = faces[closest_face][3]
             //Vector3 contact_point_minkowski = contact_normal * Vector3::Dot(p.p, search_dir)
@@ -450,7 +453,7 @@ void PolyhedronContactElement::CalculateSearchPoint(Point& point, Vector3& searc
 	KRATOS_TRY
 
     point.b = mPolyhedronParticle2->GetFurthestPoint(search_dir);
-	point.a = mPolyhedronParticle1->GetFurthestPoint(search_dir);
+	point.a = mPolyhedronParticle1->GetFurthestPoint(-search_dir);
 	point.p = point.b - point.a;
 
     KRATOS_CATCH( "" )
@@ -475,6 +478,23 @@ void PolyhedronContactElement::Barycentric(const Vector3& a, const Vector3& b, c
 }
 
 void PolyhedronContactElement::SetId(IndexType NewId) { mId = NewId;}
+
+void PolyhedronContactElement::SetPolyElement1(PolyhedronParticle* custom_poly_element){
+	KRATOS_TRY
+
+    mPolyhedronParticle1 = custom_poly_element;
+
+    KRATOS_CATCH( "" )
+}
+
+
+void PolyhedronContactElement::SetPolyElement2(PolyhedronParticle* custom_poly_element){
+	KRATOS_TRY
+
+    mPolyhedronParticle2 = custom_poly_element;
+
+    KRATOS_CATCH( "" )
+};
 
 } // Namespace Kratos
 

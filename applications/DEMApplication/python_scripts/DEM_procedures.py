@@ -610,6 +610,7 @@ class Procedures():
         model_part.AddNodalSolutionStepVariable(DELTA_ROTATION)
         model_part.AddNodalSolutionStepVariable(LOCAL_ANGULAR_VELOCITY)
         model_part.AddNodalSolutionStepVariable(EXTERNAL_APPLIED_MOMENT)
+        model_part.AddNodalSolutionStepVariable(PARTICLE_MOMENT_OF_INERTIA)
 
     def AddMpiVariables(self, model_part):
         pass
