@@ -55,6 +55,7 @@ void PolyhedronContactElement::Initialize(const ProcessInfo& r_process_info) {
     mRotationalMoment[0] = 0.0;
     mRotationalMoment[1] = 0.0;
     mRotationalMoment[2] = 0.0;
+	SetDeleteFlag(false);
 
     /*
     array_1d<double, 3> vector_of_zeros(3, 0.0);
@@ -100,7 +101,7 @@ void PolyhedronContactElement::CalculateRightHandSide(const ProcessInfo& r_proce
 		Vector3 contact_force(0.0, 0.0, 0.0);
 		Vector3 contact_moment(0.0, 0.0, 0.0);
 
-		double kn = 10000000.0;
+		double kn = 100000.0;
 		contact_force = mOverlapVector * kn;
 
 		auto& central_node_1 = mPolyhedronParticle1->GetGeometry()[0];
@@ -495,6 +496,26 @@ void PolyhedronContactElement::SetPolyElement2(PolyhedronParticle* custom_poly_e
 
     KRATOS_CATCH( "" )
 };
+
+PolyhedronParticle* PolyhedronContactElement::GetPolyElement1(){
+	KRATOS_TRY
+
+    return mPolyhedronParticle1;
+
+    KRATOS_CATCH( "" )
+}
+
+
+PolyhedronParticle* PolyhedronContactElement::GetPolyElement2(){
+	KRATOS_TRY
+
+    return mPolyhedronParticle2;
+
+    KRATOS_CATCH( "" )
+};
+
+void PolyhedronContactElement::SetDeleteFlag(bool this_flag) { mDeleteFlag = this_flag; }
+bool PolyhedronContactElement::GetDeleteFlag()               { return mDeleteFlag;}
 
 } // Namespace Kratos
 

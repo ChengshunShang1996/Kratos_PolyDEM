@@ -117,13 +117,17 @@ namespace Kratos {
         }
 
         //Destructor.
-        virtual ~ContactExplicitSolverStrategy() {}
+        virtual ~ContactExplicitSolverStrategy() {
+            //TODO: do I need this operation?
+            for (auto elem : mPolyhedronContactElements) { delete elem; }
+        }
 
         void Initialize() override;
         void RebuildPropertiesProxyPointersForPolyhedron(std::vector<PolyhedronParticle*>& rCustomListOfPolyhedronParticles);
         virtual void SearchPolyhedronOperations(ModelPart& r_model_part, ModelPart& polyhedron_model_part, bool has_mpi);
         virtual void SearchPolyhedronNeighbours();
         virtual void ComputePolyhedronNewNeighboursHistoricalData();
+        bool ElementExists(const PolyhedronContactElementContainer& elements, int this_element_id, int neighbour_element_id);
         void CreatePolyhedronContactElements();
         virtual void RepairPointersToNormalPropertiesOfPolyhedron(std::vector<PolyhedronParticle*>& rCustomListOfPolyhedronParticles);
         void InitializePolyhedrons();

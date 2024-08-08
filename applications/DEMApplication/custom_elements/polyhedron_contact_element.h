@@ -100,6 +100,10 @@ namespace Kratos
         void SetId(IndexType NewId);
         virtual void SetPolyElement1(PolyhedronParticle* custom_poly_element);
         virtual void SetPolyElement2(PolyhedronParticle* custom_poly_element);
+        virtual PolyhedronParticle* GetPolyElement1();
+        virtual PolyhedronParticle* GetPolyElement2();
+        void SetDeleteFlag(bool this_flag);
+        bool GetDeleteFlag();
 
         array_1d<double, 3> mContactForce;
         array_1d<double, 3> mRotationalMoment;
@@ -112,6 +116,7 @@ namespace Kratos
         Vector3 mOverlapVector;
         Vector3 mContactPoint1;
         Vector3 mContactPoint2;
+        bool mDeleteFlag;
 
     protected:
 
