@@ -16,10 +16,10 @@ class PolyhedronInformation
 public:
     PolyhedronInformation(){};
     std::string mName;
-    double mSize;
-    double mVolume;
-    std::vector<array_1d<double,3>> mListOfVertices;
-    std::vector<std::vector<int>> mListOfFaces;
+    std::vector<double> mListOfSize;
+    std::vector<double> mListOfVolume;
+    std::vector<std::vector<array_1d<double,3>>> mListOfVerticesList;
+    std::vector<std::vector<std::vector<int>>> mListOfFacesList;
     
     virtual ~PolyhedronInformation() {};
     

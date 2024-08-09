@@ -75,10 +75,11 @@ namespace Kratos {
 
 	    KRATOS_ERROR_IF_NOT(GetProperties().Has(POLYHEDRON_INFORMATION))<<"Something went wrong. Properties do not contain POLYHEDRON_INFORMATION.";
         const PolyhedronInformation& poly_info = GetProperties()[POLYHEDRON_INFORMATION];
-        const std::vector<array_1d<double,3> >& reference_list_of_vertices = poly_info.mListOfVertices;
-        const std::vector<std::vector<int>>& reference_list_of_faces = poly_info.mListOfFaces;
-        const double reference_size = poly_info.mSize;
-        const double reference_volume = poly_info.mVolume;
+        const int poly_shape_index = central_node.GetSolutionStepValue(POLYHEDRON_SHAPE_INDEX);
+        const std::vector<array_1d<double,3> >& reference_list_of_vertices = poly_info.mListOfVerticesList[poly_shape_index];
+        const std::vector<std::vector<int>>& reference_list_of_faces = poly_info.mListOfFacesList[poly_shape_index];
+        const double reference_size = poly_info.mListOfSize[poly_shape_index];
+        const double reference_volume = poly_info.mListOfVolume[poly_shape_index];
 
         const unsigned int number_of_vertices = reference_list_of_vertices.size();
 

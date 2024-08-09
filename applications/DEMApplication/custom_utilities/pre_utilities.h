@@ -85,10 +85,10 @@ class PreUtilities
     }
 
     void SetPolyhedronInformationInProperties(std::string const& name,
-                                            pybind11::list& list_of_vertices,
-                                            pybind11::list& list_of_faces,
-                                            double size,
-                                            double volume,
+                                            pybind11::list& list_of_vertices_list,
+                                            pybind11::list& list_of_faces_list,
+                                            pybind11::list& list_of_size,
+                                            pybind11::list& list_of_volume,
                                             Properties::Pointer& p_properties) {
         PolyhedronInformation poly_info;
 
@@ -96,28 +96,40 @@ class PreUtilities
 
         array_1d<double,3> coords(3, 0.0);
 
-        for (int i = 0; i < (int)pybind11::len(list_of_vertices); i++) {
-            pybind11::list list(list_of_vertices[i]);
-            coords[0] =  pybind11::cast<double>(list[0]);
-            coords[1] =  pybind11::cast<double>(list[1]);
-            coords[2] =  pybind11::cast<double>(list[2]);
-            poly_info.mListOfVertices.push_back(coords);
-        }
-
-        for (int i = 0; i < pybind11::len(list_of_faces); i++) {
-
-            auto face = list_of_faces[i].cast<pybind11::list>();
-            std::vector<int> face_vertices;
-
-            for (int j = 0; j < pybind11::len(face); j++) {
-                face_vertices.push_back(face[j].cast<int>());
+        for (int i = 0; i < (int) pybind11::len(list_of_vertices_list); i++) {
+            auto list_of_vertices = list_of_vertices_list[i].cast<pybind11::list>();
+            std::vector<array_1d<double,3>> temp_coords;
+            for (int j = 0; j < (int) pybind11::len(list_of_vertices); j++) {
+                pybind11::list list(list_of_vertices[j]);
+                coords[0] =  pybind11::cast<double>(list[0]);
+                coords[1] =  pybind11::cast<double>(list[1]);
+                coords[2] =  pybind11::cast<double>(list[2]);
+                temp_coords.push_back(coords);
             }
-
-            poly_info.mListOfFaces.push_back(face_vertices);
+            poly_info.mListOfVerticesList.push_back(temp_coords);
         }
 
-        poly_info.mSize = size;
-        poly_info.mVolume = volume;
+        for (int i = 0; i < (int) pybind11::len(list_of_faces_list); i++) {
+            auto list_of_faces = list_of_faces_list[i].cast<pybind11::list>();
+            std::vector<std::vector<int>> temp_face_vertices;
+            for (int j = 0; j < (int) pybind11::len(list_of_faces); j++) {
+                auto face = list_of_faces[j].cast<pybind11::list>();
+                std::vector<int> face_vertices;
+                for (int k = 0; k < pybind11::len(face); k++) {
+                    face_vertices.push_back(face[k].cast<int>());
+                }
+                temp_face_vertices.push_back(face_vertices);
+            }
+            poly_info.mListOfFacesList.push_back(temp_face_vertices);
+        }
+
+        for (int i = 0; i < (int) pybind11::len(list_of_size); i++) {
+            poly_info.mListOfSize.push_back(pybind11::cast<double>(list_of_size[i]));
+        }
+
+        for (int i = 0; i < (int) pybind11::len(list_of_volume); i++) {
+            poly_info.mListOfVolume.push_back(pybind11::cast<double>(list_of_volume[i]));
+        }
 
         p_properties->SetValue(POLYHEDRON_INFORMATION, poly_info);
 
