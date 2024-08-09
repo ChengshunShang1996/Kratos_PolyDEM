@@ -168,15 +168,15 @@ namespace Kratos {
     void DEMIntegrationScheme::CalculateNewRotationalVariablesOfPolyhedrons(
                 int StepFlag,
                 Node& i,
-                const double moment_of_inertia,
+                Matrix moment_of_inertia,
                 array_1d<double, 3 >& angular_velocity,
                 array_1d<double, 3 >& torque,
                 const double moment_reduction_factor,
                 array_1d<double, 3 >& rotated_angle,
                 array_1d<double, 3 >& delta_rotation,
                 const double delta_t,
-                const bool Fix_Ang_vel[3]) {
-        KRATOS_ERROR << "This function (DEMIntegrationScheme::CalculateNewRotationalVariablesOfPolyhedrons) shouldn't be accessed, use derived class instead" << std::endl;
+                const bool Fix_Ang_vel[3]){
+        KRATOS_ERROR << "This function (DEMIntegrationScheme::CalculateNewRotationalVariablesOfPolyhedrons) shouldn't be accessed, use derived class instead" << std::endl;            
     }
 
     void DEMIntegrationScheme::CalculateNewRotationalVariablesOfRigidBodyElements(
