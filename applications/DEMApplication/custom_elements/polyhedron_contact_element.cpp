@@ -96,16 +96,24 @@ void PolyhedronContactElement::CalculateRightHandSide(const ProcessInfo& r_proce
     KRATOS_TRY
 
     if (GJK()) {
-        Vector3 contact_m = (mContactPoint1 + mContactPoint2)/2;
+        
+		auto& central_node_1 = mPolyhedronParticle1->GetGeometry()[0];
+		auto& central_node_2 = mPolyhedronParticle2->GetGeometry()[0];
+		Vector3 coll1Pos = {central_node_1[0], central_node_1[1], central_node_1[2]};
+		Vector3 coll2Pos = {central_node_2[0], central_node_2[1], central_node_2[2]};
+		Vector3 contact_m = (mContactPoint1 + mContactPoint2)/2;
 
 		Vector3 contact_force(0.0, 0.0, 0.0);
-		Vector3 contact_moment(0.0, 0.0, 0.0);
+		Vector3 contact_moment_1(0.0, 0.0, 0.0);
+		Vector3 contact_moment_2(0.0, 0.0, 0.0);
 
 		double kn = 100000.0;
 		contact_force = mOverlapVector * kn;
 
-		auto& central_node_1 = mPolyhedronParticle1->GetGeometry()[0];
-		auto& central_node_2 = mPolyhedronParticle2->GetGeometry()[0];
+		Vector3 torque_arm_1 = contact_m - coll1Pos;
+		Vector3 torque_arm_2 = contact_m - coll2Pos;
+		contact_moment_1 = Vector3::Cross(torque_arm_1, contact_force);
+		contact_moment_2 = Vector3::Cross(torque_arm_2, -contact_force);
 
 		array_1d<double,3>& total_forces_1 = central_node_1.FastGetSolutionStepValue(TOTAL_FORCES);
 		array_1d<double,3>& total_moment_1 = central_node_1.FastGetSolutionStepValue(PARTICLE_MOMENT);
@@ -114,9 +122,9 @@ void PolyhedronContactElement::CalculateRightHandSide(const ProcessInfo& r_proce
 		total_forces_1[1] = contact_force[1];
 		total_forces_1[2] = contact_force[2];
 
-		total_moment_1[0] = contact_moment[0];
-		total_moment_1[1] = contact_moment[1];
-		total_moment_1[2] = contact_moment[2];
+		total_moment_1[0] = contact_moment_1[0];
+		total_moment_1[1] = contact_moment_1[1];
+		total_moment_1[2] = contact_moment_1[2];
 
 		array_1d<double,3>& total_forces_2 = central_node_2.FastGetSolutionStepValue(TOTAL_FORCES);
 		array_1d<double,3>& total_moment_2 = central_node_2.FastGetSolutionStepValue(PARTICLE_MOMENT);
@@ -125,9 +133,9 @@ void PolyhedronContactElement::CalculateRightHandSide(const ProcessInfo& r_proce
 		total_forces_2[1] = -contact_force[1];
 		total_forces_2[2] = -contact_force[2];
 
-		total_moment_2[0] = -contact_moment[0];
-		total_moment_2[1] = -contact_moment[1];
-		total_moment_2[2] = -contact_moment[2];
+		total_moment_2[0] = contact_moment_2[0];
+		total_moment_2[1] = contact_moment_2[1];
+		total_moment_2[2] = contact_moment_2[2];
 
 		/*
 		total_forces[0] = contact_force[0] + additional_forces[0];

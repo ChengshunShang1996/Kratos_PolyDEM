@@ -46,6 +46,7 @@ namespace Kratos {
 
         virtual void Move(Node & i, const double delta_t, const double force_reduction_factor, const int StepFlag);
         virtual void Rotate(Node & i, const double delta_t, const double force_reduction_factor, const int StepFlag);
+        virtual void RotatePolyhedron(Node & i, const double delta_t, const double moment_reduction_factor, const int StepFlag);
         virtual void MoveRigidBodyElement(RigidBodyElement3D* rigid_body_element, Node & i, const double delta_t, const double force_reduction_factor, const int StepFlag);
         virtual void RotateRigidBodyElement(RigidBodyElement3D* rigid_body_element, Node & i, const double delta_t, const double force_reduction_factor, const int StepFlag);
 
@@ -65,12 +66,25 @@ namespace Kratos {
 
         virtual void CalculateTranslationalMotionOfNode(Node & i, const double delta_t, const double force_reduction_factor, const int StepFlag);
         virtual void CalculateRotationalMotionOfSphereNode(Node & i, const double delta_t, const double force_reduction_factor, const int StepFlag);
+        virtual void CalculateRotationalMotionOfPolyhedronNode(Node & i, const double delta_t, const double moment_reduction_factor, const int StepFlag);
         virtual void CalculateRotationalMotionOfRigidBodyElementNode(Node & i, const double delta_t, const double moment_reduction_factor, const int StepFlag);
 
         virtual void CalculateNewRotationalVariablesOfSpheres(
                 int StepFlag,
                 Node& i,
                 const double moment_of_inertia,
+                array_1d<double, 3 >& angular_velocity,
+                array_1d<double, 3 >& torque,
+                const double moment_reduction_factor,
+                array_1d<double, 3 >& rotated_angle,
+                array_1d<double, 3 >& delta_rotation,
+                const double delta_t,
+                const bool Fix_Ang_vel[3]);
+
+        virtual void CalculateNewRotationalVariablesOfPolyhedrons(
+                int StepFlag,
+                Node& i,
+                Matrix moment_of_inertia,
                 array_1d<double, 3 >& angular_velocity,
                 array_1d<double, 3 >& torque,
                 const double moment_reduction_factor,

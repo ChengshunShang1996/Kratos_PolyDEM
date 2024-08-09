@@ -364,6 +364,19 @@ namespace Kratos {
         ReturnVector[2] = u[0]*v[1] - u[1]*v[0];
     }
 
+    static inline void OuterProduct(const array_1d<double,3>& u, const array_1d<double,3>& v, double ReturnVector[3][3])
+    {
+    	ReturnVector[0][0] = u[0]*v[0];
+        ReturnVector[0][1] = u[0]*v[1];
+        ReturnVector[0][2] = u[0]*v[2];
+        ReturnVector[1][0] = u[1]*v[0];
+        ReturnVector[1][1] = u[1]*v[1];
+        ReturnVector[1][2] = u[1]*v[2];
+        ReturnVector[2][0] = u[2]*v[0];
+        ReturnVector[2][1] = u[2]*v[1];
+        ReturnVector[2][2] = u[2]*v[2];
+    }
+
     static inline void RotateRightHandedBasisAroundAxis(const array_1d<double, 3>& e1,  const array_1d<double, 3>& e2,  const array_1d<double, 3>& axis,
                                                         const double ang, array_1d<double, 3>& new_axes1, array_1d<double, 3>& new_axes2,
                                                         array_1d<double, 3>& new_axes3) {

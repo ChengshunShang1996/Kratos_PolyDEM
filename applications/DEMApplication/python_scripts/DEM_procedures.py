@@ -612,6 +612,7 @@ class Procedures():
         model_part.AddNodalSolutionStepVariable(EXTERNAL_APPLIED_MOMENT)
         model_part.AddNodalSolutionStepVariable(PARTICLE_MOMENT_OF_INERTIA)
         model_part.AddNodalSolutionStepVariable(POLYHEDRON_SHAPE_INDEX)
+        model_part.AddNodalSolutionStepVariable(POLYHEDRON_MOMENT_OF_INERTIA)
 
     def AddMpiVariables(self, model_part):
         pass

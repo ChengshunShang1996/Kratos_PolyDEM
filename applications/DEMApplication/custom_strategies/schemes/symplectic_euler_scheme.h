@@ -73,6 +73,18 @@ namespace Kratos {
                 const double delta_t,
                 const bool Fix_Ang_vel[3]) override;
 
+        void CalculateNewRotationalVariablesOfPolyhedrons(
+                int StepFlag,
+                Node& i,
+                Matrix moment_of_inertia,
+                array_1d<double, 3 >& angular_velocity,
+                array_1d<double, 3 >& torque,
+                const double moment_reduction_factor,
+                array_1d<double, 3 >& rotated_angle,
+                array_1d<double, 3 >& delta_rotation,
+                const double delta_t,
+                const bool Fix_Ang_vel[3]) override;
+
         void CalculateNewRotationalVariablesOfRigidBodyElements(
                 int StepFlag,
                 Node& i,
@@ -101,6 +113,12 @@ namespace Kratos {
                 const array_1d<double, 3 >& torque,
                 const double moment_reduction_factor,
                 array_1d<double, 3 >& angular_acceleration) override;
+
+        virtual void CalculateAngularAccelerationForPolyhedron(
+                Matrix moment_of_inertia,
+                const array_1d<double, 3 >& torque,
+                const double moment_reduction_factor,
+                array_1d<double, 3 >& angular_acceleration);
 
         void CalculateLocalAngularAccelerationByEulerEquations(
                 const array_1d<double, 3 >& local_angular_velocity,

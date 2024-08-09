@@ -116,6 +116,7 @@ namespace Kratos {
 
         //SetMass(GetDensity() * CalculateVolume());
         SetMass(polyhedron_mass);
+        SetMomentOfInertia();
 
         KRATOS_CATCH("")
     }
@@ -126,6 +127,8 @@ namespace Kratos {
 
         auto& central_node = GetGeometry()[0];
         mRadius = central_node.FastGetSolutionStepValue(RADIUS); //Just in case someone is overwriting the radius in Python
+
+        SetMomentOfInertia();
 
         KRATOS_CATCH("")
     }
@@ -203,6 +206,52 @@ namespace Kratos {
         return max_point;
 
         KRATOS_CATCH("")
+    }
+
+    void PolyhedronParticle::SetMomentOfInertia(){
+
+        KRATOS_TRY
+
+        auto& central_node = GetGeometry()[0];
+        const unsigned int number_of_vertices = mListOfVertices.size();
+        double mass_per_vertex = mRealMass / number_of_vertices;
+        Matrix this_moment_of_inertia(3, 3, 0.0);
+        double this_identify[3][3] = {
+            {1.0, 0.0, 0.0},
+            {0.0, 1.0, 0.0},
+            {0.0, 0.0, 1.0}
+        };
+
+        for (int i = 0; i < (int)number_of_vertices; i++) {
+            
+            double v_dot_v = GeometryFunctions::DotProduct(mListOfVertices[i], mListOfVertices[i]);
+            double v_dot_v_identity[3][3];
+            for (int j = 0; j < 3; ++j) {
+                for (int k = 0; k < 3; ++k) {
+                    v_dot_v_identity[j][k] = v_dot_v * this_identify[j][k];
+                }
+            }
+            double v_outer_v[3][3];
+            GeometryFunctions::OuterProduct(mListOfVertices[i], mListOfVertices[i], v_outer_v);
+
+            std::vector<std::vector<double>> result(3, std::vector<double>(3));
+            for (int m = 0; m < 3; ++m) {
+                for (int n = 0; n < 3; ++n) {
+                    this_moment_of_inertia(m,n) += mass_per_vertex * (v_dot_v_identity[m][n] - v_outer_v[m][n]);
+                }
+            }
+        }
+
+        central_node.FastGetSolutionStepValue(POLYHEDRON_MOMENT_OF_INERTIA) = this_moment_of_inertia;
+
+        KRATOS_CATCH("")
+    }
+
+    void PolyhedronParticle::Move(const double delta_t, const bool rotation_option, const double force_reduction_factor, const int StepFlag) {
+        GetTranslationalIntegrationScheme().Move(GetGeometry()[0], delta_t, force_reduction_factor, StepFlag);
+        if (rotation_option) {
+            GetRotationalIntegrationScheme().RotatePolyhedron(GetGeometry()[0], delta_t, force_reduction_factor, StepFlag);
+        }
     }
         
 

@@ -63,6 +63,24 @@ namespace Kratos {
         UpdateRotationalVariables(StepFlag, i, rotated_angle, delta_rotation, angular_velocity, angular_acceleration, delta_t, Fix_Ang_vel);
     }
 
+    void SymplecticEulerScheme::CalculateNewRotationalVariablesOfPolyhedrons(
+                int StepFlag,
+                Node& i,
+                Matrix moment_of_inertia,
+                array_1d<double, 3 >& angular_velocity,
+                array_1d<double, 3 >& torque,
+                const double moment_reduction_factor,
+                array_1d<double, 3 >& rotated_angle,
+                array_1d<double, 3 >& delta_rotation,
+                const double delta_t,
+                const bool Fix_Ang_vel[3]) {
+
+        array_1d<double, 3 > angular_acceleration;
+        CalculateAngularAccelerationForPolyhedron(moment_of_inertia, torque, moment_reduction_factor, angular_acceleration);
+
+        UpdateRotationalVariables(StepFlag, i, rotated_angle, delta_rotation, angular_velocity, angular_acceleration, delta_t, Fix_Ang_vel);
+    }
+
     void SymplecticEulerScheme::CalculateNewRotationalVariablesOfRigidBodyElements(
                 int StepFlag,
                 Node& i,
@@ -124,6 +142,19 @@ namespace Kratos {
                 array_1d<double, 3 >& angular_acceleration) {
 
         double moment_of_inertia_inv = 1.0 / moment_of_inertia;
+        for (int j = 0; j < 3; j++) {
+            angular_acceleration[j] = moment_reduction_factor * torque[j] * moment_of_inertia_inv;
+        }
+    }
+
+    void SymplecticEulerScheme::CalculateAngularAccelerationForPolyhedron(
+                Matrix moment_of_inertia,
+                const array_1d<double, 3 >& torque,
+                const double moment_reduction_factor,
+                array_1d<double, 3 >& angular_acceleration) {
+
+        //fanzhuan
+        Matrix moment_of_inertia_inv = ;
         for (int j = 0; j < 3; j++) {
             angular_acceleration[j] = moment_reduction_factor * torque[j] * moment_of_inertia_inv;
         }

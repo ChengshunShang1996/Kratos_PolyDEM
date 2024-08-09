@@ -59,10 +59,12 @@ namespace Kratos
         std::vector<array_1d<double, 3>> GetListOfVertices();
         std::vector<std::vector<int>> GetListOfFaces();
         Vector3 GetFurthestPoint(Vector3 direction);
-        void   SetYoungFromProperties(double* young);
-        void   SetPoissonFromProperties(double* poisson);
-        void   SetDensityFromProperties(double* density);
-        void   SetParticleMaterialFromProperties(int* particle_material);
+        void SetYoungFromProperties(double* young);
+        void SetPoissonFromProperties(double* poisson);
+        void SetDensityFromProperties(double* density);
+        void SetParticleMaterialFromProperties(int* particle_material);
+        void SetMomentOfInertia();
+        void Move(const double delta_t, const bool rotation_option, const double force_reduction_factor, const int StepFlag) override;
 
         // 
         double mEnginePower; 
