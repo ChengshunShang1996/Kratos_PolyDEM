@@ -56,6 +56,7 @@ void PolyhedronContactElement::Initialize(const ProcessInfo& r_process_info) {
     mRotationalMoment[1] = 0.0;
     mRotationalMoment[2] = 0.0;
 	SetDeleteFlag(false);
+	mGlobalDamping = r_process_info[GLOBAL_DAMPING];
 
     /*
     array_1d<double, 3> vector_of_zeros(3, 0.0);
@@ -146,13 +147,14 @@ void PolyhedronContactElement::CalculateRightHandSide(const ProcessInfo& r_proce
 		total_moment[1] = mContactMoment[1] + additionally_applied_moment[1];
 		total_moment[2] = mContactMoment[2] + additionally_applied_moment[2];*/
 
-		//ApplyGlobalDampingToContactForcesAndMoments(total_forces, total_moment);
+		ApplyGlobalDampingToContactForcesAndMoments(mPolyhedronParticle1, total_forces_1, total_moment_1);
+		ApplyGlobalDampingToContactForcesAndMoments(mPolyhedronParticle2, total_forces_2, total_moment_2);
 
 		#ifdef KRATOS_DEBUG
-		DemDebugFunctions::CheckIfNan(total_forces_1, "NAN in Total Forces in RHS of Ball");
-		DemDebugFunctions::CheckIfNan(total_forces_2, "NAN in Total Torque in RHS of Ball");
-		DemDebugFunctions::CheckIfNan(total_moment_1, "NAN in Total Forces in RHS of Ball");
-		DemDebugFunctions::CheckIfNan(total_moment_2, "NAN in Total Torque in RHS of Ball");
+		DemDebugFunctions::CheckIfNan(total_forces_1, "NAN in Total Forces in RHS of Particle");
+		DemDebugFunctions::CheckIfNan(total_forces_2, "NAN in Total Torque in RHS of Particle");
+		DemDebugFunctions::CheckIfNan(total_moment_1, "NAN in Total Forces in RHS of Particle");
+		DemDebugFunctions::CheckIfNan(total_moment_2, "NAN in Total Torque in RHS of Particle");
 		#endif
     }
 
@@ -524,6 +526,38 @@ PolyhedronParticle* PolyhedronContactElement::GetPolyElement2(){
 
 void PolyhedronContactElement::SetDeleteFlag(bool this_flag) { mDeleteFlag = this_flag; }
 bool PolyhedronContactElement::GetDeleteFlag()               { return mDeleteFlag;}
+
+void PolyhedronContactElement::ApplyGlobalDampingToContactForcesAndMoments(PolyhedronParticle* ThisPolyhedronParticle, array_1d<double,3>& total_forces, array_1d<double,3>& total_moment) {
+
+        KRATOS_TRY
+
+        auto& central_node = ThisPolyhedronParticle->GetGeometry()[0];
+
+		const array_1d<double, 3> velocity = central_node.FastGetSolutionStepValue(VELOCITY);
+        const array_1d<double, 3> angular_velocity = central_node.FastGetSolutionStepValue(ANGULAR_VELOCITY);
+
+        if (central_node.IsNot(DEMFlags::FIXED_VEL_X)) {
+            total_forces[0] *= (1.0 - mGlobalDamping * GeometryFunctions::sign(total_forces[0] * velocity[0]));
+        }
+        if (central_node.IsNot(DEMFlags::FIXED_VEL_Y)) {
+            total_forces[1] *= (1.0 - mGlobalDamping * GeometryFunctions::sign(total_forces[1] * velocity[1]));
+        }
+        if (central_node.IsNot(DEMFlags::FIXED_VEL_Z)) {
+            total_forces[2] *= (1.0 - mGlobalDamping * GeometryFunctions::sign(total_forces[2] * velocity[2]));
+        }
+
+        if (central_node.IsNot(DEMFlags::FIXED_ANG_VEL_X)) {
+            total_moment[0] *= (1.0 - mGlobalDamping * GeometryFunctions::sign(total_moment[0] * angular_velocity[0]));
+        }
+        if (central_node.IsNot(DEMFlags::FIXED_ANG_VEL_Y)) {
+            total_moment[1] *= (1.0 - mGlobalDamping * GeometryFunctions::sign(total_moment[1] * angular_velocity[1]));
+        }
+        if (central_node.IsNot(DEMFlags::FIXED_ANG_VEL_Z)) {
+            total_moment[2] *= (1.0 - mGlobalDamping * GeometryFunctions::sign(total_moment[2] * angular_velocity[2]));
+        }
+
+        KRATOS_CATCH("")
+    }
 
 } // Namespace Kratos
 

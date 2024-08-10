@@ -93,8 +93,8 @@ namespace Kratos
         void CalculateSearchPoint(Point& point, Vector3& search_dir);
         void Barycentric(const Vector3 & a, const Vector3 & b, const Vector3 & c, const Vector3 & p, double& u, double& v, double& w);
 
+        void ApplyGlobalDampingToContactForcesAndMoments(PolyhedronParticle* ThisPolyhedronParticle, array_1d<double,3>& total_forces, array_1d<double,3>& total_moment);
         virtual void FinalizeSolutionStep(const ProcessInfo& r_process_info) ;
-
         virtual void PrepareForPrinting();
 
         void SetId(IndexType NewId);
@@ -109,6 +109,7 @@ namespace Kratos
         array_1d<double, 3> mRotationalMoment;
         double mFailureState;
         double mContactRadius;
+        double mGlobalDamping;
         IndexType mId;
         PolyhedronParticle* mPolyhedronParticle1;
         PolyhedronParticle* mPolyhedronParticle2;
