@@ -4,6 +4,7 @@
 
 #include "custom_utilities/GeometryFunctions.h"
 #include "custom_elements/cluster3D.h"
+#include "custom_elements/polyhedron_particle.h"
 #include "custom_elements/rigid_body_element.h"
 #include "dem_integration_scheme.h"
 #include "DEM_application_variables.h"
@@ -34,8 +35,9 @@ namespace Kratos {
         CalculateRotationalMotionOfSphereNode(i, delta_t, moment_reduction_factor, StepFlag);
     }
 
-    void DEMIntegrationScheme::RotatePolyhedron(Node & i, const double delta_t, const double moment_reduction_factor, const int StepFlag) {
+    void DEMIntegrationScheme::RotatePolyhedron(PolyhedronParticle* polyhedron_element, Node & i, const double delta_t, const double moment_reduction_factor, const int StepFlag) {
         CalculateRotationalMotionOfPolyhedronNode(i, delta_t, moment_reduction_factor, StepFlag);
+        polyhedron_element->UpdateVerticesDueToRotation();
     }
 
     void DEMIntegrationScheme::MoveRigidBodyElement(RigidBodyElement3D* rigid_body_element, Node & i, const double delta_t, const double force_reduction_factor, const int StepFlag) {

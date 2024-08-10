@@ -19,6 +19,7 @@
 namespace Kratos {
 
     class Cluster3D;
+    class PolyhedronParticle;
     class RigidBodyElement3D;
 
     class KRATOS_API(DEM_APPLICATION) DEMIntegrationScheme {
@@ -46,7 +47,7 @@ namespace Kratos {
 
         virtual void Move(Node & i, const double delta_t, const double force_reduction_factor, const int StepFlag);
         virtual void Rotate(Node & i, const double delta_t, const double force_reduction_factor, const int StepFlag);
-        virtual void RotatePolyhedron(Node & i, const double delta_t, const double moment_reduction_factor, const int StepFlag);
+        virtual void RotatePolyhedron(PolyhedronParticle* polyhedron_element, Node & i, const double delta_t, const double moment_reduction_factor, const int StepFlag);
         virtual void MoveRigidBodyElement(RigidBodyElement3D* rigid_body_element, Node & i, const double delta_t, const double force_reduction_factor, const int StepFlag);
         virtual void RotateRigidBodyElement(RigidBodyElement3D* rigid_body_element, Node & i, const double delta_t, const double force_reduction_factor, const int StepFlag);
 

@@ -153,15 +153,22 @@ namespace Kratos {
                 const double moment_reduction_factor,
                 array_1d<double, 3 >& angular_acceleration) {
 
-        //Matrix moment_of_inertia_inv = ;
-        // 计算惯性矩阵的逆矩阵
-        ublas::matrix<double> inv_moment_of_inertia(3, 3);
-        bool success = invert_matrix(moment_of_inertia, inv_moment_of_inertia);
+        double temp_moment_of_inertia[3][3];
+
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                temp_moment_of_inertia[i][j] = moment_of_inertia(i,j);
+            }
+        }
+
+        double inv_moment_of_inertia[3][3];
+        bool success = GeometryFunctions::InverseMatrix(temp_moment_of_inertia, inv_moment_of_inertia);
 
         if (success) {
-            ublas::vector<double> angular_acceleration = ublas::prod(inv_moment_of_inertia, torque);
+            array_1d<double, 3> angular_acceleration_temp;
+            GeometryFunctions::ProductMatrix3X3Vector3X1(inv_moment_of_inertia, torque, angular_acceleration_temp);
             for (int j = 0; j < 3; j++) {
-                angular_acceleration[j] = moment_reduction_factor * angular_acceleration[j];
+                angular_acceleration[j] = moment_reduction_factor * angular_acceleration_temp[j];
             }
         } else {
             std::cerr << "Moment of inertia matrix is singular and cannot be inverted." << std::endl;

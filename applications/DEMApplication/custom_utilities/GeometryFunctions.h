@@ -1824,7 +1824,61 @@ namespace Kratos {
             CoMTri[index] = 0.33333333333333 * (Coord1[index]+Coord2[index]+Coord3[index]);
             }
 
-        } //AreaAndCentroidTriangle
+    } //AreaAndCentroidTriangle
+
+    // Function to calculate the determinant of a 3x3 matrix
+    static inline double Determinant(double A[3][3]) {
+        return A[0][0] * (A[1][1] * A[2][2] - A[1][2] * A[2][1]) -
+            A[0][1] * (A[1][0] * A[2][2] - A[1][2] * A[2][0]) +
+            A[0][2] * (A[1][0] * A[2][1] - A[1][1] * A[2][0]);
+    }
+
+    // Function to calculate the cofactor matrix
+    static inline void CofactorMatrix(double A[3][3], double Cof[3][3]) {
+        Cof[0][0] = A[1][1] * A[2][2] - A[1][2] * A[2][1];
+        Cof[0][1] = -(A[1][0] * A[2][2] - A[1][2] * A[2][0]);
+        Cof[0][2] = A[1][0] * A[2][1] - A[1][1] * A[2][0];
+
+        Cof[1][0] = -(A[0][1] * A[2][2] - A[0][2] * A[2][1]);
+        Cof[1][1] = A[0][0] * A[2][2] - A[0][2] * A[2][0];
+        Cof[1][2] = -(A[0][0] * A[2][1] - A[0][1] * A[2][0]);
+
+        Cof[2][0] = A[0][1] * A[1][2] - A[0][2] * A[1][1];
+        Cof[2][1] = -(A[0][0] * A[1][2] - A[0][2] * A[1][0]);
+        Cof[2][2] = A[0][0] * A[1][1] - A[0][1] * A[1][0];
+    }
+
+    // Function to transpose a matrix
+    static inline void Transpose(double A[3][3], double T[3][3]) {
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                T[i][j] = A[j][i];
+            }
+        }
+    }
+
+    // Function to calculate the inverse of a 3x3 matrix
+    static inline bool InverseMatrix(double A[3][3], double invA[3][3]) {
+        double det = Determinant(A);
+        if (det == 0) {
+            KRATOS_ERROR << "The matrix is singular and cannot be inverted." << std::endl;
+            return false;
+        }
+
+        double Cof[3][3];
+        CofactorMatrix(A, Cof);
+
+        double Adj[3][3];
+        Transpose(Cof, Adj);
+
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                invA[i][j] = Adj[i][j] / det;
+            }
+        }
+
+        return true;
+    }
 
     } //namespace GeometryFunctions
 
