@@ -559,6 +559,11 @@ void PolyhedronContactElement::ApplyGlobalDampingToContactForcesAndMoments(Polyh
         KRATOS_CATCH("")
     }
 
+std::unique_ptr<DEMPolyhedronDiscontinuumConstitutiveLaw> PolyhedronContactElement::pCloneDiscontinuumConstitutiveLawWithNeighbour() {
+    Properties& properties_of_this_contact = mPolyhedronParticle1->GetProperties().GetSubProperties(mPolyhedronParticle2->GetProperties().Id());
+    return properties_of_this_contact[DEM_POLYHEDRON_DISCONTINUUM_CONSTITUTIVE_LAW_POINTER]->CloneUnique();
+}
+
 } // Namespace Kratos
 
 

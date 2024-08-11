@@ -9,12 +9,14 @@
 #include "includes/define_python.h"
 
 #include "custom_constitutive/DEM_discontinuum_constitutive_law.h"
+#include "custom_constitutive/DEM_polyhedron_discontinuum_constitutive_law.h"
 #include "custom_constitutive/DEM_continuum_constitutive_law.h"
 
 #include "custom_constitutive/DEM_compound_constitutive_law.h"
 #include "custom_constitutive/DEM_compound_constitutive_law_for_PBM.h"
 
 #include "custom_constitutive/DEM_D_Linear_viscous_Coulomb_CL.h"
+#include "custom_constitutive/DEM_P_D_Linear_viscous_Coulomb_CL.h"
 #include "custom_constitutive/DEM_D_Hertz_viscous_Coulomb_CL.h"
 #include "custom_constitutive/DEM_D_Hertz_viscous_Coulomb_Nestle_CL.h"
 #include "custom_constitutive/DEM_D_Bentonite_Colloid_CL.h"
@@ -88,6 +90,10 @@ void AddCustomConstitutiveLawsToPython(pybind11::module& m) {
         ;
 
     py::class_<DEM_D_Linear_viscous_Coulomb, DEM_D_Linear_viscous_Coulomb::Pointer, DEMDiscontinuumConstitutiveLaw>(m, "DEM_D_Linear_viscous_Coulomb")
+        .def(py::init<>())
+        ;
+
+    py::class_<DEM_P_D_Linear_viscous_Coulomb, DEM_P_D_Linear_viscous_Coulomb::Pointer, DEMPolyhedronDiscontinuumConstitutiveLaw>(m, "DEM_P_D_Linear_viscous_Coulomb")
         .def(py::init<>())
         ;
 

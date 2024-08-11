@@ -136,3 +136,41 @@ class ExplicitStrategy(BaseExplicitStrategy):
         '''
 
         AuxiliaryUtilities().UpdateTimeInOneModelPart(model_part, time, dt, is_time_to_print)
+
+    def ModifySubProperties(self, properties, parent_id, param = 0):
+
+        DiscontinuumConstitutiveLaw = globals().get(properties[DEM_POLYHEDRON_DISCONTINUUM_CONSTITUTIVE_LAW_NAME])()
+        coefficient_of_restitution = properties[COEFFICIENT_OF_RESTITUTION]
+
+        type_of_law = DiscontinuumConstitutiveLaw.GetTypeOfLaw()
+
+        write_gamma = False
+
+        if (type_of_law == 'Linear'):
+            gamma = self.RootByBisection(self.coeff_of_rest_diff, 0.0, 16.0, 0.0001, 300, coefficient_of_restitution)
+            write_gamma = True
+
+        elif (type_of_law == 'Hertz'):
+            gamma = self.GammaForHertzThornton(coefficient_of_restitution)
+            write_gamma = True
+
+        else:
+            pass
+
+        if write_gamma == True:
+            properties[DAMPING_GAMMA] = gamma
+
+        DiscontinuumConstitutiveLaw.SetConstitutiveLawInProperties(properties, False)
+
+        if properties.Has(FRICTION):
+            self.Procedures.KratosPrintWarning("-------------------------------------------------")
+            self.Procedures.KratosPrintWarning("  WARNING: Property FRICTION is deprecated since April 6th, 2020, ")
+            self.Procedures.KratosPrintWarning("  replace with STATIC_FRICTION, DYNAMIC_FRICTION and FRICTION_DECAY")
+            self.Procedures.KratosPrintWarning("  Automatic replacement is done now.")
+            self.Procedures.KratosPrintWarning("-------------------------------------------------")
+            properties[STATIC_FRICTION] = properties[FRICTION]
+            properties[DYNAMIC_FRICTION] = properties[FRICTION]
+            properties[FRICTION_DECAY] = 500.0
+
+        if not properties.Has(FRICTION_DECAY):
+            properties[FRICTION_DECAY] = 500.0

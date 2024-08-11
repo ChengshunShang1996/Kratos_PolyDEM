@@ -23,6 +23,7 @@
 #include "custom_utilities/GeometryFunctions.h"
 #include "custom_elements/polyhedron_particle.h"
 #include "custom_utilities/vector3.h"
+#include "custom_constitutive/DEM_polyhedron_discontinuum_constitutive_law.h"
 
 namespace Kratos
 {
@@ -104,6 +105,7 @@ namespace Kratos
         virtual PolyhedronParticle* GetPolyElement2();
         void SetDeleteFlag(bool this_flag);
         bool GetDeleteFlag();
+        std::unique_ptr<DEMPolyhedronDiscontinuumConstitutiveLaw> pCloneDiscontinuumConstitutiveLawWithNeighbour();
 
         array_1d<double, 3> mContactForce;
         array_1d<double, 3> mRotationalMoment;
