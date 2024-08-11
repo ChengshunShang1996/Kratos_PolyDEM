@@ -1861,7 +1861,7 @@ namespace Kratos {
     static inline bool InverseMatrix(double A[3][3], double invA[3][3]) {
         double det = Determinant(A);
         if (det == 0) {
-            KRATOS_ERROR << "The matrix is singular and cannot be inverted." << std::endl;
+            //KRATOS_ERROR << "The matrix is singular and cannot be inverted." << std::endl;
             return false;
         }
 

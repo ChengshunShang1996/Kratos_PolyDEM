@@ -171,7 +171,11 @@ namespace Kratos {
                 angular_acceleration[j] = moment_reduction_factor * angular_acceleration_temp[j];
             }
         } else {
-            std::cerr << "Moment of inertia matrix is singular and cannot be inverted." << std::endl;
+            //std::cerr << "Moment of inertia matrix is singular and cannot be inverted." << std::endl;
+            //TODO: NOT A GOOD WAY TO DEAL WITH THIS!
+            for (int j = 0; j < 3; j++) {
+                angular_acceleration[j] = 0.0;
+            }
         }
     }
 
