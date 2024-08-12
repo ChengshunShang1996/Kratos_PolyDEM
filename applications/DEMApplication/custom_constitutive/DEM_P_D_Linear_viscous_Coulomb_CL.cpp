@@ -49,9 +49,15 @@ namespace Kratos {
 
         if(!pProp->Has(COEFFICIENT_OF_RESTITUTION)) {
             KRATOS_WARNING("DEM")<<std::endl;
-            KRATOS_WARNING("DEM")<<"WARNING: Variable COEFFICIENT_OF_RESTITUTION should be present in the properties when using DEMDiscontinuumConstitutiveLaw. 0.0 value assigned by default."<<std::endl;
+            KRATOS_WARNING("DEM")<<"WARNING: Variable COEFFICIENT_OF_RESTITUTION should be present in the properties when using DEMPolyhedronDiscontinuumConstitutiveLaw. 0.0 value assigned by default."<<std::endl;
             KRATOS_WARNING("DEM")<<std::endl;
             pProp->GetValue(COEFFICIENT_OF_RESTITUTION) = 0.0;
+        }
+
+        if(!pProp->Has(CONTACT_K_N)) {
+
+            KRATOS_ERROR << "Variable CONTACT_K_N should be present in the properties when using DEMPolyhedronDiscontinuumConstitutiveLaw."<<std::endl;
+
         }
     }
 
@@ -67,7 +73,8 @@ namespace Kratos {
 
         KRATOS_TRY
 
-        double kn = 100000.0;
+        //double kn = 100000.0;
+        const double kn = (*mpProperties)[CONTACT_K_N];
 		contact_force = mOverlapVector * kn;
 
         KRATOS_CATCH( "" )

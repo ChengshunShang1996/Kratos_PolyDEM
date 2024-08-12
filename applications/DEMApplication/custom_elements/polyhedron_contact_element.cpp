@@ -111,7 +111,7 @@ void PolyhedronContactElement::CalculateRightHandSide(const ProcessInfo& r_proce
 		//double kn = 100000.0;
 		//contact_force = mOverlapVector * kn;
 
-		mPolyhedronDiscontinuumConstitutiveLaw = pCloneDiscontinuumConstitutiveLawWithNeighbour();
+		ClonePolyhedronDiscontinuumConstitutiveLawWithNeighbour();
     	mPolyhedronDiscontinuumConstitutiveLaw->CalculateForces(r_process_info, mOverlapVector, contact_force);
 
 		Vector3 torque_arm_1 = contact_m - coll1Pos;
@@ -562,9 +562,10 @@ void PolyhedronContactElement::ApplyGlobalDampingToContactForcesAndMoments(Polyh
         KRATOS_CATCH("")
     }
 
-std::unique_ptr<DEMPolyhedronDiscontinuumConstitutiveLaw> PolyhedronContactElement::pCloneDiscontinuumConstitutiveLawWithNeighbour() {
-    Properties& properties_of_this_contact = mPolyhedronParticle1->GetProperties().GetSubProperties(mPolyhedronParticle2->GetProperties().Id());
-    return properties_of_this_contact[DEM_POLYHEDRON_DISCONTINUUM_CONSTITUTIVE_LAW_POINTER]->CloneUnique();
+void PolyhedronContactElement::ClonePolyhedronDiscontinuumConstitutiveLawWithNeighbour() {
+    Properties::Pointer properties_of_this_contact = mPolyhedronParticle1->GetProperties().pGetSubProperties(mPolyhedronParticle2->GetProperties().Id());
+    mPolyhedronDiscontinuumConstitutiveLaw = (*properties_of_this_contact)[DEM_POLYHEDRON_DISCONTINUUM_CONSTITUTIVE_LAW_POINTER]->CloneUnique();
+	mPolyhedronDiscontinuumConstitutiveLaw->Initialize(properties_of_this_contact);
 }
 
 } // Namespace Kratos

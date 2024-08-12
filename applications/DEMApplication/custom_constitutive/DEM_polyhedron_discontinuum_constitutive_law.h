@@ -43,10 +43,15 @@ namespace Kratos {
 
         virtual std::string GetTypeOfLaw();
 
+        virtual void Initialize(Properties::Pointer pProps);
+        
         virtual void InitializeContact();
 
         virtual void CalculateForces(const ProcessInfo& r_process_info, Vector3 mOverlapVector, Vector3& contact_force);
 
+    protected:
+
+        Properties::Pointer mpProperties;
 
     private:
 

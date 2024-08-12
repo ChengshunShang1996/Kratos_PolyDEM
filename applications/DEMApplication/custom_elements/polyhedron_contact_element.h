@@ -105,7 +105,7 @@ namespace Kratos
         virtual PolyhedronParticle* GetPolyElement2();
         void SetDeleteFlag(bool this_flag);
         bool GetDeleteFlag();
-        std::unique_ptr<DEMPolyhedronDiscontinuumConstitutiveLaw> pCloneDiscontinuumConstitutiveLawWithNeighbour();
+        void ClonePolyhedronDiscontinuumConstitutiveLawWithNeighbour();
 
         std::unique_ptr<DEMPolyhedronDiscontinuumConstitutiveLaw> mPolyhedronDiscontinuumConstitutiveLaw;
         array_1d<double, 3> mContactForce;

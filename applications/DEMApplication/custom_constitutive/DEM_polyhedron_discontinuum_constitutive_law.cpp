@@ -34,6 +34,10 @@ namespace Kratos {
         KRATOS_ERROR << "This function (DEMContinuumConstitutiveLaw::Check) shouldn't be accessed, use derived class instead"<<std::endl;
     }
 
+    void DEMPolyhedronDiscontinuumConstitutiveLaw::Initialize(Properties::Pointer pProps) {
+        mpProperties = pProps;
+    }
+
     void DEMPolyhedronDiscontinuumConstitutiveLaw::InitializeContact() {
         KRATOS_ERROR << "This function (DEMContinuumConstitutiveLaw::InitializeContact) shouldn't be accessed, use derived class instead"<<std::endl;
     }
