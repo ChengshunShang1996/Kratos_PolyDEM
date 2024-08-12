@@ -13,9 +13,8 @@
 #include "includes/serializer.h"
 #include "containers/flags.h"
 
-#include "custom_utilities/GeometryFunctions.h"
 #include "custom_elements/discrete_element.h"
-#include "containers/array_1d.h"
+#include "custom_utilities/vector3.h"
 
 
 namespace Kratos {
@@ -46,7 +45,7 @@ namespace Kratos {
 
         virtual void InitializeContact();
 
-        virtual void CalculateForces(const ProcessInfo& r_process_info);
+        virtual void CalculateForces(const ProcessInfo& r_process_info, Vector3 mOverlapVector, Vector3& contact_force);
 
 
     private:

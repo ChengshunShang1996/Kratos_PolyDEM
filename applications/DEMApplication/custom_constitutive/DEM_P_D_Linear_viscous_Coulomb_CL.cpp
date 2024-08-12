@@ -5,7 +5,6 @@
 /////////////////////////////////////////////////////////////
 
 #include "DEM_P_D_Linear_viscous_Coulomb_CL.h"
-#include "custom_elements/spheric_particle.h"
 
 namespace Kratos {
 
@@ -64,9 +63,14 @@ namespace Kratos {
 
     }
 
-    void DEM_P_D_Linear_viscous_Coulomb::CalculateForces(const ProcessInfo& r_process_info) {
+    void DEM_P_D_Linear_viscous_Coulomb::CalculateForces(const ProcessInfo& r_process_info, Vector3 mOverlapVector, Vector3& contact_force) {
 
+        KRATOS_TRY
 
+        double kn = 100000.0;
+		contact_force = mOverlapVector * kn;
+
+        KRATOS_CATCH( "" )
     }
 
 } // namespace Kratos

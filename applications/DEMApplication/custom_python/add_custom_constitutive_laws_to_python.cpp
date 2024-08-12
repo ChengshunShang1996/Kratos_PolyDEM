@@ -85,8 +85,19 @@ void AddCustomConstitutiveLawsToPython(pybind11::module& m) {
         .def("GetTypeOfLaw", &DEMDiscontinuumConstitutiveLaw::GetTypeOfLaw)
         ;
 
+    py::class_<DEMPolyhedronDiscontinuumConstitutiveLaw, DEMPolyhedronDiscontinuumConstitutiveLaw::Pointer>(m, "DEMPolyhedronDiscontinuumConstitutiveLaw")
+        .def(py::init<>())
+        .def("Clone", &DEMPolyhedronDiscontinuumConstitutiveLaw::Clone)
+        .def("SetConstitutiveLawInProperties", &DEMPolyhedronDiscontinuumConstitutiveLaw::SetConstitutiveLawInProperties)
+        .def("GetTypeOfLaw", &DEMPolyhedronDiscontinuumConstitutiveLaw::GetTypeOfLaw)
+        ;
+
     py::class_<Variable<DEMDiscontinuumConstitutiveLaw::Pointer>, Variable<DEMDiscontinuumConstitutiveLaw::Pointer>::Pointer>(m, "DEMDiscontinuumConstitutiveLawPointerVariable")
         .def("__str__", PrintObject<Variable<DEMDiscontinuumConstitutiveLaw::Pointer>>)
+        ;
+
+    py::class_<Variable<DEMPolyhedronDiscontinuumConstitutiveLaw::Pointer>, Variable<DEMPolyhedronDiscontinuumConstitutiveLaw::Pointer>::Pointer>(m, "DEMPolyhedronDiscontinuumConstitutiveLawPointerVariable")
+        .def("__str__", PrintObject<Variable<DEMPolyhedronDiscontinuumConstitutiveLaw::Pointer>>)
         ;
 
     py::class_<DEM_D_Linear_viscous_Coulomb, DEM_D_Linear_viscous_Coulomb::Pointer, DEMDiscontinuumConstitutiveLaw>(m, "DEM_D_Linear_viscous_Coulomb")

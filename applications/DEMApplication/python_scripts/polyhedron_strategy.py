@@ -139,10 +139,10 @@ class ExplicitStrategy(BaseExplicitStrategy):
 
     def ModifySubProperties(self, properties, parent_id, param = 0):
 
-        DiscontinuumConstitutiveLaw = globals().get(properties[DEM_POLYHEDRON_DISCONTINUUM_CONSTITUTIVE_LAW_NAME])()
+        PolyhedronDiscontinuumConstitutiveLaw = globals().get(properties[DEM_POLYHEDRON_DISCONTINUUM_CONSTITUTIVE_LAW_NAME])()
         coefficient_of_restitution = properties[COEFFICIENT_OF_RESTITUTION]
 
-        type_of_law = DiscontinuumConstitutiveLaw.GetTypeOfLaw()
+        type_of_law = PolyhedronDiscontinuumConstitutiveLaw.GetTypeOfLaw()
 
         write_gamma = False
 
@@ -160,7 +160,7 @@ class ExplicitStrategy(BaseExplicitStrategy):
         if write_gamma == True:
             properties[DAMPING_GAMMA] = gamma
 
-        DiscontinuumConstitutiveLaw.SetConstitutiveLawInProperties(properties, False)
+        PolyhedronDiscontinuumConstitutiveLaw.SetConstitutiveLawInProperties(properties, False)
 
         if properties.Has(FRICTION):
             self.Procedures.KratosPrintWarning("-------------------------------------------------")

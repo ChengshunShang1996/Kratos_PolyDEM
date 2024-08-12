@@ -107,6 +107,7 @@ namespace Kratos
         bool GetDeleteFlag();
         std::unique_ptr<DEMPolyhedronDiscontinuumConstitutiveLaw> pCloneDiscontinuumConstitutiveLawWithNeighbour();
 
+        std::unique_ptr<DEMPolyhedronDiscontinuumConstitutiveLaw> mPolyhedronDiscontinuumConstitutiveLaw;
         array_1d<double, 3> mContactForce;
         array_1d<double, 3> mRotationalMoment;
         double mFailureState;

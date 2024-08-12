@@ -5,7 +5,6 @@
 /////////////////////////////////////////////////////////////
 
 #include "DEM_polyhedron_discontinuum_constitutive_law.h"
-#include "custom_elements/polyhedron_particle.h"
 
 namespace Kratos {
 
@@ -45,7 +44,7 @@ namespace Kratos {
         return type_of_law;
     }
 
-    void DEMPolyhedronDiscontinuumConstitutiveLaw::CalculateForces(const ProcessInfo& r_process_info) {
+    void DEMPolyhedronDiscontinuumConstitutiveLaw::CalculateForces(const ProcessInfo& r_process_info, Vector3 mOverlapVector, Vector3& contact_force) {
 
         KRATOS_ERROR << "This function (DEMContinuumConstitutiveLaw::CalculateForces) shouldn't be accessed, use derived class instead"<<std::endl;
     }

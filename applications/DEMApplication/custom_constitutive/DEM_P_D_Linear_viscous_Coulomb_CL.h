@@ -36,7 +36,7 @@ namespace Kratos {
 
         void InitializeContact() override;
 
-        void CalculateForces(const ProcessInfo& r_process_info) override;
+        void CalculateForces(const ProcessInfo& r_process_info, Vector3 mOverlapVector, Vector3& contact_force) override;
 
         Properties& GetPropertiesOfThisContact(SphericParticle* const element, SphericParticle* const neighbour);
 
