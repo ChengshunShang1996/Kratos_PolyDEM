@@ -670,9 +670,17 @@ namespace Kratos {
         
         auto it = std::find_if(elements.begin(), elements.end(),
             [this_element_id, neighbour_element_id](const PolyhedronContactElement::Pointer& elem) {
-                elem->SetDeleteFlag(false);
-                return (elem->GetPolyElement1()->Id() == this_element_id &&
-                        elem->GetPolyElement2()->Id() == neighbour_element_id);
+                if (elem->GetPolyElement1()->Id() == this_element_id &&
+                    elem->GetPolyElement2()->Id() == neighbour_element_id) {
+
+                    #pragma omp critical
+                    {
+                        elem->SetDeleteFlag(false); 
+                    }
+
+                    return true;
+                }
+                return false;
             });
 
         return it != elements.end();
