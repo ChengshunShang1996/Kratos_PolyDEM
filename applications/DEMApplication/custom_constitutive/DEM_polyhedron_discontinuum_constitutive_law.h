@@ -47,7 +47,11 @@ namespace Kratos {
         
         virtual void InitializeContact();
 
-        virtual void CalculateForces(const ProcessInfo& r_process_info, Vector3 mOverlapVector, Vector3& contact_force);
+        virtual void CalculateForces(const ProcessInfo& r_process_info, 
+                                    PolyhedronParticle* PolyhedronParticle1, 
+                                    PolyhedronParticle* PolyhedronParticle2, 
+                                    Vector3 mOverlapVector, 
+                                    Vector3& contact_force);
 
     protected:
 
