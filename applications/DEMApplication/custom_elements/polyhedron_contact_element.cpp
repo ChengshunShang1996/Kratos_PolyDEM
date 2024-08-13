@@ -57,6 +57,7 @@ void PolyhedronContactElement::Initialize(const ProcessInfo& r_process_info) {
     mRotationalMoment[2] = 0.0;
 	SetDeleteFlag(false);
 	mGlobalDamping = r_process_info[GLOBAL_DAMPING];
+	mTangentialElasticContactForce = Vector3(0.0, 0.0, 0.0);
 
     /*
     array_1d<double, 3> vector_of_zeros(3, 0.0);
@@ -112,7 +113,8 @@ void PolyhedronContactElement::CalculateRightHandSide(const ProcessInfo& r_proce
 		//contact_force = mOverlapVector * kn;
 
 		ClonePolyhedronDiscontinuumConstitutiveLawWithNeighbour();
-    	mPolyhedronDiscontinuumConstitutiveLaw->CalculateForces(r_process_info, mPolyhedronParticle1, mPolyhedronParticle2, mOverlapVector, contact_force);
+    	mPolyhedronDiscontinuumConstitutiveLaw->CalculateForces(r_process_info, mPolyhedronParticle1, mPolyhedronParticle2, 
+																mOverlapVector, contact_force, mTangentialElasticContactForce);
 
 		Vector3 torque_arm_1 = contact_m - coll1Pos;
 		Vector3 torque_arm_2 = contact_m - coll2Pos;

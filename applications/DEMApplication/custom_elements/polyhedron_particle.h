@@ -66,7 +66,7 @@ namespace Kratos
         void SetMomentOfInertia();
         void Move(const double delta_t, const bool rotation_option, const double force_reduction_factor, const int StepFlag) override;
         void UpdateVerticesDueToRotation();
-        Matrix RotationMatrixFromVector(const array_1d<double, 3>& rotation_vector);
+        void InitializeVerticesDueToRotation();
         
         // 
         double mEnginePower; 

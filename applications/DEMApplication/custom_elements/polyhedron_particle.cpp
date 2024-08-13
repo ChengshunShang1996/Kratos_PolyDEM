@@ -93,6 +93,8 @@ namespace Kratos {
             mListOfVertices[i][2] = scaling_factor * reference_list_of_vertices[i][2];
         }
 
+        InitializeVerticesDueToRotation();
+
         const unsigned int number_of_faces = reference_list_of_faces.size();
 
         mListOfFaces.resize(number_of_faces);
@@ -258,75 +260,33 @@ namespace Kratos {
         KRATOS_CATCH("")
     }
 
-    Matrix PolyhedronParticle::RotationMatrixFromVector(const array_1d<double, 3>& rotation_vector) {
-        
-        KRATOS_TRY
-
-        Matrix rotation_matrix(3,3);
-        double theta = std::sqrt(rotation_vector[0] * rotation_vector[0] + rotation_vector[1] * rotation_vector[1] + rotation_vector[2] * rotation_vector[2]);
-        if (theta == 0.0) {
-            rotation_matrix(0, 0) = 1.0;
-            rotation_matrix(0, 1) = 0.0;
-            rotation_matrix(0, 2) = 0.0;
-            rotation_matrix(1, 0) = 0.0;
-            rotation_matrix(1, 1) = 1.0;
-            rotation_matrix(1, 2) = 0.0;
-            rotation_matrix(2, 0) = 0.0;
-            rotation_matrix(2, 1) = 0.0;
-            rotation_matrix(2, 2) = 1.0;
-
-            return rotation_matrix;
-        }
-        
-        array_1d<double,3> k;
-        k[0] = rotation_vector[0] / theta;
-        k[1] = rotation_vector[1] / theta;
-        k[2] = rotation_vector[2] / theta;
-
-        double cos_theta = cos(theta);
-        double sin_theta = sin(theta);
-        double one_minus_cos_theta = 1 - cos_theta;
-
-        rotation_matrix(0, 0) = cos_theta + k[0]*k[0]*one_minus_cos_theta;
-        rotation_matrix(0, 1) = k[0]*k[1]*one_minus_cos_theta - k[2]*sin_theta;
-        rotation_matrix(0, 2) = k[0]*k[2]*one_minus_cos_theta + k[1]*sin_theta;
-        rotation_matrix(1, 0) = k[1]*k[0]*one_minus_cos_theta + k[2]*sin_theta;
-        rotation_matrix(1, 1) = cos_theta + k[1]*k[1]*one_minus_cos_theta;
-        rotation_matrix(1, 2) = k[1]*k[2]*one_minus_cos_theta - k[0]*sin_theta;
-        rotation_matrix(2, 0) = k[2]*k[0]*one_minus_cos_theta - k[1]*sin_theta;
-        rotation_matrix(2, 1) = k[2]*k[1]*one_minus_cos_theta + k[0]*sin_theta;
-        rotation_matrix(2, 2) = cos_theta + k[2]*k[2]*one_minus_cos_theta;
-
-        return rotation_matrix;
-
-        KRATOS_CATCH("")
-    }
-
     void PolyhedronParticle::UpdateVerticesDueToRotation(){
         auto& central_node = GetGeometry()[0];
         array_1d<double, 3>& delta_rotation = central_node.FastGetSolutionStepValue(DELTA_ROTATION);
         double modulus_square = delta_rotation[0]*delta_rotation[0] + delta_rotation[1]*delta_rotation[1] + delta_rotation[2]*delta_rotation[2];
         if (modulus_square != 0.0){
-                    // Create the rotation matrix from the rotation vector
-            Matrix temp_rotation_matrix;
-            temp_rotation_matrix = RotationMatrixFromVector(delta_rotation);
+            Quaternion<double> rotation_quaternion = Quaternion<double>::FromRotationVector(delta_rotation);
 
-            double rotation_matrix[3][3];
-            for (int i = 0; i < 3; i++) {
-                for (int j = 0; j < 3; j++) {
-                    rotation_matrix[i][j] = temp_rotation_matrix(i,j);
-                }
+            for (int k = 0; k < mListOfVertices.size(); k++) {
+                rotation_quaternion.RotateVector3(mListOfVertices[k]);
+            }
+        }
+    }
+
+    void PolyhedronParticle::InitializeVerticesDueToRotation(){
+        auto& central_node = GetGeometry()[0];
+        array_1d<double, 3>& delta_rotation = central_node.FastGetSolutionStepValue(INITIAL_ROTATION_VECTOR);
+        double modulus_square = delta_rotation[0]*delta_rotation[0] 
+                                + delta_rotation[1]*delta_rotation[1] 
+                                + delta_rotation[2]*delta_rotation[2];
+        if (modulus_square != 0.0){
+            
+            Quaternion<double> rotation_quaternion = Quaternion<double>::FromRotationVector(delta_rotation);
+
+            for (int k = 0; k < mListOfVertices.size(); k++) {
+                rotation_quaternion.RotateVector3(mListOfVertices[k]);
             }
 
-            for (int k = 0; k < (int) mListOfVertices.size(); k++) {
-                for (int i=0; i<3; i++) {
-                    double results = 0.0;
-                    for (int j=0; j<3; j++) {
-                        results += rotation_matrix[i][j] * mListOfVertices[k][j];
-                    }
-                    mListOfVertices[k][i] = results;
-                }
-            }
         }
     }
         

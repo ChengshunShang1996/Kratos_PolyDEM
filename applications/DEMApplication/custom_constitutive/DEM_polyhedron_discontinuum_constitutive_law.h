@@ -51,7 +51,8 @@ namespace Kratos {
                                     PolyhedronParticle* PolyhedronParticle1, 
                                     PolyhedronParticle* PolyhedronParticle2, 
                                     Vector3 mOverlapVector, 
-                                    Vector3& contact_force);
+                                    Vector3& contact_force,
+                                    Vector3& TangentialElasticContactForce);
 
     protected:
 

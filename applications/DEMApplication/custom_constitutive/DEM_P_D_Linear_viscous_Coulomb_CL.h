@@ -13,7 +13,7 @@
 
 namespace Kratos {
 
-    class SphericParticle;
+    class PolyhedronParticle;
 
     class KRATOS_API(DEM_APPLICATION) DEM_P_D_Linear_viscous_Coulomb : public DEMPolyhedronDiscontinuumConstitutiveLaw {
 
@@ -40,7 +40,8 @@ namespace Kratos {
                             PolyhedronParticle* PolyhedronParticle1, 
                             PolyhedronParticle* PolyhedronParticle2, 
                             Vector3 mOverlapVector, 
-                            Vector3& contact_force) override;
+                            Vector3& contact_force,
+                            Vector3& TangentialElasticContactForce) override;
 
     protected:
 

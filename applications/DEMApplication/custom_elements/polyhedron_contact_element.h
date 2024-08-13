@@ -120,6 +120,7 @@ namespace Kratos
         Vector3 mOverlapVector;
         Vector3 mContactPoint1;
         Vector3 mContactPoint2;
+        Vector3 mTangentialElasticContactForce;
         bool mDeleteFlag;
 
     protected:

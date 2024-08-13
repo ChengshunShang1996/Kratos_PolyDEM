@@ -5,6 +5,7 @@
 /////////////////////////////////////////////////////////////
 
 #include "DEM_P_D_Linear_viscous_Coulomb_CL.h"
+#include "custom_elements/polyhedron_particle.h"
 
 namespace Kratos {
 
@@ -73,7 +74,8 @@ namespace Kratos {
                                                         PolyhedronParticle* PolyhedronParticle1, 
                                                         PolyhedronParticle* PolyhedronParticle2, 
                                                         Vector3 mOverlapVector, 
-                                                        Vector3& contact_force) {
+                                                        Vector3& contact_force,
+                                                        Vector3& TangentialElasticContactForce) {
 
         KRATOS_TRY
 
@@ -81,14 +83,17 @@ namespace Kratos {
 		auto& central_node_2 = PolyhedronParticle2->GetGeometry()[0];
 
         const array_1d<double, 3>& velocity_1     = central_node_1.FastGetSolutionStepValue(VELOCITY);
-        const array_1d<double, 3>& delta_displ_1  = central_node_1.FastGetSolutionStepValue(DELTA_DISPLACEMENT);
+        const array_1d<double, 3>& delta_disp_1  = central_node_1.FastGetSolutionStepValue(DELTA_DISPLACEMENT);
         const array_1d<double, 3>& ang_velocity_1 = central_node_1.FastGetSolutionStepValue(ANGULAR_VELOCITY);
         const array_1d<double, 3>& velocity_2     = central_node_2.FastGetSolutionStepValue(VELOCITY);
-        const array_1d<double, 3>& delta_displ_2  = central_node_2.FastGetSolutionStepValue(DELTA_DISPLACEMENT);
+        const array_1d<double, 3>& delta_disp_2  = central_node_2.FastGetSolutionStepValue(DELTA_DISPLACEMENT);
         const array_1d<double, 3>& ang_velocity_2 = central_node_2.FastGetSolutionStepValue(ANGULAR_VELOCITY);
 
         Vector3 relVel = Vector3(velocity_1[0], velocity_1[1], velocity_1[2]) - 
                          Vector3(velocity_2[0], velocity_2[1], velocity_2[2]);
+
+        Vector3 relDisp = Vector3(delta_disp_1[0], delta_disp_1[1], delta_disp_1[2]) - 
+                          Vector3(delta_disp_2[0], delta_disp_2[1], delta_disp_2[2]);
 
         // Put the values into a more useful form
         Vector3 angVel1(ang_velocity_1[0], ang_velocity_1[1], ang_velocity_1[2]);
@@ -102,9 +107,28 @@ namespace Kratos {
         Vector3 relVel_n = unitCPVect * Vector3::Dot(unitCPVect, relVel);
         Vector3 relVel_t = relVel - relVel_n;
 
-        // Damping calculation
+        Vector3 relDisp_n = unitCPVect * Vector3::Dot(unitCPVect, relDisp);
+        Vector3 relDisp_t = relDisp - relDisp_n;
+
         const double kn = (*mpProperties)[CONTACT_K_N];
-        Vector3 F_nd = unitCPVect * 2 * std::sqrt(5.0 / 6.0) * 0.2 * std::sqrt(kn * 1) *  relVel_n.length();
+        const double kt = (*mpProperties)[CONTACT_K_N] * 0.5;
+        const double static_friction = (*mpProperties)[STATIC_FRICTION];
+        const double dynamic_friction = (*mpProperties)[DYNAMIC_FRICTION];
+
+        const double my_mass    = PolyhedronParticle1->GetMass();
+        const double other_mass = PolyhedronParticle2->GetMass();
+
+        const double equiv_mass = 1.0 / (1.0/my_mass + 1.0/other_mass);
+
+        Properties& properties_of_this_contact = PolyhedronParticle1->GetProperties().GetSubProperties(PolyhedronParticle2->GetProperties().Id());
+        const double damping_gamma = properties_of_this_contact[DAMPING_GAMMA];
+
+        const double equiv_visco_damp_coeff_normal     = 2.0 * damping_gamma * sqrt(equiv_mass * kn);
+        const double equiv_visco_damp_coeff_tangential = 2.0 * damping_gamma * sqrt(equiv_mass * kt);
+
+        // Damping calculation
+        Vector3 F_n = mOverlapVector * kn;
+        Vector3 F_nd = unitCPVect * equiv_visco_damp_coeff_tangential *  relVel_n.Length();
 
         // Are we in a loading situation?
         if (Vector3::Dot(relVel_n, unitCPVect) > 0.0)
@@ -112,17 +136,16 @@ namespace Kratos {
             F_nd = -F_nd;
         }
 
-        const double kt = (*mpProperties)[CONTACT_K_N];
-        Vector3 nOverlap_t(tangentialPhysicalOverlapX, tangentialPhysicalOverlapY, tangentialPhysicalOverlapZ);
-        Vector3 F_t = -nOverlap_t * kt;
+        TangentialElasticContactForce -= relDisp_t * kt;
+        Vector3 F_t = TangentialElasticContactForce;
 
         // Damping
         Vector3 F_td, newF_t;
 
-        if (F_t.length() > F_n.length() * (staticFriction))
+        if (F_t.Length() > F_n.Length() * (static_friction))
         {
-            newF_t = F_t * F_n.length() * (staticFriction) / F_t.length();
-            nOverlap_t = -newF_t / kt; //slippage has occurred so the tangential overlap is reduced a bit
+            newF_t = F_t * F_n.Length() * (dynamic_friction) / F_t.Length();
+            TangentialElasticContactForce = newF_t;
 
             //at this point we get energy loss from the sliding!
             F_td = newF_t;
@@ -130,12 +153,14 @@ namespace Kratos {
         else
         {
             //at this point we get energy loss from the damping!
-            F_td = -relVel_t * 2 * sqrt(5.0 / 6.0) * 0.2 * std::sqrt(kt * nEquivMass);
+            F_td = -relVel_t * equiv_visco_damp_coeff_tangential;
             newF_t = F_t + F_td;
         }
 
         //double kn = 100000.0;
-		contact_force = mOverlapVector * kn;
+		//contact_force = mOverlapVector * kn;
+
+        contact_force = F_n + F_nd + newF_t + F_td;
 
         KRATOS_CATCH( "" )
     }
