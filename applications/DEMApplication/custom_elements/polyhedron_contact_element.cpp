@@ -367,7 +367,7 @@ void PolyhedronContactElement::EPA(Point& a, Point& b, Point& c, Point& d)
 			mContactPoint1 = faces[closest_face][0].a * u + faces[closest_face][1].a * v + faces[closest_face][2].a * w;
 			mContactPoint2 = faces[closest_face][0].b * u + faces[closest_face][1].b * v + faces[closest_face][2].b * w;
             mOverlapVector = mContactPoint2 - mContactPoint1;
-			KRATOS_WATCH(mOverlapVector);
+			//KRATOS_WATCH(mOverlapVector);
 			//Vector3 normal = (mContactPoint1 - mContactPoint2).Normalised();
             //Vector3 contact_normal = faces[closest_face][3]
             //Vector3 contact_point_minkowski = contact_normal * Vector3::Dot(p.p, search_dir)

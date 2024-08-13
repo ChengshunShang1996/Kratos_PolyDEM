@@ -160,7 +160,7 @@ namespace Kratos {
         //double kn = 100000.0;
 		//contact_force = mOverlapVector * kn;
 
-        contact_force = F_n + F_nd + newF_t + F_td;
+        contact_force = F_n - F_nd + newF_t - F_td;
 
         KRATOS_CATCH( "" )
     }
