@@ -41,6 +41,7 @@ class PolyhedronVtkOutput():
         self.polygon_centers = np.zeros((number_of_nodes, 3))
         self.polygon_origins = []
         self.polyhedron_faces = []
+        self.polygon_velocity = np.zeros((number_of_nodes, 3))
 
         i = 0
         for node in self.polyhedron_model_part.Nodes:
@@ -63,6 +64,12 @@ class PolyhedronVtkOutput():
                     temp_face_sub.append(face_sub)
                 temp_faces_list.append(temp_face_sub)
             self.polyhedron_faces.append(temp_faces_list)
+
+        if self.PostVelocity:
+            i = 0
+            for node in self.polyhedron_model_part.Nodes:
+                self.polygon_velocity[i] = [node.GetSolutionStepValue(VELOCITY_X), node.GetSolutionStepValue(VELOCITY_Y), node.GetSolutionStepValue(VELOCITY_Z)]
+                i += 1
     
     def WriteResults(self, poly_output_cnt):
 
@@ -103,6 +110,18 @@ class PolyhedronVtkOutput():
         grid = vtk.vtkUnstructuredGrid()
         grid.SetPoints(points_vtk)
         grid.SetCells(vtk.VTK_POLYGON, cells_vtk)
+
+        velocity_array = vtk.vtkDoubleArray()
+        velocity_array.SetName("Velocity")
+        velocity_array.SetNumberOfComponents(3)
+
+        i = 0
+        for ii in range(len(self.polygon_centers)):
+            for jj in range(len(self.polygon_origins[i])):
+                velocity_array.InsertNextTuple(self.polygon_velocity[i])
+            i += 1
+
+        grid.GetPointData().SetVectors(velocity_array)
 
         writer = vtk.vtkXMLUnstructuredGridWriter()
         file_path = os.path.join(self.vtk_post_path_directory, "polyhedron_{}.vtu".format(poly_output_cnt))
