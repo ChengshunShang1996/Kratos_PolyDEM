@@ -42,6 +42,7 @@ class PolyhedronVtkOutput():
         self.polygon_origins = []
         self.polyhedron_faces = []
         self.polygon_velocity = np.zeros((number_of_nodes, 3))
+        self.polygon_displacement = np.zeros((number_of_nodes, 3))
 
         i = 0
         for node in self.polyhedron_model_part.Nodes:
@@ -69,6 +70,12 @@ class PolyhedronVtkOutput():
             i = 0
             for node in self.polyhedron_model_part.Nodes:
                 self.polygon_velocity[i] = [node.GetSolutionStepValue(VELOCITY_X), node.GetSolutionStepValue(VELOCITY_Y), node.GetSolutionStepValue(VELOCITY_Z)]
+                i += 1
+
+        if self.PostDisplacement:
+            i = 0
+            for node in self.polyhedron_model_part.Nodes:
+                self.polygon_displacement[i] = [node.GetSolutionStepValue(DISPLACEMENT_X), node.GetSolutionStepValue(DISPLACEMENT_Y), node.GetSolutionStepValue(DISPLACEMENT_Z)]
                 i += 1
     
     def WriteResults(self, poly_output_cnt):
@@ -111,17 +118,31 @@ class PolyhedronVtkOutput():
         grid.SetPoints(points_vtk)
         grid.SetCells(vtk.VTK_POLYGON, cells_vtk)
 
-        velocity_array = vtk.vtkDoubleArray()
-        velocity_array.SetName("Velocity")
-        velocity_array.SetNumberOfComponents(3)
+        if self.PostVelocity:
+            velocity_array = vtk.vtkDoubleArray()
+            velocity_array.SetName("Velocity")
+            velocity_array.SetNumberOfComponents(3)
 
-        i = 0
-        for ii in range(len(self.polygon_centers)):
-            for jj in range(len(self.polygon_origins[i])):
-                velocity_array.InsertNextTuple(self.polygon_velocity[i])
-            i += 1
+            i = 0
+            for ii in range(len(self.polygon_centers)):
+                for jj in range(len(self.polygon_origins[i])):
+                    velocity_array.InsertNextTuple(self.polygon_velocity[i])
+                i += 1
 
-        grid.GetPointData().SetVectors(velocity_array)
+            grid.GetPointData().AddArray(velocity_array)
+
+        if self.PostDisplacement:
+            displacement_array = vtk.vtkDoubleArray()
+            displacement_array.SetName("Displacement")
+            displacement_array.SetNumberOfComponents(3)
+
+            i = 0
+            for ii in range(len(self.polygon_centers)):
+                for jj in range(len(self.polygon_origins[i])):
+                    displacement_array.InsertNextTuple(self.polygon_displacement[i])
+                i += 1
+
+            grid.GetPointData().AddArray(displacement_array)
 
         writer = vtk.vtkXMLUnstructuredGridWriter()
         file_path = os.path.join(self.vtk_post_path_directory, "polyhedron_{}.vtu".format(poly_output_cnt))
