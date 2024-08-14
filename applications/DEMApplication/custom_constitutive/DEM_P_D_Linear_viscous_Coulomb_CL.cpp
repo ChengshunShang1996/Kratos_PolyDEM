@@ -140,9 +140,9 @@ namespace Kratos {
         TangentialElasticContactForce -= relDisp_t * kt;
         Vector3 F_t = TangentialElasticContactForce;
 
-        // Damping
-        Vector3 F_td, newF_t;
+        Vector3 F_td;
 
+        /*
         if (F_t.Length() > F_n.Length() * (static_friction))
         {
             newF_t = F_t * F_n.Length() * (dynamic_friction) / F_t.Length();
@@ -156,9 +156,9 @@ namespace Kratos {
             //at this point we get energy loss from the damping!
             F_td = -relVel_t * equiv_visco_damp_coeff_tangential;
             newF_t = F_t + F_td;
-        }
+        }*/
 
-        /*
+
         double equiv_friction = dynamic_friction + (static_friction - dynamic_friction) * exp(-equiv_friction_decay_coefficient * relVel_t.Length());
         double maximum_admissible_shear_force = F_n.Length() * equiv_friction;
 
@@ -199,12 +199,12 @@ namespace Kratos {
                     F_td = Vector3(0.0, 0.0, 0.0);
                 }
             }
-        }*/
+        }
 
         //double kn = 100000.0;
 		//contact_force = mOverlapVector * kn;
-        //contact_force = F_n + F_nd + F_t + F_td;
-        contact_force = F_n + F_nd + newF_t;
+        contact_force = F_n + F_nd + F_t + F_td;
+        //contact_force = F_n + F_nd + newF_t;
 
         KRATOS_CATCH( "" )
     }

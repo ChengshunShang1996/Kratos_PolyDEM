@@ -116,10 +116,12 @@ void PolyhedronContactElement::CalculateRightHandSide(const ProcessInfo& r_proce
     	mPolyhedronDiscontinuumConstitutiveLaw->CalculateForces(r_process_info, mPolyhedronParticle1, mPolyhedronParticle2, 
 																mOverlapVector, contact_force, mTangentialElasticContactForce);
 
-		Vector3 torque_arm_1 = contact_m - coll1Pos;
-		Vector3 torque_arm_2 = contact_m - coll2Pos;
-		contact_moment_1 = Vector3::Cross(torque_arm_1, contact_force);
-		contact_moment_2 = Vector3::Cross(torque_arm_2, -contact_force);
+		if (r_process_info[ROTATION_OPTION]){
+			Vector3 torque_arm_1 = contact_m - coll1Pos;
+			Vector3 torque_arm_2 = contact_m - coll2Pos;
+			contact_moment_1 = Vector3::Cross(torque_arm_1, contact_force);
+			contact_moment_2 = Vector3::Cross(torque_arm_2, -contact_force);
+		}
 
 		array_1d<double,3>& total_forces_1 = central_node_1.FastGetSolutionStepValue(TOTAL_FORCES);
 		array_1d<double,3>& total_moment_1 = central_node_1.FastGetSolutionStepValue(PARTICLE_MOMENT);
