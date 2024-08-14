@@ -124,24 +124,24 @@ void PolyhedronContactElement::CalculateRightHandSide(const ProcessInfo& r_proce
 		array_1d<double,3>& total_forces_1 = central_node_1.FastGetSolutionStepValue(TOTAL_FORCES);
 		array_1d<double,3>& total_moment_1 = central_node_1.FastGetSolutionStepValue(PARTICLE_MOMENT);
 
-		total_forces_1[0] = contact_force[0];
-		total_forces_1[1] = contact_force[1];
-		total_forces_1[2] = contact_force[2];
+		total_forces_1[0] += contact_force[0];
+		total_forces_1[1] += contact_force[1];
+		total_forces_1[2] += contact_force[2];
 
-		total_moment_1[0] = contact_moment_1[0];
-		total_moment_1[1] = contact_moment_1[1];
-		total_moment_1[2] = contact_moment_1[2];
+		total_moment_1[0] += contact_moment_1[0];
+		total_moment_1[1] += contact_moment_1[1];
+		total_moment_1[2] += contact_moment_1[2];
 
 		array_1d<double,3>& total_forces_2 = central_node_2.FastGetSolutionStepValue(TOTAL_FORCES);
 		array_1d<double,3>& total_moment_2 = central_node_2.FastGetSolutionStepValue(PARTICLE_MOMENT);
 
-		total_forces_2[0] = -contact_force[0];
-		total_forces_2[1] = -contact_force[1];
-		total_forces_2[2] = -contact_force[2];
+		total_forces_2[0] -= contact_force[0];
+		total_forces_2[1] -= contact_force[1];
+		total_forces_2[2] -= contact_force[2];
 
-		total_moment_2[0] = contact_moment_2[0];
-		total_moment_2[1] = contact_moment_2[1];
-		total_moment_2[2] = contact_moment_2[2];
+		total_moment_2[0] += contact_moment_2[0];
+		total_moment_2[1] += contact_moment_2[1];
+		total_moment_2[2] += contact_moment_2[2];
 
 		/*
 		total_forces[0] = contact_force[0] + additional_forces[0];

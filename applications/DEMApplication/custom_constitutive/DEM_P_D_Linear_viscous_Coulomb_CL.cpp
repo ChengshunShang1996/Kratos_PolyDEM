@@ -114,6 +114,7 @@ namespace Kratos {
         const double kt = (*mpProperties)[CONTACT_K_N] * 0.5;
         const double static_friction = (*mpProperties)[STATIC_FRICTION];
         const double dynamic_friction = (*mpProperties)[DYNAMIC_FRICTION];
+        const double equiv_friction_decay_coefficient = (*mpProperties)[FRICTION_DECAY];
 
         const double my_mass    = PolyhedronParticle1->GetMass();
         const double other_mass = PolyhedronParticle2->GetMass();
@@ -128,7 +129,7 @@ namespace Kratos {
 
         // Damping calculation
         Vector3 F_n = mOverlapVector * kn;
-        Vector3 F_nd = unitCPVect * equiv_visco_damp_coeff_tangential *  relVel_n.Length();
+        Vector3 F_nd = -unitCPVect * equiv_visco_damp_coeff_normal *  relVel_n.Length();
 
         // Are we in a loading situation?
         if (Vector3::Dot(relVel_n, unitCPVect) > 0.0)
@@ -148,7 +149,7 @@ namespace Kratos {
             TangentialElasticContactForce = newF_t;
 
             //at this point we get energy loss from the sliding!
-            F_td = newF_t;
+            F_td = Vector3(0.0, 0.0, 0.0);
         }
         else
         {
@@ -157,10 +158,53 @@ namespace Kratos {
             newF_t = F_t + F_td;
         }
 
+        /*
+        double equiv_friction = dynamic_friction + (static_friction - dynamic_friction) * exp(-equiv_friction_decay_coefficient * relVel_t.Length());
+        double maximum_admissible_shear_force = F_n.Length() * equiv_friction;
+
+        F_td = -relVel_t * equiv_visco_damp_coeff_tangential;
+
+        Vector3 tangential_contact_force = F_t + F_td;
+
+        const double ActualTotalShearForce = tangential_contact_force.Length();
+
+        if (ActualTotalShearForce > maximum_admissible_shear_force) {
+
+            const double ActualElasticShearForce = F_t.Length();
+
+            const double dot_product = Vector3::Dot(F_t, F_td);
+            const double ViscoDampingLocalContactForceModule = F_td.Length();
+
+            if (dot_product >= 0.0) {
+
+                if (ActualElasticShearForce > maximum_admissible_shear_force) {
+                    const double fraction = maximum_admissible_shear_force / ActualElasticShearForce;
+                    F_t *= fraction;
+                    F_td = Vector3(0.0, 0.0, 0.0);
+                }
+                else {
+                    const double ActualViscousShearForce = maximum_admissible_shear_force - ActualElasticShearForce;
+                    const double fraction = ActualViscousShearForce / ViscoDampingLocalContactForceModule;
+                    F_td *= fraction;
+                }
+            }
+            else {
+                if (ViscoDampingLocalContactForceModule >= ActualElasticShearForce) {
+                    const double fraction = (maximum_admissible_shear_force + ActualElasticShearForce) / ViscoDampingLocalContactForceModule;
+                    F_td *= fraction;
+                }
+                else {
+                    const double fraction = maximum_admissible_shear_force / ActualElasticShearForce;
+                    F_t *= fraction;
+                    F_td = Vector3(0.0, 0.0, 0.0);
+                }
+            }
+        }*/
+
         //double kn = 100000.0;
 		//contact_force = mOverlapVector * kn;
-
-        contact_force = F_n - F_nd + newF_t - F_td;
+        //contact_force = F_n + F_nd + F_t + F_td;
+        contact_force = F_n + F_nd + newF_t;
 
         KRATOS_CATCH( "" )
     }
