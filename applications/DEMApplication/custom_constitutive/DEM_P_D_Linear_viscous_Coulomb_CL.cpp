@@ -60,6 +60,12 @@ namespace Kratos {
             KRATOS_ERROR << "Variable CONTACT_K_N should be present in the properties when using DEMPolyhedronDiscontinuumConstitutiveLaw."<<std::endl;
 
         }
+
+        if(!pProp->Has(CONTACT_K_T)) {
+
+            KRATOS_ERROR << "Variable CONTACT_K_T should be present in the properties when using DEMPolyhedronDiscontinuumConstitutiveLaw."<<std::endl;
+
+        }
     }
 
     /////////////////////////
@@ -111,7 +117,7 @@ namespace Kratos {
         Vector3 relDisp_t = relDisp - relDisp_n;
 
         const double kn = (*mpProperties)[CONTACT_K_N];
-        const double kt = (*mpProperties)[CONTACT_K_N] * 0.5;
+        const double kt = (*mpProperties)[CONTACT_K_T];
         const double static_friction = (*mpProperties)[STATIC_FRICTION];
         const double dynamic_friction = (*mpProperties)[DYNAMIC_FRICTION];
         const double equiv_friction_decay_coefficient = (*mpProperties)[FRICTION_DECAY];
