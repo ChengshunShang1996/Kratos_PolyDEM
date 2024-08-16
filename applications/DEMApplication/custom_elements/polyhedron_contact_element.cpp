@@ -488,6 +488,10 @@ void PolyhedronContactElement::Barycentric(const Vector3& a, const Vector3& b, c
     double d20 = Vector3::Dot(v2, v0);
     double d21 = Vector3::Dot(v2, v1);
     double denom = d00 * d11 - d01 * d01;
+	if (std::abs(denom) < std::numeric_limits<double>::epsilon()) {
+        u = v = w = 0.0; 
+        return;
+    }
     v = (d11 * d20 - d01 * d21) / denom;
     w = (d00 * d21 - d01 * d20) / denom;
     u = 1.0 - v - w;

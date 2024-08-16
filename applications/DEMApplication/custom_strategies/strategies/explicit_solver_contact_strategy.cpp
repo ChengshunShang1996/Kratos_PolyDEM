@@ -672,12 +672,7 @@ namespace Kratos {
             [this_element_id, neighbour_element_id](const PolyhedronContactElement::Pointer& elem) {
                 if (elem->GetPolyElement1()->Id() == this_element_id &&
                     elem->GetPolyElement2()->Id() == neighbour_element_id) {
-
-                    #pragma omp critical
-                    {
                         elem->SetDeleteFlag(false); 
-                    }
-
                     return true;
                 }
                 return false;
@@ -724,7 +719,12 @@ namespace Kratos {
                     if (neighbour_element == NULL) continue; //The initial neighbor was deleted at some point in time!!
                     if (mListOfPolyhedronParticles[i]->Id() > neighbour_element->Id()) continue;
 
-                    if (!ElementExists(mPolyhedronContactElements, mListOfPolyhedronParticles[i]->Id(), neighbour_element->Id())){
+                    bool go_ahead = false;
+                    #pragma omp critical
+                    {
+                        go_ahead = ElementExists(mPolyhedronContactElements, mListOfPolyhedronParticles[i]->Id(), neighbour_element->Id());
+                    }
+                    if (!go_ahead){
                         const Properties::Pointer& properties = mListOfPolyhedronParticles[i]->pGetProperties();
                         p_new_contact_element = rReferenceElement.Create(used_contacts_counter + 1, mListOfPolyhedronParticles[i], neighbour_element, properties);
 
@@ -735,6 +735,7 @@ namespace Kratos {
                             used_contacts_counter++;
                         }
                     }
+                    
                     
                     /*
                     #pragma omp critical
