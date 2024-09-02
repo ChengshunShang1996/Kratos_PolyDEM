@@ -62,8 +62,13 @@ class ExplicitStrategy(BaseExplicitStrategy):
                         self.spheres_model_part.ProcessInfo.SetValue(COMPUTE_STRESS_TENSOR_OPTION, 1)
                         break'''
 
-        self.cplusplus_strategy = ContactExplicitSolverStrategy(self.settings, self.max_delta_time, self.n_step_search, self.safety_factor,
-                                                  self.delta_option, self.creator_destructor, self.dem_fem_search, self.search_strategy, self.solver_settings)
+        if (self.DEM_parameters["TranslationalIntegrationScheme"].GetString() == 'Velocity_Verlet'):
+            self.cplusplus_strategy = ContactIterativeSolverStrategy(self.settings, self.max_delta_time, self.n_step_search, self.safety_factor,
+                                                              self.delta_option, self.creator_destructor, self.dem_fem_search,
+                                                              self.search_strategy, self.solver_settings)
+        else:
+            self.cplusplus_strategy = ContactExplicitSolverStrategy(self.settings, self.max_delta_time, self.n_step_search, self.safety_factor,
+                                                    self.delta_option, self.creator_destructor, self.dem_fem_search, self.search_strategy, self.solver_settings)
 
     def BeforeInitialize(self):
         self.CreateCPlusPlusStrategy()

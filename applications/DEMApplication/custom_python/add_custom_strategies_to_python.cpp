@@ -11,6 +11,7 @@
 #include "custom_strategies/strategies/explicit_solver_continuum.h"
 #include "custom_strategies/strategies/explicit_solver_contact_strategy.h"
 #include "custom_strategies/strategies/iterative_solver_strategy.h"
+#include "custom_strategies/strategies/iterative_solver_contact_strategy.h"
 #include "custom_strategies/strategies/velocity_verlet_solver_strategy.h"
 
 //linear solvers
@@ -204,6 +205,10 @@ void  AddCustomStrategiesToPython(pybind11::module& m)
 
     py::class_<IterativeSolverStrategy, IterativeSolverStrategy::Pointer, ExplicitSolverStrategy>(m, "IterativeSolverStrategy")
         .def(py::init< ExplicitSolverSettings&, double, double, double, int, ParticleCreatorDestructor::Pointer,DEM_FEM_Search::Pointer, SpatialSearch::Pointer, Parameters>())
+        ;
+
+    py::class_<ContactIterativeSolverStrategy, ContactIterativeSolverStrategy::Pointer, ContactExplicitSolverStrategy>(m, "ContactIterativeSolverStrategy")
+        .def(py::init< ContactExplicitSolverSettings&, double, double, double, int, ParticleCreatorDestructor::Pointer,DEM_FEM_Search::Pointer, SpatialSearch::Pointer, Parameters>())
         ;
 
     py::class_<VelocityVerletSolverStrategy<ExplicitSolverStrategy>, VelocityVerletSolverStrategy<ExplicitSolverStrategy>::Pointer, ExplicitSolverStrategy>(m, "VelocityVerletSolverStrategy")
