@@ -51,6 +51,8 @@
 #include "custom_constitutive/DEM_parallel_bond_CL.h"
 #include "custom_constitutive/DEM_smooth_joint_CL.h"
 #include "custom_constitutive/DEM_parallel_bond_for_membrane_CL.h"
+#include "custom_constitutive/DEM_parallel_bond_bilinear_damage_CL.h"
+#include "custom_constitutive/DEM_parallel_bond_bilinear_damage_mixed_CL.h"
 #include "custom_constitutive/DEM_rolling_friction_model.h"
 #include "custom_constitutive/DEM_rolling_friction_model_constant_torque.h"
 #include "custom_constitutive/DEM_rolling_friction_model_viscous_torque.h"
@@ -111,6 +113,7 @@ KRATOS_CREATE_VARIABLE(bool, GLOBAL_COORDINATION_NUMBER_OPTION)
 KRATOS_CREATE_VARIABLE(bool, AUTOMATIC_SKIN_COMPUTATION)
 KRATOS_CREATE_VARIABLE(double, SKIN_FACTOR_RADIUS)
 KRATOS_CREATE_VARIABLE(int, CLEAN_INDENT_OPTION)
+KRATOS_CREATE_VARIABLE(int, CLEAN_INDENT_V2_OPTION)
 KRATOS_CREATE_VARIABLE(int, TRIHEDRON_OPTION)
 KRATOS_CREATE_VARIABLE(int, ROLLING_FRICTION_OPTION)
 KRATOS_CREATE_VARIABLE(int, POISSON_EFFECT_OPTION)
@@ -139,6 +142,7 @@ KRATOS_CREATE_VARIABLE(double, DEM_ENGINE_PERFORMANCE)
 KRATOS_CREATE_VARIABLE(double, DEM_DRAG_CONSTANT_X)
 KRATOS_CREATE_VARIABLE(double, DEM_DRAG_CONSTANT_Y)
 KRATOS_CREATE_VARIABLE(double, DEM_DRAG_CONSTANT_Z)
+KRATOS_CREATE_VARIABLE(bool, ENERGY_CALCULATION_OPTION)
 
 KRATOS_CREATE_VARIABLE(double, INITIAL_VELOCITY_X_VALUE)
 KRATOS_CREATE_VARIABLE(double, INITIAL_VELOCITY_Y_VALUE)
@@ -259,6 +263,9 @@ KRATOS_CREATE_VARIABLE(bool, DEBUG_PRINTING_OPTION)
 KRATOS_CREATE_VARIABLE(int, DEBUG_PRINTING_ID_1)
 KRATOS_CREATE_VARIABLE(int, DEBUG_PRINTING_ID_2)
 KRATOS_CREATE_VARIABLE(double, FRACTURE_ENERGY)
+KRATOS_CREATE_VARIABLE(double, FRACTURE_ENERGY_NORMAL)
+KRATOS_CREATE_VARIABLE(double, FRACTURE_ENERGY_TANGENTIAL)
+KRATOS_CREATE_VARIABLE(double, FRACTURE_ENERGY_EXPONENT)
 KRATOS_CREATE_VARIABLE(double, SIGMA_SLOPE_CHANGE_THRESHOLD)
 KRATOS_CREATE_VARIABLE(double, INTERNAL_FRICTION_AFTER_THRESHOLD)
 KRATOS_CREATE_VARIABLE(double, SEARCH_RADIUS_INCREMENT_FOR_BONDS_CREATION)
@@ -335,6 +342,12 @@ KRATOS_CREATE_VARIABLE(Quaternion<double>, AUX_ORIENTATION)
 KRATOS_CREATE_3D_VARIABLE_WITH_COMPONENTS(LOCAL_AUX_ANGULAR_VELOCITY)
 // ******************* Quaternion Integration END *******************
 
+// ****************Radius expansion method BEGIN*******************
+KRATOS_CREATE_VARIABLE(bool, IS_RADIUS_EXPANSION)
+KRATOS_CREATE_VARIABLE(double, RADIUS_EXPANSION_RATE)
+KRATOS_CREATE_VARIABLE(double, RADIUS_MULTIPLIER_MAX)
+// *****************Radius expansion method END********************
+
 // FORCE AND MOMENTUM
 KRATOS_CREATE_3D_VARIABLE_WITH_COMPONENTS(CONTACT_IMPULSE)
 KRATOS_CREATE_3D_VARIABLE_WITH_COMPONENTS(PARTICLE_MOMENT)
@@ -357,6 +370,7 @@ KRATOS_CREATE_VARIABLE(double, PARTICLE_GRAVITATIONAL_ENERGY)
 KRATOS_CREATE_VARIABLE(double, PARTICLE_INELASTIC_VISCODAMPING_ENERGY)
 KRATOS_CREATE_VARIABLE(double, PARTICLE_INELASTIC_FRICTIONAL_ENERGY)
 KRATOS_CREATE_VARIABLE(double, PARTICLE_INELASTIC_ROLLING_RESISTANCE_ENERGY)
+KRATOS_CREATE_VARIABLE(double, PARTICLE_MAX_NORMAL_BALL_TO_BALL_FORCE_TIMES_RADIUS)
 KRATOS_CREATE_VARIABLE(int, COMPUTE_ENERGY_OPTION)
 KRATOS_CREATE_VARIABLE(double, GLOBAL_DAMPING)
 KRATOS_CREATE_VARIABLE(double, GLOBAL_VISCOUS_DAMPING)
@@ -550,6 +564,14 @@ template class DEM_compound_constitutive_law_for_PBM<DEM_parallel_bond, DEM_D_He
 template class DEM_compound_constitutive_law_for_PBM<DEM_parallel_bond, DEM_D_Linear_classic>;
 template class DEM_compound_constitutive_law_for_PBM<DEM_parallel_bond, DEM_D_Quadratic>;
 
+template class DEM_compound_constitutive_law_for_PBM<DEM_parallel_bond_bilinear_damage, DEM_D_Hertz_viscous_Coulomb>;
+template class DEM_compound_constitutive_law_for_PBM<DEM_parallel_bond_bilinear_damage, DEM_D_Linear_classic>;
+template class DEM_compound_constitutive_law_for_PBM<DEM_parallel_bond_bilinear_damage, DEM_D_Quadratic>;
+
+template class DEM_compound_constitutive_law_for_PBM<DEM_parallel_bond_bilinear_damage_mixed, DEM_D_Hertz_viscous_Coulomb>;
+template class DEM_compound_constitutive_law_for_PBM<DEM_parallel_bond_bilinear_damage_mixed, DEM_D_Linear_classic>;
+template class DEM_compound_constitutive_law_for_PBM<DEM_parallel_bond_bilinear_damage_mixed, DEM_D_Quadratic>;
+
 void KratosDEMApplication::Register() {
     KRATOS_INFO("") << "\n"
                     << "     KRATOS |  _ \\| ____|  \\/  |  _ \\ __ _  ___| | __      \n"
@@ -606,6 +628,7 @@ void KratosDEMApplication::Register() {
     KRATOS_REGISTER_VARIABLE(AUTOMATIC_SKIN_COMPUTATION)
     KRATOS_REGISTER_VARIABLE(SKIN_FACTOR_RADIUS)
     KRATOS_REGISTER_VARIABLE(CLEAN_INDENT_OPTION)
+    KRATOS_REGISTER_VARIABLE(CLEAN_INDENT_V2_OPTION)
     KRATOS_REGISTER_VARIABLE(TRIHEDRON_OPTION)
     KRATOS_REGISTER_VARIABLE(NEIGH_INITIALIZED)
     KRATOS_REGISTER_VARIABLE(TRIAXIAL_TEST_OPTION)
@@ -630,6 +653,7 @@ void KratosDEMApplication::Register() {
     KRATOS_REGISTER_VARIABLE(DEM_DRAG_CONSTANT_X)
     KRATOS_REGISTER_VARIABLE(DEM_DRAG_CONSTANT_Y)
     KRATOS_REGISTER_VARIABLE(DEM_DRAG_CONSTANT_Z)
+    KRATOS_REGISTER_VARIABLE(ENERGY_CALCULATION_OPTION)
 
     KRATOS_REGISTER_VARIABLE(INITIAL_VELOCITY_X_VALUE)
     KRATOS_REGISTER_VARIABLE(INITIAL_VELOCITY_Y_VALUE)
@@ -744,6 +768,9 @@ void KratosDEMApplication::Register() {
     KRATOS_REGISTER_VARIABLE(DEBUG_PRINTING_ID_1)
     KRATOS_REGISTER_VARIABLE(DEBUG_PRINTING_ID_2)
     KRATOS_REGISTER_VARIABLE(FRACTURE_ENERGY)
+    KRATOS_REGISTER_VARIABLE(FRACTURE_ENERGY_NORMAL)
+    KRATOS_REGISTER_VARIABLE(FRACTURE_ENERGY_TANGENTIAL)
+    KRATOS_REGISTER_VARIABLE(FRACTURE_ENERGY_EXPONENT)
     KRATOS_REGISTER_VARIABLE(SIGMA_SLOPE_CHANGE_THRESHOLD)
     KRATOS_REGISTER_VARIABLE(INTERNAL_FRICTION_AFTER_THRESHOLD)
     KRATOS_REGISTER_VARIABLE(SEARCH_RADIUS_INCREMENT_FOR_BONDS_CREATION)
@@ -827,6 +854,12 @@ void KratosDEMApplication::Register() {
     KRATOS_REGISTER_VARIABLE(LOCAL_AUX_ANGULAR_VELOCITY)
     // ******************* Quaternion Integration END *******************
 
+    // ****************Radius expansion method BEGIN*******************
+    KRATOS_REGISTER_VARIABLE(IS_RADIUS_EXPANSION)
+    KRATOS_REGISTER_VARIABLE(RADIUS_EXPANSION_RATE)
+    KRATOS_REGISTER_VARIABLE(RADIUS_MULTIPLIER_MAX)
+    // *****************Radius expansion method END********************
+
     // FORCE AND MOMENTUM
     KRATOS_REGISTER_3D_VARIABLE_WITH_COMPONENTS(CONTACT_IMPULSE)
     KRATOS_REGISTER_3D_VARIABLE_WITH_COMPONENTS(PARTICLE_MOMENT)
@@ -849,6 +882,7 @@ void KratosDEMApplication::Register() {
     KRATOS_REGISTER_VARIABLE(PARTICLE_INELASTIC_VISCODAMPING_ENERGY)
     KRATOS_REGISTER_VARIABLE(PARTICLE_INELASTIC_FRICTIONAL_ENERGY)
     KRATOS_REGISTER_VARIABLE(PARTICLE_INELASTIC_ROLLING_RESISTANCE_ENERGY)
+    KRATOS_REGISTER_VARIABLE(PARTICLE_MAX_NORMAL_BALL_TO_BALL_FORCE_TIMES_RADIUS)
     KRATOS_REGISTER_VARIABLE(COMPUTE_ENERGY_OPTION)
     KRATOS_REGISTER_VARIABLE(GLOBAL_DAMPING)
     KRATOS_REGISTER_VARIABLE(GLOBAL_VISCOUS_DAMPING)
@@ -1048,6 +1082,8 @@ void KratosDEMApplication::Register() {
     Serializer::Register("DEM_parallel_bond", DEM_parallel_bond());
     Serializer::Register("DEM_smooth_joint", DEM_smooth_joint());
     Serializer::Register("DEM_parallel_bond_for_membrane", DEM_parallel_bond_for_membrane());
+    Serializer::Register("DEM_parallel_bond_bilinear_damage", DEM_parallel_bond_bilinear_damage());
+    Serializer::Register("DEM_parallel_bond_bilinear_damage_mixed", DEM_parallel_bond_bilinear_damage_mixed());
     Serializer::Register("DEMRollingFrictionModelConstantTorque", DEMRollingFrictionModelConstantTorque());
     Serializer::Register("DEMRollingFrictionModelViscousTorque", DEMRollingFrictionModelViscousTorque());
     Serializer::Register("DEMRollingFrictionModelBounded", DEMRollingFrictionModelBounded());
