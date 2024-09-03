@@ -419,6 +419,7 @@ class Procedures():
         cluster_model_part = all_model_parts.Get('ClusterPart')
         dem_inlet_model_part = all_model_parts.Get('DEMInletPart')
         rigid_face_model_part = all_model_parts.Get('RigidFacePart')
+        polyhedron_model_part = all_model_parts.Get('PolyhedronPart')
 
         self.solver = weakref.proxy(solver)
         self.translational_scheme = weakref.proxy(translational_scheme)
@@ -436,6 +437,8 @@ class Procedures():
         self.AddCommonVariables(rigid_face_model_part, DEM_parameters)
         self.AddRigidFaceVariables(rigid_face_model_part, DEM_parameters)
         self.AddMpiVariables(rigid_face_model_part)
+        self.AddCommonVariables(polyhedron_model_part, DEM_parameters)
+        self.AddPolyhedronVariables(polyhedron_model_part, DEM_parameters)
 
     def AddCommonVariables(self, model_part, DEM_parameters):
         model_part.AddNodalSolutionStepVariable(VELOCITY)
@@ -606,17 +609,35 @@ class Procedures():
         if DEM_parameters["PostEulerAngles"].GetBool():
             model_part.AddNodalSolutionStepVariable(EULER_ANGLES)
 
+    def AddPolyhedronVariables(self, model_part, DEM_parameters):
+        model_part.AddNodalSolutionStepVariable(RADIUS)
+        model_part.AddNodalSolutionStepVariable(ANGULAR_VELOCITY)
+        model_part.AddNodalSolutionStepVariable(REPRESENTATIVE_VOLUME)
+        model_part.AddNodalSolutionStepVariable(NODAL_MASS)
+        model_part.AddNodalSolutionStepVariable(ORIENTATION)
+        model_part.AddNodalSolutionStepVariable(PRINCIPAL_MOMENTS_OF_INERTIA)
+        model_part.AddNodalSolutionStepVariable(PARTICLE_MOMENT)
+        model_part.AddNodalSolutionStepVariable(PARTICLE_ROTATION_ANGLE)
+        model_part.AddNodalSolutionStepVariable(DELTA_ROTATION)
+        model_part.AddNodalSolutionStepVariable(LOCAL_ANGULAR_VELOCITY)
+        model_part.AddNodalSolutionStepVariable(EXTERNAL_APPLIED_MOMENT)
+        model_part.AddNodalSolutionStepVariable(PARTICLE_MOMENT_OF_INERTIA)
+        model_part.AddNodalSolutionStepVariable(POLYHEDRON_SHAPE_INDEX)
+        model_part.AddNodalSolutionStepVariable(POLYHEDRON_MOMENT_OF_INERTIA)
+        model_part.AddNodalSolutionStepVariable(INITIAL_ROTATION_VECTOR)
+
     def AddMpiVariables(self, model_part):
         pass
 
-    def SetInitialNodalValues(self, spheres_model_part, cluster_model_part, dem_inlet_model_part, rigid_face_model_part):
+    def SetInitialNodalValues(self, spheres_model_part, cluster_model_part, dem_inlet_model_part, rigid_face_model_part, polyhedron_model_part):
         pass
 
-    def SetUpBufferSizeInAllModelParts(self, spheres_model_part, spheres_b_size, cluster_model_part, clusters_b_size, dem_inlet_model_part, inlet_b_size, rigid_face_model_part, rigid_b_size):
+    def SetUpBufferSizeInAllModelParts(self, spheres_model_part, spheres_b_size, cluster_model_part, clusters_b_size, dem_inlet_model_part, inlet_b_size, rigid_face_model_part, rigid_b_size, polyhedron_model_part, polyhedron_b_size):
         spheres_model_part.SetBufferSize(spheres_b_size)
         cluster_model_part.SetBufferSize(clusters_b_size)
         dem_inlet_model_part.SetBufferSize(inlet_b_size)
         rigid_face_model_part.SetBufferSize(rigid_b_size)
+        polyhedron_model_part.SetBufferSize(polyhedron_b_size)
 
     def FindMaxNodeIdAccrossModelParts(self, creator_destructor, all_model_parts):
 
@@ -625,6 +646,7 @@ class Procedures():
         max_candidates.append(creator_destructor.FindMaxElementIdInModelPart(all_model_parts.Get("SpheresPart")))
         max_candidates.append(creator_destructor.FindMaxNodeIdInModelPart(all_model_parts.Get("RigidFacePart")))
         max_candidates.append(creator_destructor.FindMaxNodeIdInModelPart(all_model_parts.Get("ClusterPart")))
+        max_candidates.append(creator_destructor.FindMaxNodeIdInModelPart(all_model_parts.Get("PolyhedronPart")))
 
         return max(max_candidates)
 
@@ -1416,6 +1438,12 @@ class DEMIo():
         self.KratosPrintInfo("*******************  PRINTING RESULTS FOR {}  ***************************".format(format_name))
         self.KratosPrintInfo("                        (" + str(all_model_parts.Get("SpheresPart").NumberOfElements(0)) + " elements)")
         self.KratosPrintInfo("                        (" + str(all_model_parts.Get("SpheresPart").NumberOfNodes(0)) + " nodes)")
+        self.KratosPrintInfo("")
+
+    def ShowPrintingPolyhedronResultsOnScreen(self, all_model_parts, format_name):
+        self.KratosPrintInfo("*******************  PRINTING RESULTS FOR {}  ***************************".format(format_name))
+        self.KratosPrintInfo("                        (" + str(all_model_parts.Get("PolyhedronPart").NumberOfElements(0)) + " elements)")
+        self.KratosPrintInfo("                        (" + str(all_model_parts.Get("PolyhedronPart").NumberOfNodes(0)) + " nodes)")
         self.KratosPrintInfo("")
 
     def Initialize(self, DEM_parameters):

@@ -9,7 +9,9 @@
 #include "solving_strategies/strategies/implicit_solving_strategy.h"
 #include "custom_strategies/strategies/explicit_solver_strategy.h"
 #include "custom_strategies/strategies/explicit_solver_continuum.h"
+#include "custom_strategies/strategies/explicit_solver_contact_strategy.h"
 #include "custom_strategies/strategies/iterative_solver_strategy.h"
+#include "custom_strategies/strategies/iterative_solver_contact_strategy.h"
 #include "custom_strategies/strategies/velocity_verlet_solver_strategy.h"
 
 //linear solvers
@@ -151,6 +153,16 @@ void  AddCustomStrategiesToPython(pybind11::module& m)
         .def_readwrite("inlet_model_part",&ExplicitSolverSettings::inlet_model_part)
         ;
 
+    py::class_<ContactExplicitSolverSettings, ContactExplicitSolverSettings::Pointer>(m, "ContactExplicitSolverSettings")
+        .def(py::init<>())
+        .def_readwrite("r_model_part",&ContactExplicitSolverSettings::r_model_part)
+        .def_readwrite("contact_model_part",&ContactExplicitSolverSettings::contact_model_part)
+        .def_readwrite("fem_model_part",&ContactExplicitSolverSettings::fem_model_part)
+        .def_readwrite("cluster_model_part",&ContactExplicitSolverSettings::cluster_model_part)
+        .def_readwrite("inlet_model_part",&ContactExplicitSolverSettings::inlet_model_part)
+        .def_readwrite("polyhedron_model_part",&ContactExplicitSolverSettings::polyhedron_model_part)
+        ;
+
     py::class_<ExplicitSolverStrategy, ExplicitSolverStrategy::Pointer>(m, "ExplicitSolverStrategy")
         .def(py::init< ExplicitSolverSettings&, double, int, double, int, ParticleCreatorDestructor::Pointer,DEM_FEM_Search::Pointer, SpatialSearch::Pointer, Parameters>())
         .def("SolveSolutionStep", &ExplicitSolverStrategy::SolveSolutionStep)
@@ -180,8 +192,24 @@ void  AddCustomStrategiesToPython(pybind11::module& m)
         .def("RebuildListOfContinuumSphericParticles", &ContinuumExplicitSolverStrategy::RebuildListOfContinuumSphericParticles)
         ;
 
+    py::class_<ContactExplicitSolverStrategy, ContactExplicitSolverStrategy::Pointer, ExplicitSolverStrategy>(m, "ContactExplicitSolverStrategy")
+        .def(py::init< ContactExplicitSolverSettings&, double, int, double, int, ParticleCreatorDestructor::Pointer,DEM_FEM_Search::Pointer, SpatialSearch::Pointer, Parameters>())
+        .def("RebuildListOfPolyhedronParticles", &ContactExplicitSolverStrategy::RebuildListOfPolyhedronParticles)
+        .def("CreateContactElements", &ContactExplicitSolverStrategy::CreateContactElements)
+        .def("SetNormalRadiiOnAllParticles", &ContactExplicitSolverStrategy::SetNormalRadiiOnAllParticles)
+        .def("ResetPrescribedMotionFlagsRespectingImposedDofsForPolyhedron", &ContactExplicitSolverStrategy::ResetPrescribedMotionFlagsRespectingImposedDofsForPolyhedron)
+        .def("SolveSolutionStep", &ContactExplicitSolverStrategy::SolveSolutionStep)
+        .def("Initialize", &ContactExplicitSolverStrategy::Initialize)
+        .def("InitializeSolutionStep", &ContactExplicitSolverStrategy::InitializeSolutionStep)
+        .def("FinalizeSolutionStep", &ContactExplicitSolverStrategy::FinalizeSolutionStep)
+        ;
+
     py::class_<IterativeSolverStrategy, IterativeSolverStrategy::Pointer, ExplicitSolverStrategy>(m, "IterativeSolverStrategy")
         .def(py::init< ExplicitSolverSettings&, double, double, double, int, ParticleCreatorDestructor::Pointer,DEM_FEM_Search::Pointer, SpatialSearch::Pointer, Parameters>())
+        ;
+
+    py::class_<ContactIterativeSolverStrategy, ContactIterativeSolverStrategy::Pointer, ContactExplicitSolverStrategy>(m, "ContactIterativeSolverStrategy")
+        .def(py::init< ContactExplicitSolverSettings&, double, double, double, int, ParticleCreatorDestructor::Pointer,DEM_FEM_Search::Pointer, SpatialSearch::Pointer, Parameters>())
         ;
 
     py::class_<VelocityVerletSolverStrategy<ExplicitSolverStrategy>, VelocityVerletSolverStrategy<ExplicitSolverStrategy>::Pointer, ExplicitSolverStrategy>(m, "VelocityVerletSolverStrategy")

@@ -17,8 +17,11 @@
 #include "includes/model_part.h"
 #include "custom_utilities/GeometryFunctions.h"
 #include "utilities/quaternion.h"
+#include "includes/ublas_interface.h"
 
 namespace Kratos {
+
+    namespace ublas = boost::numeric::ublas;
 
     class KRATOS_API(DEM_APPLICATION) SymplecticEulerScheme : public DEMIntegrationScheme {
     public:
@@ -42,6 +45,20 @@ namespace Kratos {
         DEMIntegrationScheme::Pointer CloneShared() const override {
             DEMIntegrationScheme::Pointer cloned_scheme(new SymplecticEulerScheme(*this));
             return cloned_scheme;
+        }
+
+        // Function to calculate the inverse of a matrix using LU decomposition
+        template<typename T>
+        bool invert_matrix(const ublas::matrix<T>& input, ublas::matrix<T>& inverse) {
+            ublas::matrix<T> A(input);
+            ublas::permutation_matrix<std::size_t> pm(A.size1());
+
+            int res = ublas::lu_factorize(A, pm);
+            if (res != 0) return false;
+
+            inverse.assign(ublas::identity_matrix<T>(A.size1()));
+            ublas::lu_substitute(A, pm, inverse);
+            return true;
         }
 
         void SetTranslationalIntegrationSchemeInProperties(Properties::Pointer pProp, bool verbose = true) const override;
@@ -73,6 +90,18 @@ namespace Kratos {
                 const double delta_t,
                 const bool Fix_Ang_vel[3]) override;
 
+        virtual void CalculateNewRotationalVariablesOfPolyhedrons(
+                int StepFlag,
+                Node& i,
+                Matrix moment_of_inertia,
+                array_1d<double, 3 >& angular_velocity,
+                array_1d<double, 3 >& torque,
+                const double moment_reduction_factor,
+                array_1d<double, 3 >& rotated_angle,
+                array_1d<double, 3 >& delta_rotation,
+                const double delta_t,
+                const bool Fix_Ang_vel[3]);
+
         void CalculateNewRotationalVariablesOfRigidBodyElements(
                 int StepFlag,
                 Node& i,
@@ -101,6 +130,12 @@ namespace Kratos {
                 const array_1d<double, 3 >& torque,
                 const double moment_reduction_factor,
                 array_1d<double, 3 >& angular_acceleration) override;
+
+        virtual void CalculateAngularAccelerationForPolyhedron(
+                Matrix moment_of_inertia,
+                const array_1d<double, 3 >& torque,
+                const double moment_reduction_factor,
+                array_1d<double, 3 >& angular_acceleration);
 
         void CalculateLocalAngularAccelerationByEulerEquations(
                 const array_1d<double, 3 >& local_angular_velocity,

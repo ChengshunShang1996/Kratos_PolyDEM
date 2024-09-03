@@ -111,6 +111,8 @@ class DEMAnalysisStage(AnalysisStage):
         self.SetFinalTime()
         self.AddVariables()
 
+        self.poly_output_cnt = 0
+
         super().__init__(model, self.DEM_parameters)
 
     def CreateModelParts(self):
@@ -120,6 +122,7 @@ class DEMAnalysisStage(AnalysisStage):
         self.dem_inlet_model_part = self.model.CreateModelPart("DEMInletPart")
         self.mapping_model_part = self.model.CreateModelPart("MappingPart")
         self.contact_model_part = self.model.CreateModelPart("ContactPart")
+        self.polyhedron_model_part = self.model.CreateModelPart("PolyhedronPart")
 
         mp_list = []
         mp_list.append(self.spheres_model_part)
@@ -128,6 +131,7 @@ class DEMAnalysisStage(AnalysisStage):
         mp_list.append(self.dem_inlet_model_part)
         mp_list.append(self.mapping_model_part)
         mp_list.append(self.contact_model_part)
+        mp_list.append(self.polyhedron_model_part)
 
         self.all_model_parts = DEM_procedures.SetOfModelParts(mp_list)
 
@@ -259,7 +263,7 @@ class DEMAnalysisStage(AnalysisStage):
         self.SetAnalyticWatchers()
 
         # Setting up the buffer size
-        self.procedures.SetUpBufferSizeInAllModelParts(self.spheres_model_part, 1, self.cluster_model_part, 1, self.dem_inlet_model_part, 1, self.rigid_face_model_part, 1)
+        self.procedures.SetUpBufferSizeInAllModelParts(self.spheres_model_part, 1, self.cluster_model_part, 1, self.dem_inlet_model_part, 1, self.rigid_face_model_part, 1, self.polyhedron_model_part, 1)
 
         self.KratosPrintInfo("Initializing Problem...")
 
@@ -351,6 +355,9 @@ class DEMAnalysisStage(AnalysisStage):
 
     def GetDEMClustersInputFileTag(self):
         return 'DEM_Clusters'
+    
+    def GetDEMPolyhedronInputFileTag(self):
+        return 'DEM_Polyhedron'
 
     def GetDiscreteElementsInputFilePath(self):
         return self.GetInputFilePath(self.GetDiscreteElementsInputFileTag())
@@ -363,6 +370,9 @@ class DEMAnalysisStage(AnalysisStage):
 
     def GetDEMClustersInputFilePath(self):
         return self.GetInputFilePath(self.GetDEMClustersInputFileTag())
+    
+    def GetDEMPolyhedronInputFilePath(self):
+        return self.GetInputFilePath(self.GetDEMPolyhedronInputFileTag())
 
     def GetMpFilePath(self):
         return GetInputFilePath('DEM')
@@ -375,6 +385,9 @@ class DEMAnalysisStage(AnalysisStage):
 
     def GetClusterFilePath(self):
         return GetInputFilePath('DEM_Clusters')
+    
+    def GetPolyhedronFilePath(self):
+        return GetInputFilePath('DEM_Polyhedron')
 
     def GetInputFilePath(self, file_tag=''):
         return self.GetProblemNameWithPath() + file_tag
@@ -440,6 +453,10 @@ class DEMAnalysisStage(AnalysisStage):
         max_node_id, max_elem_id, max_cond_id = UpdateMaxIds(max_node_id, max_elem_id, max_cond_id, self.cluster_model_part)
 
         ReadModelPart(self.dem_inlet_model_part, self.GetDEMInletInputFileTag(), max_node_id, max_elem_id, max_cond_id)
+
+        max_node_id, max_elem_id, max_cond_id = UpdateMaxIds(max_node_id, max_elem_id, max_cond_id, self.cluster_model_part)
+
+        ReadModelPart(self.polyhedron_model_part, self.GetDEMPolyhedronInputFileTag(), max_node_id, max_elem_id, max_cond_id)
 
     def ReadModelParts(self, max_node_id=0, max_elem_id=0, max_cond_id=0):
 
@@ -514,7 +531,7 @@ class DEMAnalysisStage(AnalysisStage):
             self.DEM_inlet.InitializeDEM_Inlet(self.spheres_model_part, self.creator_destructor, self._GetSolver().continuum_type)
 
     def SetInitialNodalValues(self):
-        self.procedures.SetInitialNodalValues(self.spheres_model_part, self.cluster_model_part, self.dem_inlet_model_part, self.rigid_face_model_part)
+        self.procedures.SetInitialNodalValues(self.spheres_model_part, self.cluster_model_part, self.dem_inlet_model_part, self.rigid_face_model_part, self.polyhedron_model_part)
 
     def InitializeSolutionStep(self):
         super().InitializeSolutionStep()
@@ -612,6 +629,7 @@ class DEMAnalysisStage(AnalysisStage):
         self.model.DeleteModelPart(self.dem_inlet_model_part.Name)
         self.model.DeleteModelPart(self.mapping_model_part.Name)
         self.model.DeleteModelPart(self.spheres_model_part.Name)
+        self.model.DeleteModelPart(self.polyhedron_model_part.Name)
 
     def Finalize(self):
         self.KratosPrintInfo("Finalizing execution...")
@@ -624,12 +642,15 @@ class DEMAnalysisStage(AnalysisStage):
 
         self.CleanUpOperations()
 
+    #TODO: why repeat this function?
+    '''
     def __SafeDeleteModelParts(self):
         self.model.DeleteModelPart(self.cluster_model_part.Name)
         self.model.DeleteModelPart(self.rigid_face_model_part.Name)
         self.model.DeleteModelPart(self.dem_inlet_model_part.Name)
         self.model.DeleteModelPart(self.mapping_model_part.Name)
         self.model.DeleteModelPart(self.spheres_model_part.Name)
+    '''
 
     def CleanUpOperations(self):
 
@@ -657,6 +678,7 @@ class DEMAnalysisStage(AnalysisStage):
         del self.dem_inlet_model_part
         del self.mapping_model_part
         del self.contact_model_part
+        del self.polyhedron_model_part
 
         if self.DEM_parameters["dem_inlet_option"].GetBool():
             del self.DEM_inlet
@@ -666,6 +688,9 @@ class DEMAnalysisStage(AnalysisStage):
         if self.DEM_parameters["post_vtk_option"].GetBool():
             import KratosMultiphysics.DEMApplication.dem_vtk_output as dem_vtk_output
             self.vtk_output = dem_vtk_output.VtkOutput(self.main_path, self.problem_name, self.spheres_model_part, self.contact_model_part, self.rigid_face_model_part, self.DEM_parameters)
+        if self.DEM_parameters["post_polyhedron_vtk_option"].GetBool():
+            import KratosMultiphysics.DEMApplication.polyhedron_vtk_output as polyhedron_vtk_output
+            self.polyhedron_vtk_output = polyhedron_vtk_output.PolyhedronVtkOutput(self.main_path, self.problem_name, self.spheres_model_part, self.contact_model_part, self.rigid_face_model_part, self.polyhedron_model_part, self.DEM_parameters)
 
     def GraphicalOutputInitialize(self):
         if self.do_print_results_option:
@@ -693,6 +718,12 @@ class DEMAnalysisStage(AnalysisStage):
             if self.DEM_parameters["post_vtk_option"].GetBool():
                 self.demio.ShowPrintingResultsOnScreen(self.all_model_parts, 'VTK')
                 self.vtk_output.WriteResults(self.time)
+
+        if "post_polyhedron_vtk_option" in self.DEM_parameters.keys():
+            if self.DEM_parameters["post_polyhedron_vtk_option"].GetBool():
+                self.demio.ShowPrintingPolyhedronResultsOnScreen(self.all_model_parts, 'POLYHEDRON VTK')
+                self.polyhedron_vtk_output.WriteResults(self.poly_output_cnt)
+                self.poly_output_cnt += 1
 
         self.file_msh = self.demio.GetMultiFileListName(self.problem_name + "_" + "%.12g"%time + ".post.msh")
         self.file_res = self.demio.GetMultiFileListName(self.problem_name + "_" + "%.12g"%time + ".post.res")

@@ -22,6 +22,7 @@
 #include "includes/variables.h"
 #include "utilities/openmp_utils.h"
 #include "cluster_information.h"
+#include "polyhedron_information.h"
 #include "custom_elements/spheric_continuum_particle.h"
 
 namespace Kratos
@@ -81,6 +82,57 @@ class PreUtilities
         cl_info.mInertias[2] = pybind11::cast<double>(inertias[2]);
 
         p_properties->SetValue(CLUSTER_INFORMATION, cl_info);
+    }
+
+    void SetPolyhedronInformationInProperties(std::string const& name,
+                                            pybind11::list& list_of_vertices_list,
+                                            pybind11::list& list_of_faces_list,
+                                            pybind11::list& list_of_size,
+                                            pybind11::list& list_of_volume,
+                                            Properties::Pointer& p_properties) {
+        PolyhedronInformation poly_info;
+
+        poly_info.mName = name;
+
+        array_1d<double,3> coords(3, 0.0);
+
+        for (int i = 0; i < (int) pybind11::len(list_of_vertices_list); i++) {
+            auto list_of_vertices = list_of_vertices_list[i].cast<pybind11::list>();
+            std::vector<array_1d<double,3>> temp_coords;
+            for (int j = 0; j < (int) pybind11::len(list_of_vertices); j++) {
+                pybind11::list list(list_of_vertices[j]);
+                coords[0] =  pybind11::cast<double>(list[0]);
+                coords[1] =  pybind11::cast<double>(list[1]);
+                coords[2] =  pybind11::cast<double>(list[2]);
+                temp_coords.push_back(coords);
+            }
+            poly_info.mListOfVerticesList.push_back(temp_coords);
+        }
+
+        for (int i = 0; i < (int) pybind11::len(list_of_faces_list); i++) {
+            auto list_of_faces = list_of_faces_list[i].cast<pybind11::list>();
+            std::vector<std::vector<int>> temp_face_vertices;
+            for (int j = 0; j < (int) pybind11::len(list_of_faces); j++) {
+                auto face = list_of_faces[j].cast<pybind11::list>();
+                std::vector<int> face_vertices;
+                for (int k = 0; k < pybind11::len(face); k++) {
+                    face_vertices.push_back(face[k].cast<int>());
+                }
+                temp_face_vertices.push_back(face_vertices);
+            }
+            poly_info.mListOfFacesList.push_back(temp_face_vertices);
+        }
+
+        for (int i = 0; i < (int) pybind11::len(list_of_size); i++) {
+            poly_info.mListOfSize.push_back(pybind11::cast<double>(list_of_size[i]));
+        }
+
+        for (int i = 0; i < (int) pybind11::len(list_of_volume); i++) {
+            poly_info.mListOfVolume.push_back(pybind11::cast<double>(list_of_volume[i]));
+        }
+
+        p_properties->SetValue(POLYHEDRON_INFORMATION, poly_info);
+
     }
 
     void PrintNumberOfNeighboursHistogram(const ModelPart& rSpheresModelPart, std::string const& filename) {

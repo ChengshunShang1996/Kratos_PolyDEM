@@ -187,10 +187,12 @@ def GetDefaultInputParameters():
             },
             "post_gid_option"                  : true,
             "post_vtk_option"                  : false,
+            "post_polyhedron_vtk_option"       : false,
             "IntegrationScheme"                : "deprecated_key_since_6_december_2017",
             "LoadingVelocityTop"               : 0.0,
             "LoadingVelocityBot"               : 0.0,
-            "problem_name" : "dummy_name.Provide_a_real_one",
+            "problem_name"                     : "dummy_name.Provide_a_real_one",
+            "PolyhedronFileName"               : "demo.poly.Provide_a_real_one",
             "processes" : {}
         }""")
     return default_settings

@@ -63,6 +63,24 @@ namespace Kratos {
         UpdateRotationalVariables(StepFlag, i, rotated_angle, delta_rotation, angular_velocity, angular_acceleration, delta_t, Fix_Ang_vel);
     }
 
+    void SymplecticEulerScheme::CalculateNewRotationalVariablesOfPolyhedrons(
+                int StepFlag,
+                Node& i,
+                Matrix moment_of_inertia,
+                array_1d<double, 3 >& angular_velocity,
+                array_1d<double, 3 >& torque,
+                const double moment_reduction_factor,
+                array_1d<double, 3 >& rotated_angle,
+                array_1d<double, 3 >& delta_rotation,
+                const double delta_t,
+                const bool Fix_Ang_vel[3]) {
+
+        array_1d<double, 3 > angular_acceleration;
+        CalculateAngularAccelerationForPolyhedron(moment_of_inertia, torque, moment_reduction_factor, angular_acceleration);
+
+        UpdateRotationalVariables(StepFlag, i, rotated_angle, delta_rotation, angular_velocity, angular_acceleration, delta_t, Fix_Ang_vel);
+    }
+
     void SymplecticEulerScheme::CalculateNewRotationalVariablesOfRigidBodyElements(
                 int StepFlag,
                 Node& i,
@@ -126,6 +144,38 @@ namespace Kratos {
         double moment_of_inertia_inv = 1.0 / moment_of_inertia;
         for (int j = 0; j < 3; j++) {
             angular_acceleration[j] = moment_reduction_factor * torque[j] * moment_of_inertia_inv;
+        }
+    }
+
+    void SymplecticEulerScheme::CalculateAngularAccelerationForPolyhedron(
+                Matrix moment_of_inertia,
+                const array_1d<double, 3 >& torque,
+                const double moment_reduction_factor,
+                array_1d<double, 3 >& angular_acceleration) {
+
+        double temp_moment_of_inertia[3][3];
+
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                temp_moment_of_inertia[i][j] = moment_of_inertia(i,j);
+            }
+        }
+
+        double inv_moment_of_inertia[3][3];
+        bool success = GeometryFunctions::InverseMatrix(temp_moment_of_inertia, inv_moment_of_inertia);
+
+        if (success) {
+            array_1d<double, 3> angular_acceleration_temp;
+            GeometryFunctions::ProductMatrix3X3Vector3X1(inv_moment_of_inertia, torque, angular_acceleration_temp);
+            for (int j = 0; j < 3; j++) {
+                angular_acceleration[j] = moment_reduction_factor * angular_acceleration_temp[j];
+            }
+        } else {
+            //std::cerr << "Moment of inertia matrix is singular and cannot be inverted." << std::endl;
+            //TODO: NOT A GOOD WAY TO DEAL WITH THIS!
+            for (int j = 0; j < 3; j++) {
+                angular_acceleration[j] = 0.0;
+            }
         }
     }
 
