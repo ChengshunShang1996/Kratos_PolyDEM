@@ -289,6 +289,154 @@ namespace Kratos {
 
         }
     }
+
+    std::vector<Vector3> PolyhedronParticle::GetIntersectingFaceVertices(const Vector3& closestPoint, const Vector3& ContactVector)
+    {
+        std::vector<Vector3> bestFaceVertices;
+        double bestDotProduct = -1.0; 
+
+        auto& central_node = GetGeometry()[0];
+
+        for (int i = 0; i < mListOfFaces.size(); ++i) {
+            const auto& face = mListOfFaces[i];
+
+            if (IsPointOnFace(face, closestPoint)) {
+
+                Vector3 faceNormal = CalculateFaceNormal(face);
+
+                double dotProduct = std::abs(Vector3::Dot(faceNormal.Normalised(), ContactVector.Normalised()));
+
+                if (dotProduct > bestDotProduct) {
+                    bestDotProduct = dotProduct;
+                    bestFaceVertices.clear();
+
+                    for (int j = 0; j < face.size(); ++j) {
+                        Vector3 vertexPoint = {
+                            mListOfVertices[face[j]][0] + central_node[0],
+                            mListOfVertices[face[j]][1] + central_node[1],
+                            mListOfVertices[face[j]][2] + central_node[2]};
+                        bestFaceVertices.push_back(vertexPoint);
+                    }
+                }
+            }
+        }
+
+        if (bestFaceVertices.empty() && mListOfFaces.size() == 1) {
+            const auto& defaultFace = mListOfFaces[0];
+            for (int j = 0; j < defaultFace.size(); ++j) {
+                Vector3 vertexPoint = {
+                    mListOfVertices[defaultFace[j]][0] + central_node[0],
+                    mListOfVertices[defaultFace[j]][1] + central_node[1],
+                    mListOfVertices[defaultFace[j]][2] + central_node[2]};
+                bestFaceVertices.push_back(vertexPoint);
+            }
+        }
+
+        return bestFaceVertices;
+    }
+
+
+    bool PolyhedronParticle::IsPointOnFace(const std::vector<int> face, const Vector3& point)
+    {
+        // Calculate the normal of the face
+        Vector3 normal = CalculateFaceNormal(face);
+
+        auto& central_node = GetGeometry()[0];
+        // Check if the point is on the plane of the face
+        Vector3 facePoint = {mListOfVertices[face[0]][0] + central_node[0], mListOfVertices[face[0]][1] + central_node[1], mListOfVertices[face[0]][2] + central_node[2]};
+        double distance = Vector3::Dot(normal, point - facePoint);
+        const double epsilon = 1e-6; // Tolerance for floating-point comparison
+        if (std::abs(distance) > epsilon) {
+            return false; // Point is not on the plane of the face
+        }
+
+        return true;
+        /*
+        // Project the face vertices and the point onto a 2D plane
+        std::vector<Vector3> vertices;
+        for (int i = 0; i < face.size(); ++i) {
+            Vector3 VertexPoint = {mListOfVertices[face[i]][0] + central_node[0], mListOfVertices[face[i]][1] + central_node[1], mListOfVertices[face[i]][2] + central_node[2]};
+            vertices.push_back(VertexPoint);
+        } 
+        std::vector<Vector2> projectedVertices = ProjectToPlane(vertices, normal);
+        Vector2 projectedPoint = ProjectToPlane(point, normal);
+
+        // Check if the projected point is inside the projected polygon
+        return IsPointInPolygon(projectedVertices, projectedPoint);*/
+        //return true;
+    }
+
+    Vector3 PolyhedronParticle::CalculateFaceNormal(const std::vector<int> face)
+    {
+
+        // Calculate the normal using the cross product of two edges of the face
+        Vector3 edge1 = {mListOfVertices[face[1]][0] - mListOfVertices[face[0]][0], mListOfVertices[face[1]][1] - mListOfVertices[face[0]][1], mListOfVertices[face[1]][2] - mListOfVertices[face[0]][2]};
+        Vector3 edge2 = {mListOfVertices[face[2]][0] - mListOfVertices[face[0]][0], mListOfVertices[face[2]][1] - mListOfVertices[face[0]][1], mListOfVertices[face[2]][2] - mListOfVertices[face[0]][2]};
+        Vector3 normal = Vector3::Cross(edge1, edge2);
+
+        // Normalize the normal vector
+        normal.Normalise();
+
+        return normal;
+    }
+
+    std::vector<Vector2> PolyhedronParticle::ProjectToPlane(const std::vector<Vector3>& vertices, const Vector3& normal)
+    {
+        // Choose a basis for the plane
+        Vector3 u;
+        if (std::abs(normal[0]) > std::abs(normal[1])) {
+            u = Vector3(-normal[2], 0, normal[0]).Normalised();
+        } else {
+            u = Vector3(0, -normal[2], normal[1]).Normalised();
+        }
+        //Vector3 u = normal.Perpendicular();
+        Vector3 v = Vector3::Cross(normal, u);
+
+        // Project each vertex onto the plane
+        std::vector<Vector2> projectedVertices;
+        for (const auto& vertex : vertices) {
+            double x = Vector3::Dot(vertex, u);
+            double y = Vector3::Dot(vertex, v);
+            projectedVertices.push_back(Vector2(x, y));
+        }
+
+        return projectedVertices;
+    }
+
+    Vector2 PolyhedronParticle::ProjectToPlane(const Vector3& vertex, const Vector3& normal)
+    {
+        // Choose a basis for the plane
+        Vector3 u;
+        if (std::abs(normal[0]) > std::abs(normal[1])) {
+            u = Vector3(-normal[2], 0, normal[0]).Normalised();
+        } else {
+            u = Vector3(0, -normal[2], normal[1]).Normalised();
+        }
+        //Vector3 u = normal.Perpendicular();
+        Vector3 v = Vector3::Cross(normal, u);
+
+        // Project the vertex onto the plane
+        double x = Vector3::Dot(vertex, u);
+        double y = Vector3::Dot(vertex, v);
+        return Vector2(x, y);
+    }
+
+    bool PolyhedronParticle::IsPointInPolygon(const std::vector<Vector2>& polygon, const Vector2& point)
+    {
+        // Implement a point-in-polygon test (e.g., ray-casting algorithm)
+        int intersections = 0;
+        for (size_t i = 0; i < polygon.size(); ++i) {
+            Vector2 v1 = polygon[i];
+            Vector2 v2 = polygon[(i + 1) % polygon.size()];
+
+            if (((v1.y > point.y) != (v2.y > point.y)) &&
+                (point.x < (v2.x - v1.x) * (point.y - v1.y) / (v2.y - v1.y) + v1.x)) {
+                intersections++;
+            }
+        }
+
+        return (intersections % 2) != 0;
+    }
         
     double PolyhedronParticle::GetMass()                                                         { return mRealMass;       }
     void   PolyhedronParticle::SetMass(double real_mass)                                         { mRealMass = real_mass;  GetGeometry()[0].FastGetSolutionStepValue(NODAL_MASS) = real_mass;}

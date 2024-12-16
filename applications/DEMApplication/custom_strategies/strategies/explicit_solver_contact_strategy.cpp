@@ -697,6 +697,7 @@ namespace Kratos {
         const int number_of_particles = (int) mListOfPolyhedronParticles.size();
         int used_contacts_counter = 0;
         const ProcessInfo& r_process_info = GetModelPart().GetProcessInfo();
+        ModelPart& polyhedron_model_part = GetPolyhedronModelPart();
 
         #pragma omp parallel
         {
@@ -718,6 +719,17 @@ namespace Kratos {
                     PolyhedronParticle* neighbour_element = dynamic_cast<PolyhedronParticle*> (neighbour_elements[j]);
                     if (neighbour_element == NULL) continue; //The initial neighbor was deleted at some point in time!!
                     if (mListOfPolyhedronParticles[i]->Id() > neighbour_element->Id()) continue;
+                    
+                    bool is_in_dem_wall_sub_model_part = false;
+                    for (ModelPart::SubModelPartsContainerType::iterator sub_model_part = polyhedron_model_part.SubModelPartsBegin(); sub_model_part != polyhedron_model_part.SubModelPartsEnd(); ++sub_model_part) {
+                        if (sub_model_part->Name() == "DEMWall") {
+                            if (sub_model_part->HasElement(mListOfPolyhedronParticles[i]->Id()) && sub_model_part->HasElement(neighbour_element->Id())) {
+                                is_in_dem_wall_sub_model_part = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (is_in_dem_wall_sub_model_part) continue;
 
                     bool go_ahead = false;
                     #pragma omp critical

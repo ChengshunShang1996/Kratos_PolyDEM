@@ -23,6 +23,7 @@
 #include "custom_utilities/GeometryFunctions.h"
 #include "custom_elements/polyhedron_particle.h"
 #include "custom_utilities/vector3.h"
+#include "custom_utilities/vector2.h"
 #include "custom_constitutive/DEM_polyhedron_discontinuum_constitutive_law.h"
 
 namespace Kratos
@@ -47,6 +48,7 @@ namespace Kratos
             double distance = Vector3::Dot(point, normal) + d;
             return point - (normal * distance);
         }
+
     };
     
     class KRATOS_API(DEM_APPLICATION) PolyhedronContactElement {
@@ -94,6 +96,19 @@ namespace Kratos
         void CalculateSearchPoint(Point& point, Vector3& search_dir);
         void Barycentric(const Vector3 & a, const Vector3 & b, const Vector3 & c, const Vector3 & p, double& u, double& v, double& w);
 
+        bool AreNormalsParallel(const Vector3& normal1, const Vector3& normal2);
+        Vector3 CalculateFaceNormal(const std::vector<Vector3>& vertices);
+        std::vector<Vector3> CalculateIntersection(const std::vector<Vector3>& faceVertices1, const std::vector<Vector3>& faceVertices2, const Vector3& normal);
+        std::vector<Vector2> ProjectToPlane(const std::vector<Vector3>& vertices, const Vector3& normal);
+        std::vector<Vector3> ReprojectTo3D(const std::vector<Vector2>& vertices2D, const Vector3& normal, const Vector3& reletiveVector);
+        std::vector<Vector2> CalculatePolygonIntersection(std::vector<Vector2>& poly1, std::vector<Vector2>& poly2);
+        bool IsInside(const Vector2& edgeStart, const Vector2& edgeEnd, const Vector2& point);
+        Vector2 ComputeIntersection(const Vector2& p1, const Vector2& p2, const Vector2& p3, const Vector2& p4);
+        Vector3 CalculateCentroid(const std::vector<Vector3>& vertices);
+        double PolyhedronContactElement::calculateSignedArea(const std::vector<Vector2>& polygon);
+        bool PolyhedronContactElement::isClockwise(const std::vector<Vector2>& polygon);
+        void PolyhedronContactElement::ensureClockwise(std::vector<Vector2>& polygon);
+
         void ApplyGlobalDampingToContactForcesAndMoments(PolyhedronParticle* ThisPolyhedronParticle, array_1d<double,3>& total_forces, array_1d<double,3>& total_moment);
         virtual void FinalizeSolutionStep(const ProcessInfo& r_process_info) ;
         virtual void PrepareForPrinting();
@@ -121,6 +136,7 @@ namespace Kratos
         Vector3 mContactPoint1;
         Vector3 mContactPoint2;
         Vector3 mTangentialElasticContactForce;
+        Vector3 mContactPoint;
         bool mDeleteFlag;
 
     protected:
