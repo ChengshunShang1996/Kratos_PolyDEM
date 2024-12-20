@@ -21,7 +21,8 @@ class PolyhedronVtkOutput():
 
         # Reading Post options from DEM_parameters
         self.PostDisplacement = self.DEM_parameters["PostDisplacement"].GetBool()
-        self.PostVelocity = self.DEM_parameters["PostVelocity"].GetBool()  
+        self.PostVelocity = self.DEM_parameters["PostVelocity"].GetBool()
+        self.PostAngularVelocity = self.DEM_parameters["PostAngularVelocity"].GetBool()  
 
         self.spheres_model_part = weakref.proxy(spheres_model_part)
         self.contact_model_part = weakref.proxy(contact_model_part)
@@ -62,6 +63,7 @@ class PolyhedronVtkOutput():
         self.polygon_origins = []
         self.polyhedron_faces = []
         self.polygon_velocity = np.zeros((number_of_nodes, 3))
+        self.polygon_angular_velocity = np.zeros((number_of_nodes, 3))
         self.polygon_displacement = np.zeros((number_of_nodes, 3))
 
         i = 0
@@ -91,6 +93,12 @@ class PolyhedronVtkOutput():
             for node in self.polyhedron_model_part.Nodes:
                 self.polygon_velocity[i] = [node.GetSolutionStepValue(VELOCITY_X), node.GetSolutionStepValue(VELOCITY_Y), node.GetSolutionStepValue(VELOCITY_Z)]
                 i += 1
+        
+        if self.PostAngularVelocity:
+            i = 0
+            for node in self.polyhedron_model_part.Nodes:
+                self.polygon_angular_velocity[i] = [node.GetSolutionStepValue(ANGULAR_VELOCITY_X), node.GetSolutionStepValue(ANGULAR_VELOCITY_Y), node.GetSolutionStepValue(ANGULAR_VELOCITY_Z)]
+                i += 1
 
         if self.PostDisplacement:
             i = 0
@@ -106,6 +114,7 @@ class PolyhedronVtkOutput():
         self.polygon_origins_p = []
         self.polyhedron_faces_p = []
         self.polygon_velocity_p = np.zeros((number_of_nodes_p, 3))
+        self.polygon_angular_velocity_p = np.zeros((number_of_nodes_p, 3))
         self.polygon_displacement_p = np.zeros((number_of_nodes_p, 3))
 
         i = 0
@@ -136,6 +145,12 @@ class PolyhedronVtkOutput():
                 self.polygon_velocity_p[i] = [node.GetSolutionStepValue(VELOCITY_X), node.GetSolutionStepValue(VELOCITY_Y), node.GetSolutionStepValue(VELOCITY_Z)]
                 i += 1
 
+        if self.PostAngularVelocity:
+            i = 0
+            for node in self.polyhedron_model_part_p.Nodes:
+                self.polygon_angular_velocity_p[i] = [node.GetSolutionStepValue(ANGULAR_VELOCITY_X), node.GetSolutionStepValue(ANGULAR_VELOCITY_Y), node.GetSolutionStepValue(ANGULAR_VELOCITY_Z)]
+                i += 1
+
         if self.PostDisplacement:
             i = 0
             for node in self.polyhedron_model_part_p.Nodes:
@@ -150,6 +165,7 @@ class PolyhedronVtkOutput():
         self.polygon_origins_w = []
         self.polyhedron_faces_w = []
         self.polygon_velocity_w = np.zeros((number_of_nodes_w, 3))
+        self.polygon_angular_velocity_w = np.zeros((number_of_nodes_w, 3))
         self.polygon_displacement_w = np.zeros((number_of_nodes_w, 3))
 
         i = 0
@@ -178,6 +194,12 @@ class PolyhedronVtkOutput():
             i = 0
             for node in self.polyhedron_model_part_w.Nodes:
                 self.polygon_velocity_w[i] = [node.GetSolutionStepValue(VELOCITY_X), node.GetSolutionStepValue(VELOCITY_Y), node.GetSolutionStepValue(VELOCITY_Z)]
+                i += 1
+
+        if self.PostAngularVelocity:
+            i = 0
+            for node in self.polyhedron_model_part_w.Nodes:
+                self.polygon_angular_velocity_w[i] = [node.GetSolutionStepValue(ANGULAR_VELOCITY_X), node.GetSolutionStepValue(ANGULAR_VELOCITY_Y), node.GetSolutionStepValue(ANGULAR_VELOCITY_Z)]
                 i += 1
 
         if self.PostDisplacement:
@@ -236,6 +258,19 @@ class PolyhedronVtkOutput():
                 i += 1
 
             grid.GetPointData().AddArray(velocity_array)
+
+        if self.PostAngularVelocity:
+            angular_velocity_array = vtk.vtkDoubleArray()
+            angular_velocity_array.SetName("Angular Velocity")
+            angular_velocity_array.SetNumberOfComponents(3)
+
+            i = 0
+            for ii in range(len(self.polygon_centers)):
+                for jj in range(len(self.polygon_origins[i])):
+                    angular_velocity_array.InsertNextTuple(self.polygon_angular_velocity[i])
+                i += 1
+
+            grid.GetPointData().AddArray(angular_velocity_array)
 
         if self.PostDisplacement:
             displacement_array = vtk.vtkDoubleArray()
@@ -307,6 +342,19 @@ class PolyhedronVtkOutput():
 
             grid.GetPointData().AddArray(velocity_array)
 
+        if self.PostAngularVelocity:
+            angular_velocity_array = vtk.vtkDoubleArray()
+            angular_velocity_array.SetName("Angular Velocity")
+            angular_velocity_array.SetNumberOfComponents(3)
+
+            i = 0
+            for ii in range(len(self.polygon_centers_p)):
+                for jj in range(len(self.polygon_origins_p[i])):
+                    angular_velocity_array.InsertNextTuple(self.polygon_angular_velocity_p[i])
+                i += 1
+
+            grid.GetPointData().AddArray(angular_velocity_array)
+
         if self.PostDisplacement:
             displacement_array = vtk.vtkDoubleArray()
             displacement_array.SetName("Displacement")
@@ -376,6 +424,19 @@ class PolyhedronVtkOutput():
                 i += 1
 
             grid.GetPointData().AddArray(velocity_array)
+
+        if self.PostAngularVelocity:
+            angular_velocity_array = vtk.vtkDoubleArray()
+            angular_velocity_array.SetName("Angular Velocity")
+            angular_velocity_array.SetNumberOfComponents(3)
+
+            i = 0
+            for ii in range(len(self.polygon_centers_w)):
+                for jj in range(len(self.polygon_origins_w[i])):
+                    angular_velocity_array.InsertNextTuple(self.polygon_angular_velocity_w[i])
+                i += 1
+
+            grid.GetPointData().AddArray(angular_velocity_array)
 
         if self.PostDisplacement:
             displacement_array = vtk.vtkDoubleArray()
