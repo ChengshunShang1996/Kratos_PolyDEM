@@ -120,6 +120,10 @@ void PolyhedronContactElement::CalculateRightHandSide(const ProcessInfo& r_proce
 			Vector3 torque_arm_2 = mContactPoint - coll2Pos;
 			contact_moment_1 = Vector3::Cross(torque_arm_1, contact_force);
 			contact_moment_2 = Vector3::Cross(torque_arm_2, -contact_force);
+			//KRATOS_INFO("torque_arm_1") << torque_arm_1 << std::endl;
+			//KRATOS_INFO("torque_arm_2") << torque_arm_2 << std::endl;
+			//KRATOS_INFO("Contact Moment 1") << contact_moment_1 << std::endl;
+			//KRATOS_INFO("Contact Moment 2") << contact_moment_2 << std::endl;
 		}
 
 		array_1d<double,3>& total_forces_1 = central_node_1.FastGetSolutionStepValue(TOTAL_FORCES);
@@ -393,9 +397,9 @@ void PolyhedronContactElement::EPA(Point& a, Point& b, Point& c, Point& d)
 				// Determine the contact point
 				mContactPoint = CalculateCentroid(intersectionVertices);
 
-				Vector3 mOverlapVector = mOverlapVector.Normalised();
+				Vector3 TempOverlapVector = mOverlapVector.Normalised();
 
-				if (Vector3::Dot(normal1, mOverlapVector) < 0){
+				if (Vector3::Dot(normal1, TempOverlapVector) < 0){
 					normal1	= -normal1;
 				} 
 
@@ -515,9 +519,9 @@ void PolyhedronContactElement::EPA(Point& a, Point& b, Point& c, Point& d)
 		// Determine the contact point
 		mContactPoint = CalculateCentroid(intersectionVertices);
 
-		Vector3 mOverlapVector = mOverlapVector.Normalised();
+		Vector3 TempOverlapVector = mOverlapVector.Normalised();
 
-		if (Vector3::Dot(normal1, mOverlapVector) < 0){
+		if (Vector3::Dot(normal1, TempOverlapVector) < 0){
 			normal1	= -normal1;
 		} 
 

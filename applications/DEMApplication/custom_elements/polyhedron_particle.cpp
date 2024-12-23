@@ -264,11 +264,14 @@ namespace Kratos {
         auto& central_node = GetGeometry()[0];
         array_1d<double, 3>& delta_rotation = central_node.FastGetSolutionStepValue(DELTA_ROTATION);
         double modulus_square = delta_rotation[0]*delta_rotation[0] + delta_rotation[1]*delta_rotation[1] + delta_rotation[2]*delta_rotation[2];
-        if (modulus_square != 0.0){
+        if (modulus_square != 0.0){   
             Quaternion<double> rotation_quaternion = Quaternion<double>::FromRotationVector(delta_rotation);
-
+            Matrix rotation_matrix(3, 3, 0.0);
+            rotation_quaternion.ToRotationMatrix(rotation_matrix);
             for (int k = 0; k < mListOfVertices.size(); k++) {
-                rotation_quaternion.RotateVector3(mListOfVertices[k]);
+                array_1d<double,3> tempVector;
+                GeometryFunctions::ProductMatrix3X3Vector3X1(rotation_matrix, mListOfVertices[k], tempVector);
+                mListOfVertices[k] = tempVector;
             }
         }
     }

@@ -251,6 +251,16 @@ namespace Kratos {
         }
     }
 
+    static inline void ProductMatrix3X3Vector3X1(const Matrix Matrix, const array_1d<double,3>& Vector1, array_1d<double,3>& Vector2)
+    {
+        for (int i=0; i<3; i++) {
+            Vector2[i] = 0.0;
+            for (int j=0; j<3; j++) {
+                Vector2[i]+=Matrix(i,j)*Vector1[j];
+            }
+        }
+    }
+
     static inline void TensorGlobal2Local(const double LocalCoordSystem[3][3], const double GlobalTensor[3][3], double LocalTensor[3][3])
     {
         // We will compute LocalTensor = LocalCoordSystem * GlobalTensor * transposed(LocalCoordSystem)

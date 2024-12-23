@@ -451,7 +451,9 @@ namespace Kratos {
         SearchPolyhedronOperations(r_model_part, r_polyhedron_model_part, has_mpi);
 
         ForceOperations(r_model_part, r_polyhedron_model_part);
+        KRATOS_INFO("Intergrate_start") << "Start to integrate the motion of particles" << std::endl;
         PerformTimeIntegrationOfMotion();
+        KRATOS_INFO("Intergrate_end") << "End to integrate the motion of particles" << std::endl;
 
         KRATOS_CATCH("")
 
