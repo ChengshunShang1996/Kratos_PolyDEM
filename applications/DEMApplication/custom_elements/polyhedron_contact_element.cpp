@@ -500,6 +500,7 @@ void PolyhedronContactElement::EPA(Point& a, Point& b, Point& c, Point& d)
 		}
 	} //End for iterations
 	std::cout<< "EPA did not converge" << std::endl;
+	KRATOS_ERROR << "EPA did not converge" << std::endl;
 	//Return most recent closest point
 	Vector3 search_dir = faces[closest_face][3].p;
 
