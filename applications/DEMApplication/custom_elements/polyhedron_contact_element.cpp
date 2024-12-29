@@ -97,7 +97,9 @@ void PolyhedronContactElement::FinalizeSolutionStep(const ProcessInfo& r_process
 void PolyhedronContactElement::CalculateRightHandSide(const ProcessInfo& r_process_info, double dt, const array_1d<double, 3>& gravity) {
     KRATOS_TRY
 
-    if (GJK()) {
+    mIsFaceParallel = false;
+
+	if (GJK()) {
         
 		auto& central_node_1 = mPolyhedronParticle1->GetGeometry()[0];
 		auto& central_node_2 = mPolyhedronParticle2->GetGeometry()[0];
@@ -124,6 +126,22 @@ void PolyhedronContactElement::CalculateRightHandSide(const ProcessInfo& r_proce
 			//KRATOS_INFO("torque_arm_2") << torque_arm_2 << std::endl;
 			//KRATOS_INFO("Contact Moment 1") << contact_moment_1 << std::endl;
 			//KRATOS_INFO("Contact Moment 2") << contact_moment_2 << std::endl;
+			const array_1d<double, 3>& velocity_1 = central_node_1.FastGetSolutionStepValue(VELOCITY);
+        	const array_1d<double, 3>& velocity_2 = central_node_2.FastGetSolutionStepValue(VELOCITY);
+			Vector3 velocity_1_vec(velocity_1[0], velocity_1[1], velocity_1[2]);
+			Vector3 velocity_2_vec(velocity_2[0], velocity_2[1], velocity_2[2]);
+			double velocity_1_vec_modulus = velocity_1_vec.Length();
+			double velocity_2_vec_modulus = velocity_2_vec.Length();
+			if (velocity_1_vec_modulus > 1e-3 && mIsFaceParallel == true){
+				central_node_1.FastGetSolutionStepValue(ANGULAR_VELOCITY)[0] *= 0.5;
+				central_node_1.FastGetSolutionStepValue(ANGULAR_VELOCITY)[1] *= 0.5;
+				central_node_1.FastGetSolutionStepValue(ANGULAR_VELOCITY)[2] *= 0.5;
+			}
+			if (velocity_2_vec_modulus > 1e-3 && mIsFaceParallel == true){
+				central_node_2.FastGetSolutionStepValue(ANGULAR_VELOCITY)[0] *= 0.5;
+				central_node_2.FastGetSolutionStepValue(ANGULAR_VELOCITY)[1] *= 0.5;
+				central_node_2.FastGetSolutionStepValue(ANGULAR_VELOCITY)[2] *= 0.5;
+			}
 		}
 
 		array_1d<double,3>& total_forces_1 = central_node_1.FastGetSolutionStepValue(TOTAL_FORCES);
@@ -405,6 +423,8 @@ void PolyhedronContactElement::EPA(Point& a, Point& b, Point& c, Point& d)
 
 				mOverlapVector = normal1 * mOverlapVector.Length();
 
+				mIsFaceParallel = true;
+
 				return;
 			} else {
 
@@ -526,6 +546,8 @@ void PolyhedronContactElement::EPA(Point& a, Point& b, Point& c, Point& d)
 		} 
 
 		mOverlapVector = normal1 * mOverlapVector.Length();
+
+		mIsFaceParallel = true;
 
 		return;
 

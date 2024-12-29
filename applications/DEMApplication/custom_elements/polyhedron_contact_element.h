@@ -138,6 +138,7 @@ namespace Kratos
         Vector3 mTangentialElasticContactForce;
         Vector3 mContactPoint;
         bool mDeleteFlag;
+        bool mIsFaceParallel;
 
     protected:
 
