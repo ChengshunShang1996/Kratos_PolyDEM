@@ -883,7 +883,7 @@ namespace Kratos {
             polyhedron_element.GetGeometry()[0].FastGetSolutionStepValue(PARTICLE_MOMENT).clear();
             polyhedron_element.ComputeExternalForces(gravity);
 
-        } 
+        }
 
         /*
         ElementsArrayType& pPolyhedronContactElements = GetAllElements(*mpPolyhedron_contact_model_part);

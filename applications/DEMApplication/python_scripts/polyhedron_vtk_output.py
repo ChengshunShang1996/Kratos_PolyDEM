@@ -23,6 +23,7 @@ class PolyhedronVtkOutput():
         self.PostDisplacement = self.DEM_parameters["PostDisplacement"].GetBool()
         self.PostVelocity = self.DEM_parameters["PostVelocity"].GetBool()
         self.PostAngularVelocity = self.DEM_parameters["PostAngularVelocity"].GetBool()  
+        self.PostTotalForces = self.DEM_parameters["PostTotalForces"].GetBool() 
 
         self.spheres_model_part = weakref.proxy(spheres_model_part)
         self.contact_model_part = weakref.proxy(contact_model_part)
@@ -65,6 +66,7 @@ class PolyhedronVtkOutput():
         self.polygon_velocity = np.zeros((number_of_nodes, 3))
         self.polygon_angular_velocity = np.zeros((number_of_nodes, 3))
         self.polygon_displacement = np.zeros((number_of_nodes, 3))
+        self.polygon_totalforces = np.zeros((number_of_nodes, 3))
 
         i = 0
         for node in self.polyhedron_model_part.Nodes:
@@ -106,6 +108,12 @@ class PolyhedronVtkOutput():
                 self.polygon_displacement[i] = [node.GetSolutionStepValue(DISPLACEMENT_X), node.GetSolutionStepValue(DISPLACEMENT_Y), node.GetSolutionStepValue(DISPLACEMENT_Z)]
                 i += 1
 
+        if self.PostTotalForces:
+            i = 0
+            for node in self.polyhedron_model_part.Nodes:
+                self.polygon_totalforces[i] = [node.GetSolutionStepValue(TOTAL_FORCES)[0], node.GetSolutionStepValue(TOTAL_FORCES)[1], node.GetSolutionStepValue(TOTAL_FORCES)[2]]
+                i += 1
+
     def DataPreparationParticles(self):
         
         number_of_nodes_p = self.polyhedron_model_part_p.NumberOfNodes(0)
@@ -116,6 +124,7 @@ class PolyhedronVtkOutput():
         self.polygon_velocity_p = np.zeros((number_of_nodes_p, 3))
         self.polygon_angular_velocity_p = np.zeros((number_of_nodes_p, 3))
         self.polygon_displacement_p = np.zeros((number_of_nodes_p, 3))
+        self.polygon_totalforces_p = np.zeros((number_of_nodes_p, 3))
 
         i = 0
         for node in self.polyhedron_model_part_p.Nodes:
@@ -157,6 +166,12 @@ class PolyhedronVtkOutput():
                 self.polygon_displacement_p[i] = [node.GetSolutionStepValue(DISPLACEMENT_X), node.GetSolutionStepValue(DISPLACEMENT_Y), node.GetSolutionStepValue(DISPLACEMENT_Z)]
                 i += 1
 
+        if self.PostTotalForces:
+            i = 0
+            for node in self.polyhedron_model_part_p.Nodes:
+                self.polygon_totalforces_p[i] = [node.GetSolutionStepValue(TOTAL_FORCES)[0], node.GetSolutionStepValue(TOTAL_FORCES)[1], node.GetSolutionStepValue(TOTAL_FORCES)[2]]
+                i += 1
+
     def DataPreparationWalls(self):
         
         number_of_nodes_w = self.polyhedron_model_part_w.NumberOfNodes(0)
@@ -167,6 +182,7 @@ class PolyhedronVtkOutput():
         self.polygon_velocity_w = np.zeros((number_of_nodes_w, 3))
         self.polygon_angular_velocity_w = np.zeros((number_of_nodes_w, 3))
         self.polygon_displacement_w = np.zeros((number_of_nodes_w, 3))
+        self.polygon_totalforces_w = np.zeros((number_of_nodes_w, 3))
 
         i = 0
         for node in self.polyhedron_model_part_w.Nodes:
@@ -206,7 +222,13 @@ class PolyhedronVtkOutput():
             i = 0
             for node in self.polyhedron_model_part_w.Nodes:
                 self.polygon_displacement_w[i] = [node.GetSolutionStepValue(DISPLACEMENT_X), node.GetSolutionStepValue(DISPLACEMENT_Y), node.GetSolutionStepValue(DISPLACEMENT_Z)]
-                i += 1     
+                i += 1 
+
+        if self.PostTotalForces:
+            i = 0
+            for node in self.polyhedron_model_part_w.Nodes:
+                self.polygon_totalforces_w[i] = [node.GetSolutionStepValue(TOTAL_FORCES)[0], node.GetSolutionStepValue(TOTAL_FORCES)[1], node.GetSolutionStepValue(TOTAL_FORCES)[2]]
+                i += 1    
     
     def WriteOutAll(self, poly_output_cnt):
         
@@ -284,6 +306,19 @@ class PolyhedronVtkOutput():
                 i += 1
 
             grid.GetPointData().AddArray(displacement_array)
+
+        if self.PostTotalForces:
+            totalforces_array = vtk.vtkDoubleArray()
+            totalforces_array.SetName("Total Forces")
+            totalforces_array.SetNumberOfComponents(3)
+
+            i = 0
+            for ii in range(len(self.polygon_centers)):
+                for jj in range(len(self.polygon_origins[i])):
+                    totalforces_array.InsertNextTuple(self.polygon_totalforces[i])
+                i += 1
+
+            grid.GetPointData().AddArray(totalforces_array)
 
         writer = vtk.vtkXMLUnstructuredGridWriter()
         file_path = os.path.join(self.vtk_post_path_directory, "polyhedron_{}.vtu".format(poly_output_cnt))
@@ -368,6 +403,19 @@ class PolyhedronVtkOutput():
 
             grid.GetPointData().AddArray(displacement_array)
 
+        if self.PostTotalForces:
+            totalforces_array = vtk.vtkDoubleArray()
+            totalforces_array.SetName("Total Forces")
+            totalforces_array.SetNumberOfComponents(3)
+
+            i = 0
+            for ii in range(len(self.polygon_centers_p)):
+                for jj in range(len(self.polygon_origins_p[i])):
+                    totalforces_array.InsertNextTuple(self.polygon_totalforces_p[i])
+                i += 1
+
+            grid.GetPointData().AddArray(totalforces_array)
+
         writer = vtk.vtkXMLUnstructuredGridWriter()
         file_path = os.path.join(self.vtk_post_path_directory, "polyhedron_p_{}.vtu".format(poly_output_cnt))
         writer.SetFileName(file_path)
@@ -450,6 +498,19 @@ class PolyhedronVtkOutput():
                 i += 1
 
             grid.GetPointData().AddArray(displacement_array)
+
+        if self.PostTotalForces:
+            totalforces_array = vtk.vtkDoubleArray()
+            totalforces_array.SetName("Total Forces")
+            totalforces_array.SetNumberOfComponents(3)
+
+            i = 0
+            for ii in range(len(self.polygon_centers_w)):
+                for jj in range(len(self.polygon_origins_w[i])):
+                    totalforces_array.InsertNextTuple(self.polygon_totalforces_w[i])
+                i += 1
+
+            grid.GetPointData().AddArray(totalforces_array)
 
         writer = vtk.vtkXMLUnstructuredGridWriter()
         file_path = os.path.join(self.vtk_post_path_directory, "polyhedron_w_{}.vtu".format(poly_output_cnt))
