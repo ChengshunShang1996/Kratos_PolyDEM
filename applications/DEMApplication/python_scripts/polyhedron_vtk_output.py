@@ -67,10 +67,16 @@ class PolyhedronVtkOutput():
         self.polygon_angular_velocity = np.zeros((number_of_nodes, 3))
         self.polygon_displacement = np.zeros((number_of_nodes, 3))
         self.polygon_totalforces = np.zeros((number_of_nodes, 3))
+        self.polygon_id = np.zeros((number_of_nodes, 1))
 
         i = 0
         for node in self.polyhedron_model_part.Nodes:
             self.polygon_centers[i] = [node.X, node.Y, node.Z]
+            i += 1
+        
+        i = 0
+        for node in self.polyhedron_model_part.Nodes:
+            self.polygon_id[i] = node.Id
             i += 1
 
         for element in self.polyhedron_model_part.Elements:
@@ -125,10 +131,16 @@ class PolyhedronVtkOutput():
         self.polygon_angular_velocity_p = np.zeros((number_of_nodes_p, 3))
         self.polygon_displacement_p = np.zeros((number_of_nodes_p, 3))
         self.polygon_totalforces_p = np.zeros((number_of_nodes_p, 3))
+        self.polygon_id_p = np.zeros((number_of_nodes_p, 1))
 
         i = 0
         for node in self.polyhedron_model_part_p.Nodes:
             self.polygon_centers_p[i] = [node.X, node.Y, node.Z]
+            i += 1
+
+        i = 0
+        for node in self.polyhedron_model_part_p.Nodes:
+            self.polygon_id_p[i] = node.Id
             i += 1
 
         for element in self.polyhedron_model_part_p.Elements:
@@ -183,10 +195,16 @@ class PolyhedronVtkOutput():
         self.polygon_angular_velocity_w = np.zeros((number_of_nodes_w, 3))
         self.polygon_displacement_w = np.zeros((number_of_nodes_w, 3))
         self.polygon_totalforces_w = np.zeros((number_of_nodes_w, 3))
+        self.polygon_id_w = np.zeros((number_of_nodes_w, 1))
 
         i = 0
         for node in self.polyhedron_model_part_w.Nodes:
             self.polygon_centers_w[i] = [node.X, node.Y, node.Z]
+            i += 1
+
+        i = 0
+        for node in self.polyhedron_model_part_w.Nodes:
+            self.polygon_id_w[i] = node.Id
             i += 1
 
         for element in self.polyhedron_model_part_w.Elements:
@@ -320,6 +338,18 @@ class PolyhedronVtkOutput():
 
             grid.GetPointData().AddArray(totalforces_array)
 
+        polygon_id_array = vtk.vtkIntArray()
+        polygon_id_array.SetName("Polygon Id")
+        polygon_id_array.SetNumberOfComponents(1)
+
+        i = 0
+        for ii in range(len(self.polygon_centers)):
+            for jj in range(len(self.polygon_origins[i])):
+                polygon_id_array.InsertNextTuple(self.polygon_id[i])
+            i += 1
+
+        grid.GetPointData().AddArray(polygon_id_array)
+
         writer = vtk.vtkXMLUnstructuredGridWriter()
         file_path = os.path.join(self.vtk_post_path_directory, "polyhedron_{}.vtu".format(poly_output_cnt))
         writer.SetFileName(file_path)
@@ -416,6 +446,18 @@ class PolyhedronVtkOutput():
 
             grid.GetPointData().AddArray(totalforces_array)
 
+        polygon_id_array = vtk.vtkIntArray()
+        polygon_id_array.SetName("Polygon Id")
+        polygon_id_array.SetNumberOfComponents(1)
+
+        i = 0
+        for ii in range(len(self.polygon_centers_p)):
+            for jj in range(len(self.polygon_origins_p[i])):
+                polygon_id_array.InsertNextTuple(self.polygon_id_p[i])
+            i += 1
+
+        grid.GetPointData().AddArray(polygon_id_array)
+
         writer = vtk.vtkXMLUnstructuredGridWriter()
         file_path = os.path.join(self.vtk_post_path_directory, "polyhedron_p_{}.vtu".format(poly_output_cnt))
         writer.SetFileName(file_path)
@@ -511,6 +553,18 @@ class PolyhedronVtkOutput():
                 i += 1
 
             grid.GetPointData().AddArray(totalforces_array)
+
+        polygon_id_array = vtk.vtkIntArray()
+        polygon_id_array.SetName("Polygon Id")
+        polygon_id_array.SetNumberOfComponents(1)
+
+        i = 0
+        for ii in range(len(self.polygon_centers_w)):
+            for jj in range(len(self.polygon_origins_w[i])):
+                polygon_id_array.InsertNextTuple(self.polygon_id_w[i])
+            i += 1
+
+        grid.GetPointData().AddArray(polygon_id_array)
 
         writer = vtk.vtkXMLUnstructuredGridWriter()
         file_path = os.path.join(self.vtk_post_path_directory, "polyhedron_w_{}.vtu".format(poly_output_cnt))
