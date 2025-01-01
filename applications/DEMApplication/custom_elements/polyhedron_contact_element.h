@@ -65,11 +65,11 @@ namespace Kratos
                 Vector3 b; //Result coordinate of object B's support function 
             };
 
-        #define GJK_MAX_NUM_ITERATIONS 100
+        #define GJK_MAX_NUM_ITERATIONS 64
         #define EPA_TOLERANCE 1e-6
         #define EPA_MAX_NUM_FACES 64
         #define EPA_MAX_NUM_LOOSE_EDGES 32
-        #define EPA_MAX_NUM_ITERATIONS 100
+        #define EPA_MAX_NUM_ITERATIONS 64
         
         //KRATOS_CLASS_INTRUSIVE_POINTER_DEFINITION(PolyhedronContactElement);
 
