@@ -324,7 +324,8 @@ namespace Kratos {
             }
         }
 
-        if (bestFaceVertices.empty() && mListOfFaces.size() == 1) {
+        //if (bestFaceVertices.empty() && mListOfFaces.size() == 1) {
+        if (bestFaceVertices.empty()) {
             const auto& defaultFace = mListOfFaces[0];
             for (int j = 0; j < defaultFace.size(); ++j) {
                 Vector3 vertexPoint = {
@@ -373,9 +374,18 @@ namespace Kratos {
     {
 
         // Calculate the normal using the cross product of two edges of the face
+        Vector3 normal;
         Vector3 edge1 = {mListOfVertices[face[1]][0] - mListOfVertices[face[0]][0], mListOfVertices[face[1]][1] - mListOfVertices[face[0]][1], mListOfVertices[face[1]][2] - mListOfVertices[face[0]][2]};
-        Vector3 edge2 = {mListOfVertices[face[2]][0] - mListOfVertices[face[0]][0], mListOfVertices[face[2]][1] - mListOfVertices[face[0]][1], mListOfVertices[face[2]][2] - mListOfVertices[face[0]][2]};
-        Vector3 normal = Vector3::Cross(edge1, edge2);
+        for (size_t i = 0; i < face.size() - 2; ++i) {
+            Vector3 edge2 = {mListOfVertices[face[i + 2]][0] - mListOfVertices[face[0]][0], mListOfVertices[face[i + 2]][1] - mListOfVertices[face[0]][1], mListOfVertices[face[i + 2]][2] - mListOfVertices[face[0]][2]};
+            normal = Vector3::Cross(edge1, edge2);
+
+            if (normal.Length() > 1e-6) {
+                break;
+            }
+        }
+        //Vector3 edge2 = {mListOfVertices[face[2]][0] - mListOfVertices[face[0]][0], mListOfVertices[face[2]][1] - mListOfVertices[face[0]][1], mListOfVertices[face[2]][2] - mListOfVertices[face[0]][2]};
+        //Vector3 normal = Vector3::Cross(edge1, edge2);
 
         // Normalize the normal vector
         normal.Normalise();
