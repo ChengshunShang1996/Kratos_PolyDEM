@@ -399,8 +399,10 @@ void PolyhedronContactElement::EPA(Point& a, Point& b, Point& c, Point& d)
             //Vector3 contact_point_minkowski = contact_normal * Vector3::Dot(p.p, search_dir)
 
 			// Identify the corresponding geometric features on the two polyhedra
-			std::vector<Vector3> faceVertices1 = mPolyhedronParticle1->GetIntersectingFaceVertices(mContactPoint1, mOverlapVector);
-			std::vector<Vector3> faceVertices2 = mPolyhedronParticle2->GetIntersectingFaceVertices(mContactPoint2, -mOverlapVector);
+			bool poly1_find_face = true;
+			bool poly2_find_face = true;
+			std::vector<Vector3> faceVertices1 = mPolyhedronParticle1->GetIntersectingFaceVertices(mContactPoint1, mOverlapVector, poly1_find_face);
+			std::vector<Vector3> faceVertices2 = mPolyhedronParticle2->GetIntersectingFaceVertices(mContactPoint2, -mOverlapVector, poly2_find_face);
 			
 			//if (faceVertices1.size() == 0 || faceVertices2.size() == 0) {
 			//	mContactPoint = (mContactPoint1 + mContactPoint2)/2;
@@ -411,7 +413,7 @@ void PolyhedronContactElement::EPA(Point& a, Point& b, Point& c, Point& d)
 			Vector3 normal2 = CalculateFaceNormal(faceVertices2);
 
 			// Check if it is a face-face contact
-			if (AreNormalsParallel(normal1, normal2)) {
+			if (AreNormalsParallel(normal1, normal2) && poly1_find_face && poly2_find_face) {
 				// Calculate the contact area for face-face contact
 				std::vector<Vector3> intersectionVertices = CalculateIntersection(faceVertices1, faceVertices2, normal1);
 
@@ -524,8 +526,10 @@ void PolyhedronContactElement::EPA(Point& a, Point& b, Point& c, Point& d)
 	Vector3 normal = (localA - localB).Normalised();*/
 
 	// Identify the corresponding geometric features on the two polyhedra
-	std::vector<Vector3> faceVertices1 = mPolyhedronParticle1->GetIntersectingFaceVertices(mContactPoint1, mOverlapVector);
-	std::vector<Vector3> faceVertices2 = mPolyhedronParticle2->GetIntersectingFaceVertices(mContactPoint2, -mOverlapVector);
+	bool poly1_find_face = true;
+	bool poly2_find_face = true;
+	std::vector<Vector3> faceVertices1 = mPolyhedronParticle1->GetIntersectingFaceVertices(mContactPoint1, mOverlapVector, poly1_find_face);
+	std::vector<Vector3> faceVertices2 = mPolyhedronParticle2->GetIntersectingFaceVertices(mContactPoint2, -mOverlapVector, poly2_find_face);
 	
 	//if (faceVertices1.size() == 0 || faceVertices2.size() == 0) {
 	//	mContactPoint = (mContactPoint1 + mContactPoint2)/2;
@@ -536,7 +540,7 @@ void PolyhedronContactElement::EPA(Point& a, Point& b, Point& c, Point& d)
 	Vector3 normal2 = CalculateFaceNormal(faceVertices2);
 
 	// Check if it is a face-face contact
-	if (AreNormalsParallel(normal1, normal2)) {
+	if (AreNormalsParallel(normal1, normal2) && poly1_find_face && poly2_find_face) {
 		// Calculate the contact area for face-face contact
 		std::vector<Vector3> intersectionVertices = CalculateIntersection(faceVertices1, faceVertices2, normal1);
 

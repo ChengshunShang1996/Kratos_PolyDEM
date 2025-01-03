@@ -69,7 +69,7 @@ namespace Kratos
         void UpdateVerticesDueToRotation();
         void InitializeVerticesDueToRotation();
         
-        std::vector<Vector3> GetIntersectingFaceVertices(const Vector3& closestPoint, const Vector3& ContactVector);
+        std::vector<Vector3> GetIntersectingFaceVertices(const Vector3& closestPoint, const Vector3& ContactVector, bool& find_face);
         bool IsPointOnFace(const std::vector<int> face, const Vector3& point);
         Vector3 CalculateFaceNormal(const std::vector<int> face);
         std::vector<Vector2> ProjectToPlane(const std::vector<Vector3>& vertices, const Vector3& normal);

@@ -293,7 +293,7 @@ namespace Kratos {
         }
     }
 
-    std::vector<Vector3> PolyhedronParticle::GetIntersectingFaceVertices(const Vector3& closestPoint, const Vector3& ContactVector)
+    std::vector<Vector3> PolyhedronParticle::GetIntersectingFaceVertices(const Vector3& closestPoint, const Vector3& ContactVector, bool& find_face)
     {
         std::vector<Vector3> bestFaceVertices;
         double bestDotProduct = -1.0; 
@@ -324,16 +324,28 @@ namespace Kratos {
             }
         }
 
-        //if (bestFaceVertices.empty() && mListOfFaces.size() == 1) {
         if (bestFaceVertices.empty()) {
-            const auto& defaultFace = mListOfFaces[0];
-            for (int j = 0; j < defaultFace.size(); ++j) {
-                Vector3 vertexPoint = {
-                    mListOfVertices[defaultFace[j]][0] + central_node[0],
-                    mListOfVertices[defaultFace[j]][1] + central_node[1],
-                    mListOfVertices[defaultFace[j]][2] + central_node[2]};
-                bestFaceVertices.push_back(vertexPoint);
+            if (mListOfFaces.size() == 1) {
+                const auto& defaultFace = mListOfFaces[0];
+                for (int j = 0; j < defaultFace.size(); ++j) {
+                    Vector3 vertexPoint = {
+                        mListOfVertices[defaultFace[j]][0] + central_node[0],
+                        mListOfVertices[defaultFace[j]][1] + central_node[1],
+                        mListOfVertices[defaultFace[j]][2] + central_node[2]};
+                    bestFaceVertices.push_back(vertexPoint);
+                }
+            } else {
+                const auto& defaultFace = mListOfFaces[0];
+                for (int j = 0; j < defaultFace.size(); ++j) {
+                    Vector3 vertexPoint = {
+                        mListOfVertices[defaultFace[j]][0] + central_node[0],
+                        mListOfVertices[defaultFace[j]][1] + central_node[1],
+                        mListOfVertices[defaultFace[j]][2] + central_node[2]};
+                    bestFaceVertices.push_back(vertexPoint);
+                }
+                find_face = false;
             }
+            
         }
 
         return bestFaceVertices;
