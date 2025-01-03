@@ -417,18 +417,23 @@ void PolyhedronContactElement::EPA(Point& a, Point& b, Point& c, Point& d)
 				// Calculate the contact area for face-face contact
 				std::vector<Vector3> intersectionVertices = CalculateIntersection(faceVertices1, faceVertices2, normal1);
 
-				// Determine the contact point
-				mContactPoint = CalculateCentroid(intersectionVertices);
+				if (!intersectionVertices.empty()){
+					// Determine the contact point
+					mContactPoint = CalculateCentroid(intersectionVertices);
 
-				Vector3 TempOverlapVector = mOverlapVector.Normalised();
+					Vector3 TempOverlapVector = mOverlapVector.Normalised();
 
-				if (Vector3::Dot(normal1, TempOverlapVector) < 0){
-					normal1	= -normal1;
-				} 
+					if (Vector3::Dot(normal1, TempOverlapVector) < 0){
+						normal1	= -normal1;
+					} 
 
-				mOverlapVector = normal1 * mOverlapVector.Length();
+					mOverlapVector = normal1 * mOverlapVector.Length();
 
-				mIsFaceParallel = true;
+					mIsFaceParallel = true;
+
+				} else {
+					mContactPoint = (mContactPoint1 + mContactPoint2)/2;
+				}
 
 				return;
 			} else {
@@ -544,19 +549,24 @@ void PolyhedronContactElement::EPA(Point& a, Point& b, Point& c, Point& d)
 		// Calculate the contact area for face-face contact
 		std::vector<Vector3> intersectionVertices = CalculateIntersection(faceVertices1, faceVertices2, normal1);
 
-		// Determine the contact point
-		mContactPoint = CalculateCentroid(intersectionVertices);
+		if (!intersectionVertices.empty()){
+			// Determine the contact point
+			mContactPoint = CalculateCentroid(intersectionVertices);
 
-		Vector3 TempOverlapVector = mOverlapVector.Normalised();
+			Vector3 TempOverlapVector = mOverlapVector.Normalised();
 
-		if (Vector3::Dot(normal1, TempOverlapVector) < 0){
-			normal1	= -normal1;
-		} 
+			if (Vector3::Dot(normal1, TempOverlapVector) < 0){
+				normal1	= -normal1;
+			} 
 
-		mOverlapVector = normal1 * mOverlapVector.Length();
+			mOverlapVector = normal1 * mOverlapVector.Length();
 
-		mIsFaceParallel = true;
+			mIsFaceParallel = true;
 
+		} else {
+			mContactPoint = (mContactPoint1 + mContactPoint2)/2;
+		}
+		
 		return;
 
 	} else {
@@ -803,12 +813,9 @@ Vector3 PolyhedronContactElement::CalculateCentroid(const std::vector<Vector3>& 
     for (const auto& vertex : vertices) {
         centroid += vertex;
     }
-    if (!vertices.empty()){
-		centroid /= vertices.size();
-	}else{
-		KRATOS_INFO("ERROR") << "The intersection vertices are empty." << std::endl;
-		KRATOS_ERROR << "The intersection vertices are empty." << std::endl;
-	}
+    
+	centroid /= vertices.size();
+	
 	return centroid;
 }
 
