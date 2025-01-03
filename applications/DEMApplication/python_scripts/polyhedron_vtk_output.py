@@ -254,8 +254,8 @@ class PolyhedronVtkOutput():
         i = 0
         for polygon_center in self.polygon_centers:
             polygon = polygon_center + self.polygon_origins[i]
-            for poly in polygon:
-                polyhedron_points.append(poly)
+            #for poly in polygon:
+            polyhedron_points.append(polygon)
             i += 1
 
         polyhedron_faces_list = []
@@ -272,14 +272,14 @@ class PolyhedronVtkOutput():
             polyhedron_faces = []
             i += 1
         
-        points_vtk = vtk.vtkPoints()
-        for point_coord in polyhedron_points:
-            points_vtk.InsertNextPoint(point_coord)
-        
         grid = vtk.vtkUnstructuredGrid()
+        points_vtk = vtk.vtkPoints()
 
-        for poly_id, polyhedron_faces in enumerate(polyhedron_faces_list):
+        for poly_id, (vertices, polyhedron_faces) in enumerate(zip(polyhedron_points, polyhedron_faces_list)):
 
+            for point_coord in vertices:
+                points_vtk.InsertNextPoint(point_coord[0], point_coord[1], point_coord[2])
+            
             faces_id_list = vtk.vtkIdList()
             faces_id_list.InsertNextId(len(polyhedron_faces))  # Number of faces
             for face in polyhedron_faces:
@@ -367,8 +367,7 @@ class PolyhedronVtkOutput():
         i = 0
         for polygon_center in self.polygon_centers_p:
             polygon = polygon_center + self.polygon_origins_p[i]
-            for poly in polygon:
-                polyhedron_points.append(poly)
+            polyhedron_points.append(polygon)
             i += 1
 
         polyhedron_faces_list = []
@@ -384,15 +383,15 @@ class PolyhedronVtkOutput():
             polyhedron_faces_list.append(polyhedron_faces)
             polyhedron_faces = []
             i += 1
-        
-        points_vtk = vtk.vtkPoints()
-        for point_coord in polyhedron_points:
-            points_vtk.InsertNextPoint(point_coord)
-        
+
         grid = vtk.vtkUnstructuredGrid()
+        points_vtk = vtk.vtkPoints()
 
-        for poly_id, polyhedron_faces in enumerate(polyhedron_faces_list):
+        for poly_id, (vertices, polyhedron_faces) in enumerate(zip(polyhedron_points, polyhedron_faces_list)):
 
+            for point_coord in vertices:
+                points_vtk.InsertNextPoint(point_coord[0], point_coord[1], point_coord[2])
+            
             faces_id_list = vtk.vtkIdList()
             faces_id_list.InsertNextId(len(polyhedron_faces))  # Number of faces
             for face in polyhedron_faces:
@@ -480,76 +479,41 @@ class PolyhedronVtkOutput():
         i = 0
         for polygon_center in self.polygon_centers_w:
             polygon = polygon_center + self.polygon_origins_w[i]
-            for poly in polygon:
-                polyhedron_points.append(poly)
+            polyhedron_points.append(polygon)
             i += 1
 
-        thick_wall = False
+        polyhedron_faces_list = []
+        polyhedron_faces = []
+        i = 0
+        offset = 0
         for polyhedron_face in self.polyhedron_faces_w:
-            if len(polyhedron_face) == 1:
-                thick_wall = True
-                break
+            if i > 0:
+                offset += len(self.polygon_origins_w[i-1])
+            for face in polyhedron_face:
+                adjusted_face = [v + offset for v in face]
+                polyhedron_faces.append(adjusted_face)
+            polyhedron_faces_list.append(polyhedron_faces)
+            polyhedron_faces = []
+            i += 1
 
-        points_vtk = vtk.vtkPoints()
-        cells_vtk = vtk.vtkCellArray()
         grid = vtk.vtkUnstructuredGrid()
+        points_vtk = vtk.vtkPoints()
 
-        if thick_wall:
-            polyhedron_faces = []
-            i = 0
-            offset = 0
-            for polyhedron_face in self.polyhedron_faces_w:
-                if i > 0:
-                    offset += len(self.polygon_origins_w[i-1])
-                for face in polyhedron_face:
-                    adjusted_face = [v + offset for v in face]
-                    polyhedron_faces.append(adjusted_face)
-                i += 1
+        for poly_id, (vertices, polyhedron_faces) in enumerate(zip(polyhedron_points, polyhedron_faces_list)):
+
+            for point_coord in vertices:
+                points_vtk.InsertNextPoint(point_coord[0], point_coord[1], point_coord[2])
             
-            for point_coord in polyhedron_points:
-                points_vtk.InsertNextPoint(point_coord)
-
+            faces_id_list = vtk.vtkIdList()
+            faces_id_list.InsertNextId(len(polyhedron_faces))  # Number of faces
             for face in polyhedron_faces:
-                cell = vtk.vtkPolygon()
-                cell.GetPointIds().SetNumberOfIds(len(face))
-                for j, point_id in enumerate(face):
-                    cell.GetPointIds().SetId(j, point_id)
-                cells_vtk.InsertNextCell(cell)
+                faces_id_list.InsertNextId(len(face))  # Number of vertices in this face
+                for idx in face:
+                    faces_id_list.InsertNextId(idx)
 
-            grid = vtk.vtkUnstructuredGrid()
-            grid.SetPoints(points_vtk)
-            grid.SetCells(vtk.VTK_POLYGON, cells_vtk)
+            grid.InsertNextCell(vtk.VTK_POLYHEDRON, faces_id_list)
 
-        else:
-            polyhedron_faces_list = []
-            polyhedron_faces = []
-            i = 0
-            offset = 0
-            for polyhedron_face in self.polyhedron_faces_w:
-                if i > 0:
-                    offset += len(self.polygon_origins_w[i-1])
-                for face in polyhedron_face:
-                    adjusted_face = [v + offset for v in face]
-                    polyhedron_faces.append(adjusted_face)
-                polyhedron_faces_list.append(polyhedron_faces)
-                polyhedron_faces = []
-                i += 1
-            
-            for point_coord in polyhedron_points:
-                points_vtk.InsertNextPoint(point_coord)
-
-            for poly_id, polyhedron_faces in enumerate(polyhedron_faces_list):
-
-                faces_id_list = vtk.vtkIdList()
-                faces_id_list.InsertNextId(len(polyhedron_faces))  # Number of faces
-                for face in polyhedron_faces:
-                    faces_id_list.InsertNextId(len(face))  # Number of vertices in this face
-                    for idx in face:
-                        faces_id_list.InsertNextId(idx)
-
-                grid.InsertNextCell(vtk.VTK_POLYHEDRON, faces_id_list)
-
-            grid.SetPoints(points_vtk)
+        grid.SetPoints(points_vtk)
 
         if self.PostVelocity:
             velocity_array = vtk.vtkDoubleArray()
