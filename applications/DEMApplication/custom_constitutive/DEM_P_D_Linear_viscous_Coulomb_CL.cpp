@@ -79,7 +79,8 @@ namespace Kratos {
     void DEM_P_D_Linear_viscous_Coulomb::CalculateForces(const ProcessInfo& r_process_info, 
                                                         PolyhedronParticle* PolyhedronParticle1, 
                                                         PolyhedronParticle* PolyhedronParticle2, 
-                                                        Vector3 mOverlapVector, 
+                                                        Vector3 OverlapVector, 
+                                                        Vector3 ContactPoint,
                                                         Vector3& contact_force,
                                                         Vector3& TangentialElasticContactForce) {
 
@@ -91,22 +92,34 @@ namespace Kratos {
         const array_1d<double, 3>& velocity_1     = central_node_1.FastGetSolutionStepValue(VELOCITY);
         const array_1d<double, 3>& delta_disp_1  = central_node_1.FastGetSolutionStepValue(DELTA_DISPLACEMENT);
         const array_1d<double, 3>& ang_velocity_1 = central_node_1.FastGetSolutionStepValue(ANGULAR_VELOCITY);
+        const array_1d<double, 3>& delta_rotation_1 = central_node_1.FastGetSolutionStepValue(DELTA_ROTATION);
         const array_1d<double, 3>& velocity_2     = central_node_2.FastGetSolutionStepValue(VELOCITY);
         const array_1d<double, 3>& delta_disp_2  = central_node_2.FastGetSolutionStepValue(DELTA_DISPLACEMENT);
         const array_1d<double, 3>& ang_velocity_2 = central_node_2.FastGetSolutionStepValue(ANGULAR_VELOCITY);
+        const array_1d<double, 3>& delta_rotation_2 = central_node_2.FastGetSolutionStepValue(DELTA_ROTATION);
+
+        Vector3 delta_rotation_vec_1 = Vector3(delta_rotation_1[0], delta_rotation_1[1], delta_rotation_1[2]);
+        Vector3 delta_rotation_vec_2 = Vector3(delta_rotation_2[0], delta_rotation_2[1], delta_rotation_2[2]);
+        Vector3 poly1Pos = {central_node_1[0], central_node_1[1], central_node_1[2]};
+		Vector3 poly2Pos = {central_node_2[0], central_node_2[1], central_node_2[2]};
+        Vector3 rotation_arm_1 = ContactPoint - poly1Pos;
+		Vector3 rotation_arm_2 = ContactPoint - poly2Pos;
+        Vector3 linear_displacement_1 = Vector3::Cross(delta_rotation_vec_1, rotation_arm_1);
+        Vector3 linear_displacement_2 = Vector3::Cross(delta_rotation_vec_2, rotation_arm_2);
+        Vector3 rel_linear_disp_due_to_rotation = linear_displacement_1 - linear_displacement_2;
 
         Vector3 relVel = Vector3(velocity_1[0], velocity_1[1], velocity_1[2]) - 
                          Vector3(velocity_2[0], velocity_2[1], velocity_2[2]);
 
         Vector3 relDisp = Vector3(delta_disp_1[0], delta_disp_1[1], delta_disp_1[2]) - 
-                          Vector3(delta_disp_2[0], delta_disp_2[1], delta_disp_2[2]);
+                          Vector3(delta_disp_2[0], delta_disp_2[1], delta_disp_2[2]) + rel_linear_disp_due_to_rotation;
 
         // Put the values into a more useful form
-        Vector3 angVel1(ang_velocity_1[0], ang_velocity_1[1], ang_velocity_1[2]);
-        Vector3 angVel2(ang_velocity_2[0], ang_velocity_2[1], ang_velocity_2[2]);
+        //Vector3 angVel1(ang_velocity_1[0], ang_velocity_1[1], ang_velocity_1[2]);
+        //Vector3 angVel2(ang_velocity_2[0], ang_velocity_2[1], ang_velocity_2[2]);
 
         // The unit vector from element 1 to the contact point
-        Vector3 unitCPVect = mOverlapVector;
+        Vector3 unitCPVect = OverlapVector;
         unitCPVect.Normalised();
 
         // normal and tangential components of the relative velocity at the contact point
@@ -134,7 +147,7 @@ namespace Kratos {
         const double equiv_visco_damp_coeff_tangential = 2.0 * damping_gamma * sqrt(equiv_mass * kt);
 
         // Damping calculation
-        Vector3 F_n = mOverlapVector * kn;
+        Vector3 F_n = OverlapVector * kn;
         Vector3 F_nd = -unitCPVect * equiv_visco_damp_coeff_normal *  relVel_n.Length();
 
         // Are we in a loading situation?
@@ -208,7 +221,7 @@ namespace Kratos {
         }
 
         //double kn = 100000.0;
-		//contact_force = mOverlapVector * kn;
+		//contact_force = OverlapVector * kn;
         contact_force = F_n + F_nd + F_t + F_td;
         //contact_force = F_n + F_nd + newF_t;
 

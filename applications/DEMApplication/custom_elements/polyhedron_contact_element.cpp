@@ -115,7 +115,7 @@ void PolyhedronContactElement::CalculateRightHandSide(const ProcessInfo& r_proce
 
 		ClonePolyhedronDiscontinuumConstitutiveLawWithNeighbour();
     	mPolyhedronDiscontinuumConstitutiveLaw->CalculateForces(r_process_info, mPolyhedronParticle1, mPolyhedronParticle2, 
-																mOverlapVector, contact_force, mTangentialElasticContactForce);
+																mOverlapVector, mContactPoint, contact_force, mTangentialElasticContactForce);
 
 		if (r_process_info[ROTATION_OPTION]){
 			Vector3 torque_arm_1 = mContactPoint - coll1Pos;
