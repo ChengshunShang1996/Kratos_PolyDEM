@@ -148,7 +148,10 @@ namespace Kratos {
         
         SetRadius();
 
-        const unsigned int number_of_vertices = 4; //TODO:limited to tetrahedron
+        // Check if the first Condition type of r_fem_model_part is a tetrahedron
+        const auto& first_condition = *r_fem_model_part.ConditionsBegin();
+        const unsigned int number_of_vertices = first_condition.GetGeometry().size(); 
+        const unsigned int number_of_face_vertices = number_of_vertices; // = first_condition.GetGeometry().size()
 
         mListOfVertices.resize(number_of_vertices);
 
@@ -165,15 +168,24 @@ namespace Kratos {
             }
         }
 
+        //TODO:limited to surface
         const unsigned int number_of_faces = 1;
-        const unsigned int number_of_face = 4;
-
         mListOfFaces.resize(number_of_faces);
-        mListOfFaces[0].resize(number_of_face);
-        mListOfFaces[0][0] = 0;
-        mListOfFaces[0][1] = 1;
-        mListOfFaces[0][2] = 2;
-        mListOfFaces[0][3] = 3;
+        mListOfFaces[0].resize(number_of_face_vertices);
+
+        if (number_of_vertices == 3) {
+            mListOfFaces[0][0] = 0;
+            mListOfFaces[0][1] = 1;
+            mListOfFaces[0][2] = 2;
+        } else if (number_of_vertices == 4) {
+            mListOfFaces[0][0] = 0;
+            mListOfFaces[0][1] = 1;
+            mListOfFaces[0][2] = 2;
+            mListOfFaces[0][3] = 3;
+        } else {
+            KRATOS_ERROR << "The number of vertices of the first condition is not 3 or 4." << std::endl;
+            KRATOS_INFO("DEM") << "The number of vertices of the first condition is not 3 or 4." << std::endl;
+        }
 
         const double polyhedron_volume = 1.0;
         const double polyhedron_mass = 1.0;
