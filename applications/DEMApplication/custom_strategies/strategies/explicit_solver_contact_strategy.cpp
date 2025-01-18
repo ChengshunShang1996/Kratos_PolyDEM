@@ -288,21 +288,28 @@ namespace Kratos {
                 (it)->InitializeSolutionStep(r_fem_process_info);
             }
 
-            #pragma omp for nowait
-            for (int k = 0; k < (int) pPolyElements.size(); k++) {
-                ElementsArrayType::iterator it = pPolyElements.ptr_begin() + k;
-                (it)->InitializeSolutionStep(r_polyhedron_process_info);  //TODO: what should be in this r_polyhedron_process_info
-                
-                for (ModelPart::SubModelPartsContainerType::iterator sub_model_part = r_fem_model_part.SubModelPartsBegin();
-                    sub_model_part != r_fem_model_part.SubModelPartsEnd(); ++sub_model_part) {
-                    if (sub_model_part->Name() == "SurfaceForPolyWall") {
-                        ModelPart& submp = *sub_model_part;
-                        const bool rigid_body_motion = submp[RIGID_BODY_MOTION];
-                        if (rigid_body_motion){
-                            PolyhedronParticle& polyhedron_element = dynamic_cast<Kratos::PolyhedronParticle&> (*it);
-                            polyhedron_element.UpdateVerticesFromFEM(r_fem_model_part);
-                        }
-                    }
+            bool rigid_body_motion = false;
+            for (ModelPart::SubModelPartsContainerType::iterator sub_model_part = r_fem_model_part.SubModelPartsBegin(); sub_model_part != r_fem_model_part.SubModelPartsEnd(); ++sub_model_part) {
+                if (sub_model_part->Name() == "SurfaceForPolyWall") {
+                    ModelPart& submp = *sub_model_part;
+                    rigid_body_motion = submp[RIGID_BODY_MOTION];
+                    break;
+                }
+            }
+            
+            if (rigid_body_motion) {
+                #pragma omp for nowait
+                for (int k = 0; k < (int) pPolyElements.size(); k++) {
+                    ElementsArrayType::iterator it = pPolyElements.ptr_begin() + k;
+                    (it)->InitializeSolutionStep(r_polyhedron_process_info);  //TODO: what should be in this r_polyhedron_process_info
+                }
+            } else {
+                #pragma omp for nowait
+                for (int k = 0; k < (int) pPolyElements.size(); k++) {
+                    ElementsArrayType::iterator it = pPolyElements.ptr_begin() + k;
+                    (it)->InitializeSolutionStep(r_polyhedron_process_info);  //TODO: what should be in this r_polyhedron_process_info
+                    PolyhedronParticle& polyhedron_element = dynamic_cast<Kratos::PolyhedronParticle&> (*it);
+                    polyhedron_element.UpdateVerticesFromFEM(r_fem_model_part);
                 }
             }
         }
@@ -549,15 +556,63 @@ namespace Kratos {
                 rigid_body_element.Move(delta_t, rotation_option, force_reduction_factor, StepFlag);
             }
 
-            #pragma omp for nowait
-            for (int i = 0; i < number_of_polyhedron_particles; i++) {
-                mListOfPolyhedronParticles[i]->Move(delta_t, rotation_option, force_reduction_factor, StepFlag);
+            bool rigid_body_motion = false;
+            for (ModelPart::SubModelPartsContainerType::iterator sub_model_part = r_fem_model_part.SubModelPartsBegin();
+                sub_model_part != r_fem_model_part.SubModelPartsEnd(); ++sub_model_part) {
+                if (sub_model_part->Name() == "SurfaceForPolyWall") {
+                    ModelPart& submp = *sub_model_part;
+                    rigid_body_motion = submp[RIGID_BODY_MOTION];
+                    break;
+                }
             }
 
-            #pragma omp for nowait
-            for (int i = 0; i < number_of_ghost_polyhedron_particles; i++) {
-                mListOfGhostPolyhedronParticles[i]->Move(delta_t, rotation_option, force_reduction_factor, StepFlag);
+            if (rigid_body_motion){
+                ModelPart& polyhedron_model_part = GetPolyhedronModelPart();
+                #pragma omp for nowait
+                for (int i = 0; i < number_of_polyhedron_particles; i++) {
+                    bool is_in_dem_wall_sub_model_part = false;
+                    for (ModelPart::SubModelPartsContainerType::iterator sub_model_part = polyhedron_model_part.SubModelPartsBegin(); sub_model_part != polyhedron_model_part.SubModelPartsEnd(); ++sub_model_part) {
+                        if (sub_model_part->Name() == "DEMWall") {
+                            if (sub_model_part->HasElement(mListOfPolyhedronParticles[i]->Id())) {
+                                is_in_dem_wall_sub_model_part = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (!is_in_dem_wall_sub_model_part) {
+                        mListOfPolyhedronParticles[i]->Move(delta_t, rotation_option, force_reduction_factor, StepFlag);
+                    }
+                }
+
+                #pragma omp for nowait
+                for (int i = 0; i < number_of_ghost_polyhedron_particles; i++) {
+                    bool is_in_dem_wall_sub_model_part = false;
+                    for (ModelPart::SubModelPartsContainerType::iterator sub_model_part = polyhedron_model_part.SubModelPartsBegin(); sub_model_part != polyhedron_model_part.SubModelPartsEnd(); ++sub_model_part) {
+                        if (sub_model_part->Name() == "DEMWall") {
+                            if (sub_model_part->HasElement(mListOfPolyhedronParticles[i]->Id())) {
+                                is_in_dem_wall_sub_model_part = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (!is_in_dem_wall_sub_model_part) {
+                        mListOfGhostPolyhedronParticles[i]->Move(delta_t, rotation_option, force_reduction_factor, StepFlag);
+                    }
+                }
+
+            } else {
+
+                #pragma omp for nowait
+                for (int i = 0; i < number_of_polyhedron_particles; i++) {
+                    mListOfPolyhedronParticles[i]->Move(delta_t, rotation_option, force_reduction_factor, StepFlag);
+                }
+
+                #pragma omp for nowait
+                for (int i = 0; i < number_of_ghost_polyhedron_particles; i++) {
+                    mListOfGhostPolyhedronParticles[i]->Move(delta_t, rotation_option, force_reduction_factor, StepFlag);
+                }
             }
+            
         }
 
         //GetScheme()->Calculate(GetModelPart(), StepFlag);
