@@ -207,9 +207,27 @@ namespace Kratos {
 
         ModelPart& r_model_part = GetModelPart();
         ProcessInfo& r_process_info = r_model_part.GetProcessInfo();
+        ModelPart& polyhedron_model_part = GetPolyhedronModelPart();
+        ModelPart& fem_model_part = GetFemModelPart();
 
         IndexPartition<unsigned int>(mListOfPolyhedronParticles.size()).for_each([&](unsigned int i){
-            mListOfPolyhedronParticles[i]->Initialize(r_process_info);
+            
+            bool is_in_dem_wall_sub_model_part = false;
+            for (ModelPart::SubModelPartsContainerType::iterator sub_model_part = polyhedron_model_part.SubModelPartsBegin(); sub_model_part != polyhedron_model_part.SubModelPartsEnd(); ++sub_model_part) {
+                if (sub_model_part->Name() == "DEMWall") {
+                    if (sub_model_part->HasElement(mListOfPolyhedronParticles[i]->Id())) {
+                        is_in_dem_wall_sub_model_part = true;
+                        break;
+                    }
+                }
+            }
+            
+            if (is_in_dem_wall_sub_model_part){
+                mListOfPolyhedronParticles[i]->InitializeFromFEM(r_process_info, fem_model_part);
+            } else{
+                mListOfPolyhedronParticles[i]->Initialize(r_process_info);
+            }
+        
         });
 
         KRATOS_CATCH("")
@@ -274,6 +292,8 @@ namespace Kratos {
             for (int k = 0; k < (int) pPolyElements.size(); k++) {
                 ElementsArrayType::iterator it = pPolyElements.ptr_begin() + k;
                 (it)->InitializeSolutionStep(r_polyhedron_process_info);  //TODO: what should be in this r_polyhedron_process_info
+                PolyhedronParticle& polyhedron_element = dynamic_cast<Kratos::PolyhedronParticle&> (*it);
+                polyhedron_element.UpdateVerticesFromFEM(r_fem_model_part);
             }
         }
 
