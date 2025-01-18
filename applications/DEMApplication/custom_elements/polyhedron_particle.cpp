@@ -275,9 +275,9 @@ namespace Kratos {
                     center_node[i] = center[i];
                 }
 
-                velocity = [0]*3
+                array_1d<double, 3>& velocity = it->GetGeometry()[0].FastGetSolutionStepValue(VELOCITY);
                 central_node.SetSolutionStepValue(VELOCITY, velocity)
-                angular_velocity = [0]*3
+                angular_velocity = it->GetGeometry()[0].FastGetSolutionStepValue(ANGULAR_VELOCITY);
                 central_node.SetSolutionStepValue(ANGULAR_VELOCITY, angular_velocity)
 
                 break;
