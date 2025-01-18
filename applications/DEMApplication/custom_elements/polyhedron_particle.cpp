@@ -203,6 +203,7 @@ namespace Kratos {
 
         KRATOS_TRY
 
+        //TODO: "SurfaceForPolyWall" is a temporary name, it should be changed to something more general
         for (auto it = r_fem_model_part.GetSubModelPart("SurfaceForPolyWall").ConditionsBegin(); 
              it != r_fem_model_part.GetSubModelPart("SurfaceForPolyWall").ConditionsEnd(); ++it) {
             if (it->Id() == this->Id()) {
