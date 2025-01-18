@@ -164,6 +164,30 @@ namespace Kratos {
                     mListOfVertices[i][1] = it->GetGeometry()[i].Coordinates()[1];
                     mListOfVertices[i][2] = it->GetGeometry()[i].Coordinates()[2];
                 }
+
+                array_1d<double, 3> center = ZeroVector(3);
+                for (int i = 0; i < (int)mListOfVertices.size(); i++) {
+                    center[0] += mListOfVertices[i][0];
+                    center[1] += mListOfVertices[i][1];
+                    center[2] += mListOfVertices[i][2];
+                }
+                center[0] /= (int)mListOfVertices.size();
+                center[1] /= (int)mListOfVertices.size();
+                center[2] /= (int)mListOfVertices.size();
+
+                KRATOS_ERROR_IF_NOT(mListOfVertices.size()) << "The number of vertices is zero." << std::endl;
+
+                // Calculate the new vertices
+                for (int i = 0; i < (int)mListOfVertices.size(); i++) {
+                    mListOfVertices[i][0] -= center[0];
+                    mListOfVertices[i][1] -= center[1];
+                    mListOfVertices[i][2] -= center[2];
+                }
+
+                for (int i = 0; i < 3; i++) {
+                    center_node[i] = center[i];
+                }
+
                 break;
             }
         }
@@ -215,6 +239,8 @@ namespace Kratos {
 
         KRATOS_TRY
 
+        auto& central_node = GetGeometry()[0];
+
         //TODO: "SurfaceForPolyWall" is a temporary name, it should be changed to something more general
         for (auto it = r_fem_model_part.GetSubModelPart("SurfaceForPolyWall").ConditionsBegin(); 
              it != r_fem_model_part.GetSubModelPart("SurfaceForPolyWall").ConditionsEnd(); ++it) {
@@ -224,6 +250,35 @@ namespace Kratos {
                     mListOfVertices[i][1] = it->GetGeometry()[i].Coordinates()[1];
                     mListOfVertices[i][2] = it->GetGeometry()[i].Coordinates()[2];
                 }
+                
+                array_1d<double, 3> center = ZeroVector(3);
+                for (int i = 0; i < (int)mListOfVertices.size(); i++) {
+                    center[0] += mListOfVertices[i][0];
+                    center[1] += mListOfVertices[i][1];
+                    center[2] += mListOfVertices[i][2];
+                }
+                center[0] /= (int)mListOfVertices.size();
+                center[1] /= (int)mListOfVertices.size();
+                center[2] /= (int)mListOfVertices.size();
+
+                KRATOS_ERROR_IF_NOT(mListOfVertices.size()) << "The number of vertices is zero." << std::endl;
+
+                // Calculate the new vertices
+                for (int i = 0; i < (int)mListOfVertices.size(); i++) {
+                    mListOfVertices[i][0] -= center[0];
+                    mListOfVertices[i][1] -= center[1];
+                    mListOfVertices[i][2] -= center[2];
+                }
+
+                for (int i = 0; i < 3; i++) {
+                    center_node[i] = center[i];
+                }
+
+                velocity = [0]*3
+                central_node.SetSolutionStepValue(VELOCITY, velocity)
+                angular_velocity = [0]*3
+                central_node.SetSolutionStepValue(ANGULAR_VELOCITY, angular_velocity)
+
                 break;
             }
         }
