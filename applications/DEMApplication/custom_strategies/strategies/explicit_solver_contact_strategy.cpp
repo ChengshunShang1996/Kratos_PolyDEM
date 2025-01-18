@@ -292,8 +292,18 @@ namespace Kratos {
             for (int k = 0; k < (int) pPolyElements.size(); k++) {
                 ElementsArrayType::iterator it = pPolyElements.ptr_begin() + k;
                 (it)->InitializeSolutionStep(r_polyhedron_process_info);  //TODO: what should be in this r_polyhedron_process_info
-                PolyhedronParticle& polyhedron_element = dynamic_cast<Kratos::PolyhedronParticle&> (*it);
-                polyhedron_element.UpdateVerticesFromFEM(r_fem_model_part);
+                
+                for (ModelPart::SubModelPartsContainerType::iterator sub_model_part = r_fem_model_part.SubModelPartsBegin();
+                    sub_model_part != r_fem_model_part.SubModelPartsEnd(); ++sub_model_part) {
+                    if (sub_model_part->Name() == "SurfaceForPolyWall") {
+                        ModelPart& submp = *sub_model_part;
+                        const bool rigid_body_motion = submp[RIGID_BODY_MOTION];
+                        if (rigid_body_motion){
+                            PolyhedronParticle& polyhedron_element = dynamic_cast<Kratos::PolyhedronParticle&> (*it);
+                            polyhedron_element.UpdateVerticesFromFEM(r_fem_model_part);
+                        }
+                    }
+                }
             }
         }
 

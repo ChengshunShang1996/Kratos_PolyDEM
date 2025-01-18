@@ -173,6 +173,7 @@ namespace Kratos {
         mListOfFaces[0][0] = 0;
         mListOfFaces[0][1] = 1;
         mListOfFaces[0][2] = 2;
+        mListOfFaces[0][3] = 3;
 
         const double polyhedron_volume = 1.0;
         const double polyhedron_mass = 1.0;
