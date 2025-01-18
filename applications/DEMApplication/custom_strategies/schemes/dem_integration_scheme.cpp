@@ -37,7 +37,9 @@ namespace Kratos {
 
     void DEMIntegrationScheme::RotatePolyhedron(PolyhedronParticle* polyhedron_element, Node & i, const double delta_t, const double moment_reduction_factor, const int StepFlag) {
         CalculateRotationalMotionOfPolyhedronNode(i, delta_t, moment_reduction_factor, StepFlag);
-        polyhedron_element->UpdateVerticesDueToRotation();
+        if (StepFlag != 1){
+            polyhedron_element->UpdateVerticesDueToRotation();
+        }
     }
 
     void DEMIntegrationScheme::MoveRigidBodyElement(RigidBodyElement3D* rigid_body_element, Node & i, const double delta_t, const double force_reduction_factor, const int StepFlag) {
@@ -110,7 +112,7 @@ namespace Kratos {
         Fix_Ang_vel[1] = i.Is(DEMFlags::FIXED_ANG_VEL_Y);
         Fix_Ang_vel[2] = i.Is(DEMFlags::FIXED_ANG_VEL_Z);
 
-        //TODO: ONLY SUPPORT symplectic_euler_scheme now
+        //TODO: ONLY SUPPORT symplectic_euler_scheme and velocity_verlet_scheme now
         CalculateNewRotationalVariablesOfPolyhedrons(StepFlag, i, moment_of_inertia, angular_velocity, torque, moment_reduction_factor, rotated_angle, delta_rotation, delta_t, Fix_Ang_vel);
     }
 

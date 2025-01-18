@@ -97,13 +97,14 @@ void PolyhedronContactElement::FinalizeSolutionStep(const ProcessInfo& r_process
 void PolyhedronContactElement::CalculateRightHandSide(const ProcessInfo& r_process_info, double dt, const array_1d<double, 3>& gravity) {
     KRATOS_TRY
 
-    if (GJK()) {
+    mIsFaceParallel = false;
+
+	if (GJK()) {
         
 		auto& central_node_1 = mPolyhedronParticle1->GetGeometry()[0];
 		auto& central_node_2 = mPolyhedronParticle2->GetGeometry()[0];
 		Vector3 coll1Pos = {central_node_1[0], central_node_1[1], central_node_1[2]};
 		Vector3 coll2Pos = {central_node_2[0], central_node_2[1], central_node_2[2]};
-		Vector3 contact_m = (mContactPoint1 + mContactPoint2)/2;
 
 		Vector3 contact_force(0.0, 0.0, 0.0);
 		Vector3 contact_moment_1(0.0, 0.0, 0.0);
@@ -114,13 +115,33 @@ void PolyhedronContactElement::CalculateRightHandSide(const ProcessInfo& r_proce
 
 		ClonePolyhedronDiscontinuumConstitutiveLawWithNeighbour();
     	mPolyhedronDiscontinuumConstitutiveLaw->CalculateForces(r_process_info, mPolyhedronParticle1, mPolyhedronParticle2, 
-																mOverlapVector, contact_force, mTangentialElasticContactForce);
+																mOverlapVector, mContactPoint, contact_force, mTangentialElasticContactForce);
 
 		if (r_process_info[ROTATION_OPTION]){
-			Vector3 torque_arm_1 = contact_m - coll1Pos;
-			Vector3 torque_arm_2 = contact_m - coll2Pos;
+			Vector3 torque_arm_1 = mContactPoint - coll1Pos;
+			Vector3 torque_arm_2 = mContactPoint - coll2Pos;
 			contact_moment_1 = Vector3::Cross(torque_arm_1, contact_force);
 			contact_moment_2 = Vector3::Cross(torque_arm_2, -contact_force);
+			//KRATOS_INFO("torque_arm_1") << torque_arm_1 << std::endl;
+			//KRATOS_INFO("torque_arm_2") << torque_arm_2 << std::endl;
+			//KRATOS_INFO("Contact Moment 1") << contact_moment_1 << std::endl;
+			//KRATOS_INFO("Contact Moment 2") << contact_moment_2 << std::endl;
+			const array_1d<double, 3>& velocity_1 = central_node_1.FastGetSolutionStepValue(VELOCITY);
+        	const array_1d<double, 3>& velocity_2 = central_node_2.FastGetSolutionStepValue(VELOCITY);
+			Vector3 velocity_1_vec(velocity_1[0], velocity_1[1], velocity_1[2]);
+			Vector3 velocity_2_vec(velocity_2[0], velocity_2[1], velocity_2[2]);
+			double velocity_1_vec_modulus = velocity_1_vec.Length();
+			double velocity_2_vec_modulus = velocity_2_vec.Length();
+			if (velocity_1_vec_modulus > 1e-3 && mIsFaceParallel == true){
+				central_node_1.FastGetSolutionStepValue(ANGULAR_VELOCITY)[0] *= 0.5;
+				central_node_1.FastGetSolutionStepValue(ANGULAR_VELOCITY)[1] *= 0.5;
+				central_node_1.FastGetSolutionStepValue(ANGULAR_VELOCITY)[2] *= 0.5;
+			}
+			if (velocity_2_vec_modulus > 1e-3 && mIsFaceParallel == true){
+				central_node_2.FastGetSolutionStepValue(ANGULAR_VELOCITY)[0] *= 0.5;
+				central_node_2.FastGetSolutionStepValue(ANGULAR_VELOCITY)[1] *= 0.5;
+				central_node_2.FastGetSolutionStepValue(ANGULAR_VELOCITY)[2] *= 0.5;
+			}
 		}
 
 		array_1d<double,3>& total_forces_1 = central_node_1.FastGetSolutionStepValue(TOTAL_FORCES);
@@ -144,6 +165,9 @@ void PolyhedronContactElement::CalculateRightHandSide(const ProcessInfo& r_proce
 		total_moment_2[0] += contact_moment_2[0];
 		total_moment_2[1] += contact_moment_2[1];
 		total_moment_2[2] += contact_moment_2[2];
+
+		//KRATOS_INFO("Contact Force") << contact_force << std::endl;
+		//KRATOS_INFO("TOTAL_FORCES_1") << total_forces_1 << std::endl;
 
 		/*
 		total_forces[0] = contact_force[0] + additional_forces[0];
@@ -373,7 +397,51 @@ void PolyhedronContactElement::EPA(Point& a, Point& b, Point& c, Point& d)
 			//Vector3 normal = (mContactPoint1 - mContactPoint2).Normalised();
             //Vector3 contact_normal = faces[closest_face][3]
             //Vector3 contact_point_minkowski = contact_normal * Vector3::Dot(p.p, search_dir)
-			return;
+
+			// Identify the corresponding geometric features on the two polyhedra
+			bool poly1_find_face = true;
+			bool poly2_find_face = true;
+			std::vector<Vector3> faceVertices1 = mPolyhedronParticle1->GetIntersectingFaceVertices(mContactPoint1, mOverlapVector, poly1_find_face);
+			std::vector<Vector3> faceVertices2 = mPolyhedronParticle2->GetIntersectingFaceVertices(mContactPoint2, -mOverlapVector, poly2_find_face);
+			
+			//if (faceVertices1.size() == 0 || faceVertices2.size() == 0) {
+			//	mContactPoint = (mContactPoint1 + mContactPoint2)/2;
+			//	return;
+			//}
+			
+			Vector3 normal1 = CalculateFaceNormal(faceVertices1);
+			Vector3 normal2 = CalculateFaceNormal(faceVertices2);
+
+			// Check if it is a face-face contact
+			if (AreNormalsParallel(normal1, normal2) && poly1_find_face && poly2_find_face) {
+				// Calculate the contact area for face-face contact
+				std::vector<Vector3> intersectionVertices = CalculateIntersection(faceVertices1, faceVertices2, normal1);
+
+				if (!intersectionVertices.empty()){
+					// Determine the contact point
+					mContactPoint = CalculateCentroid(intersectionVertices);
+
+					Vector3 TempOverlapVector = mOverlapVector.Normalised();
+
+					if (Vector3::Dot(normal1, TempOverlapVector) < 0){
+						normal1	= -normal1;
+					} 
+
+					mOverlapVector = normal1 * mOverlapVector.Length();
+
+					mIsFaceParallel = true;
+
+				} else {
+					mContactPoint = (mContactPoint1 + mContactPoint2)/2;
+				}
+
+				return;
+			} else {
+
+				mContactPoint = (mContactPoint1 + mContactPoint2)/2;
+
+				return;
+			}
 		}
 
 		Point loose_edges[EPA_MAX_NUM_LOOSE_EDGES][2]; //keep track of edges we need to fix after removing faces
@@ -442,6 +510,7 @@ void PolyhedronContactElement::EPA(Point& a, Point& b, Point& c, Point& d)
 		}
 	} //End for iterations
 	std::cout<< "EPA did not converge" << std::endl;
+	KRATOS_ERROR << "EPA did not converge" << std::endl;
 	//Return most recent closest point
 	Vector3 search_dir = faces[closest_face][3].p;
 
@@ -460,6 +529,52 @@ void PolyhedronContactElement::EPA(Point& a, Point& b, Point& c, Point& d)
 	Vector3 localB = faces[closest_face][0].b * u + faces[closest_face][1].b * v + faces[closest_face][2].b * w;
 	double penetration = (localA - localB).Length();
 	Vector3 normal = (localA - localB).Normalised();*/
+
+	// Identify the corresponding geometric features on the two polyhedra
+	bool poly1_find_face = true;
+	bool poly2_find_face = true;
+	std::vector<Vector3> faceVertices1 = mPolyhedronParticle1->GetIntersectingFaceVertices(mContactPoint1, mOverlapVector, poly1_find_face);
+	std::vector<Vector3> faceVertices2 = mPolyhedronParticle2->GetIntersectingFaceVertices(mContactPoint2, -mOverlapVector, poly2_find_face);
+	
+	//if (faceVertices1.size() == 0 || faceVertices2.size() == 0) {
+	//	mContactPoint = (mContactPoint1 + mContactPoint2)/2;
+	//	return;
+	//}
+	
+	Vector3 normal1 = CalculateFaceNormal(faceVertices1);
+	Vector3 normal2 = CalculateFaceNormal(faceVertices2);
+
+	// Check if it is a face-face contact
+	if (AreNormalsParallel(normal1, normal2) && poly1_find_face && poly2_find_face) {
+		// Calculate the contact area for face-face contact
+		std::vector<Vector3> intersectionVertices = CalculateIntersection(faceVertices1, faceVertices2, normal1);
+
+		if (!intersectionVertices.empty()){
+			// Determine the contact point
+			mContactPoint = CalculateCentroid(intersectionVertices);
+
+			Vector3 TempOverlapVector = mOverlapVector.Normalised();
+
+			if (Vector3::Dot(normal1, TempOverlapVector) < 0){
+				normal1	= -normal1;
+			} 
+
+			mOverlapVector = normal1 * mOverlapVector.Length();
+
+			mIsFaceParallel = true;
+
+		} else {
+			mContactPoint = (mContactPoint1 + mContactPoint2)/2;
+		}
+		
+		return;
+
+	} else {
+
+		mContactPoint = (mContactPoint1 + mContactPoint2)/2;
+
+		return;
+	}
 
 	return;
 
@@ -497,6 +612,211 @@ void PolyhedronContactElement::Barycentric(const Vector3& a, const Vector3& b, c
     u = 1.0 - v - w;
 
     KRATOS_CATCH( "" )
+}
+
+bool PolyhedronContactElement::AreNormalsParallel(const Vector3& normal1, const Vector3& normal2)
+{
+    // Normalize the normals
+    Vector3 norm1 = normal1.Normalised();
+    Vector3 norm2 = normal2.Normalised();
+
+    // Calculate the dot product
+    double dotProduct = Vector3::Dot(norm1, norm2);
+
+    // Check if the dot product is close to 1 or -1
+    const double epsilon = 1e-6; // Tolerance for floating-point comparison
+    return std::abs(std::abs(dotProduct) - 1.0) < epsilon;
+}
+
+Vector3 PolyhedronContactElement::CalculateFaceNormal(const std::vector<Vector3>& vertices)
+{
+	// Ensure there are at least 3 vertices to define a plane
+    if (vertices.size() < 3) {
+        KRATOS_INFO("ERROR") << "A face must have at least 3 vertices to calculate a normal." << std::endl;
+    }
+    // Calculate the normal using the cross product of two edges of the face
+    Vector3 edge1 = vertices[1] - vertices[0];
+    Vector3 edge2 = vertices[2] - vertices[0];
+    Vector3 normal = Vector3::Cross(edge1, edge2);
+
+    // Normalize the normal vector
+    normal.Normalise();
+
+    return normal;
+}
+
+std::vector<Vector3> PolyhedronContactElement::CalculateIntersection(const std::vector<Vector3>& faceVertices1, const std::vector<Vector3>& faceVertices2, const Vector3& normal)
+{
+    // Project the vertices of both faces onto a common plane defined by the normal
+    std::vector<Vector2> projectedFace1 = ProjectToPlane(faceVertices1, normal);
+    std::vector<Vector2> projectedFace2 = ProjectToPlane(faceVertices2, normal);
+
+	Vector3 u;
+	if (std::abs(normal[0]) > std::abs(normal[1])) {
+		u = Vector3(-normal[2], 0, normal[0]).Normalised();
+	} else {
+		u = Vector3(0, -normal[2], normal[1]).Normalised();
+	}
+    Vector3 v = Vector3::Cross(normal, u);
+
+	Vector3 projectedPoint3d = u * projectedFace1[0].x + v * projectedFace1[0].y;
+    Vector3 relativeVector = faceVertices1[0] - projectedPoint3d;
+
+    // Calculate the intersection of the two projected polygons
+    std::vector<Vector2> intersection2D = CalculatePolygonIntersection(projectedFace1, projectedFace2);
+
+	// Reproject the intersection vertices back to 3D space
+	std::vector<Vector3> intersection3D = ReprojectTo3D(intersection2D, normal, relativeVector);
+
+    return intersection3D;
+}
+
+std::vector<Vector2> PolyhedronContactElement::ProjectToPlane(const std::vector<Vector3>& vertices, const Vector3& normal)
+{
+    // Choose a basis for the plane
+    Vector3 u;
+	if (std::abs(normal[0]) > std::abs(normal[1])) {
+		u = Vector3(-normal[2], 0, normal[0]).Normalised();
+	} else {
+		u = Vector3(0, -normal[2], normal[1]).Normalised();
+	}
+    Vector3 v = Vector3::Cross(normal, u);
+
+    // Project each vertex onto the plane
+    std::vector<Vector2> projectedVertices;
+    for (const auto& vertex : vertices) {
+        double x = Vector3::Dot(vertex, u);
+        double y = Vector3::Dot(vertex, v);
+        projectedVertices.push_back(Vector2(x, y));
+    }
+
+    return projectedVertices;
+}
+
+std::vector<Vector3> PolyhedronContactElement::ReprojectTo3D(const std::vector<Vector2>& vertices2D, const Vector3& normal, const Vector3& reletiveVector)
+{
+	Vector3 u;
+	if (std::abs(normal[0]) > std::abs(normal[1])) {
+		u = Vector3(-normal[2], 0, normal[0]).Normalised();
+	} else {
+		u = Vector3(0, -normal[2], normal[1]).Normalised();
+	}
+    Vector3 v = Vector3::Cross(normal, u);
+
+    // Reproject each 2D vertex back to 3D space
+    std::vector<Vector3> vertices3D;
+    for (const auto& vertex2D : vertices2D) {
+        Vector3 vertex3D = reletiveVector + u * vertex2D.x + v * vertex2D.y;
+        vertices3D.push_back(vertex3D);
+    }
+
+    return vertices3D;
+}
+
+// Helper function to calculate the signed area of a polygon
+double PolyhedronContactElement::calculateSignedArea(const std::vector<Vector2>& polygon) {
+	double area = 0.0;
+	size_t n = polygon.size();
+	for (size_t i = 0; i < n; ++i) {
+		const Vector2& p1 = polygon[i];
+		const Vector2& p2 = polygon[(i + 1) % n];
+		area += (p2.x - p1.x) * (p2.y + p1.y);
+	}
+	return area;
+}
+
+// Check if a polygon is clockwise
+bool PolyhedronContactElement::isClockwise(const std::vector<Vector2>& polygon) {
+	return calculateSignedArea(polygon) > 0;
+}
+
+// Ensure that a polygon is in clockwise order
+void PolyhedronContactElement::ensureClockwise(std::vector<Vector2>& polygon) {
+	if (!isClockwise(polygon)) {
+		reverse(polygon.begin(), polygon.end());
+	}
+}
+
+std::vector<Vector2> PolyhedronContactElement::CalculatePolygonIntersection(std::vector<Vector2>& subjectPolygon, std::vector<Vector2>& clippingPolygon) {
+	
+	ensureClockwise(subjectPolygon);
+    ensureClockwise(clippingPolygon);
+	
+	std::vector<Vector2> finalPolygon = subjectPolygon;
+
+	for (size_t i = 0; i < clippingPolygon.size(); ++i) {
+		std::vector<Vector2> nextPolygon = finalPolygon;
+		finalPolygon.clear();
+
+		Vector2 c_edge_start = clippingPolygon[i == 0 ? clippingPolygon.size() - 1 : i - 1];
+		Vector2 c_edge_end = clippingPolygon[i];
+
+		for (size_t j = 0; j < nextPolygon.size(); ++j) {
+			Vector2 s_edge_start = nextPolygon[j == 0 ? nextPolygon.size() - 1 : j - 1];
+			Vector2 s_edge_end = nextPolygon[j];
+
+			if (IsInside(c_edge_start, c_edge_end, s_edge_end)) {
+				if (!IsInside(c_edge_start, c_edge_end, s_edge_start)) {
+					finalPolygon.push_back(ComputeIntersection(s_edge_start, s_edge_end, c_edge_start, c_edge_end));
+				}
+				finalPolygon.push_back(s_edge_end);
+			} else if (IsInside(c_edge_start, c_edge_end, s_edge_start)) {
+				finalPolygon.push_back(ComputeIntersection(s_edge_start, s_edge_end, c_edge_start, c_edge_end));
+			}
+		}
+	}
+
+	return finalPolygon;
+}
+
+bool PolyhedronContactElement::IsInside(const Vector2& edgeStart, const Vector2& edgeEnd, const Vector2& point)
+{
+    double R = (edgeEnd.x - edgeStart.x) * (point.y - edgeStart.y) > (edgeEnd.y - edgeStart.y) * (point.x - edgeStart.x);
+    return R <= 0;
+}
+
+Vector2 PolyhedronContactElement::ComputeIntersection(const Vector2& p1, const Vector2& p2, const Vector2& p3, const Vector2& p4) {
+	
+	double x, y;
+
+	// If first line is vertical
+	if (std::abs(p2.x - p1.x) < 1e-9) {
+		x = p1.x;
+		double m2 = (p4.y - p3.y) / (p4.x - p3.x);
+		double b2 = p3.y - m2 * p3.x;
+		y = m2 * x + b2;
+	}
+	// If second line is vertical
+	else if (std::abs(p4.x - p3.x) < 1e-9) {
+		x = p3.x;
+		double m1 = (p2.y - p1.y) / (p2.x - p1.x);
+		double b1 = p1.y - m1 * p1.x;
+		y = m1 * x + b1;
+	}
+	// If neither line is vertical
+	else {
+		double m1 = (p2.y - p1.y) / (p2.x - p1.x);
+		double b1 = p1.y - m1 * p1.x;
+		double m2 = (p4.y - p3.y) / (p4.x - p3.x);
+		double b2 = p3.y - m2 * p3.x;
+
+		x = (b2 - b1) / (m1 - m2);
+		y = m1 * x + b1;
+	}
+
+	return Vector2(x, y);
+}
+
+Vector3 PolyhedronContactElement::CalculateCentroid(const std::vector<Vector3>& vertices)
+{
+    Vector3 centroid(0.0, 0.0, 0.0);
+    for (const auto& vertex : vertices) {
+        centroid += vertex;
+    }
+    
+	centroid /= vertices.size();
+	
+	return centroid;
 }
 
 void PolyhedronContactElement::SetId(IndexType NewId) { mId = NewId;}

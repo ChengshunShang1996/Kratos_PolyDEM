@@ -52,7 +52,8 @@ namespace Kratos {
     void DEMPolyhedronDiscontinuumConstitutiveLaw::CalculateForces(const ProcessInfo& r_process_info, 
                                                                     PolyhedronParticle* PolyhedronParticle1, 
                                                                     PolyhedronParticle* PolyhedronParticle2, 
-                                                                    Vector3 mOverlapVector, 
+                                                                    Vector3 OverlapVector,
+                                                                    Vector3 ContactPoint, 
                                                                     Vector3& contact_force,
                                                                     Vector3& TangentialElasticContactForce) {
         KRATOS_ERROR << "This function (DEMContinuumConstitutiveLaw::CalculateForces) shouldn't be accessed, use derived class instead"<<std::endl;

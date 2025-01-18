@@ -246,7 +246,17 @@ namespace Kratos {
         for (int i=0; i<3; i++) {
             Vector2[i] = 0.0;
             for (int j=0; j<3; j++) {
-                Vector2[i]+=Matrix[j][i]*Vector1[j];
+                Vector2[i]+=Matrix[i][j]*Vector1[j];
+            }
+        }
+    }
+
+    static inline void ProductMatrix3X3Vector3X1(const Matrix Matrix, const array_1d<double,3>& Vector1, array_1d<double,3>& Vector2)
+    {
+        for (int i=0; i<3; i++) {
+            Vector2[i] = 0.0;
+            for (int j=0; j<3; j++) {
+                Vector2[i]+=Matrix(i,j)*Vector1[j];
             }
         }
     }
