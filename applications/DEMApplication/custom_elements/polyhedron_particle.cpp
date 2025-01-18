@@ -276,9 +276,14 @@ namespace Kratos {
                 }
 
                 array_1d<double, 3>& velocity = it->GetGeometry()[0].FastGetSolutionStepValue(VELOCITY);
-                central_node.SetSolutionStepValue(VELOCITY, velocity)
-                angular_velocity = it->GetGeometry()[0].FastGetSolutionStepValue(ANGULAR_VELOCITY);
-                central_node.SetSolutionStepValue(ANGULAR_VELOCITY, angular_velocity)
+                array_1d<double, 3>& delta_disp = it->GetGeometry()[0].FastGetSolutionStepValue(DELTA_DISPLACEMENT);
+                array_1d<double, 3>& angular_velocity = it->GetGeometry()[0].FastGetSolutionStepValue(ANGULAR_VELOCITY);
+                array_1d<double, 3>& delta_rotation = it->GetGeometry()[0].FastGetSolutionStepValue(DELTA_ROTATION);
+                 
+                central_node.SetSolutionStepValue(VELOCITY, velocity);
+                central_node.SetSolutionStepValue(DELTA_DISPLACEMENT, delta_disp);
+                central_node.SetSolutionStepValue(ANGULAR_VELOCITY, angular_velocity);
+                central_node.SetSolutionStepValue(DELTA_ROTATION, delta_rotation);
 
                 break;
             }
