@@ -211,6 +211,7 @@ namespace Kratos {
             KRATOS_INFO("DEM") << "The number of vertices of the first condition is not 3 or 4." << std::endl;
         }
 
+        //those values are not important for the wall elements
         const double polyhedron_volume = 1.0;
         const double polyhedron_mass = 1.0;
 
