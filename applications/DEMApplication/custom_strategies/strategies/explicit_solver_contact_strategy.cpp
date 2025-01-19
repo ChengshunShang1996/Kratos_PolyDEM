@@ -78,6 +78,7 @@ namespace Kratos {
         InitializePolyhedrons();
 
         CheckRigidBodyMotionForPolyWall(fem_model_part);
+        CheckPolydedronParticleBelongingToDEMWall(polyhedron_model_part);
         
         UpdateMaxIdOfCreatorDestructor();
 
@@ -253,6 +254,25 @@ namespace Kratos {
         KRATOS_CATCH("")
     }
 
+    void ContactExplicitSolverStrategy::CheckPolydedronParticleBelongingToDEMWall(ModelPart& polyhedron_model_part) {
+
+        KRATOS_TRY
+
+        IndexPartition<unsigned int>(mListOfPolyhedronParticles.size()).for_each([&](unsigned int i){
+            for (ModelPart::SubModelPartsContainerType::iterator sub_model_part = polyhedron_model_part.SubModelPartsBegin(); 
+                sub_model_part != polyhedron_model_part.SubModelPartsEnd(); ++sub_model_part) {
+                if (sub_model_part->Name() == "DEMWall") {
+                    if (sub_model_part->HasElement(mListOfPolyhedronParticles[i]->Id())) {
+                        mListOfPolyhedronParticles[i]->mIsBelongingToDEMWall = true;
+                        break;
+                    }
+                }
+            }
+        });
+
+        KRATOS_CATCH("")
+    }
+
     void ContactExplicitSolverStrategy::UpdateMaxIdOfCreatorDestructor() {
 
         KRATOS_TRY
@@ -320,7 +340,9 @@ namespace Kratos {
                     ElementsArrayType::iterator it = pPolyElements.ptr_begin() + k;
                     (it)->InitializeSolutionStep(r_polyhedron_process_info);  //TODO: what should be in this r_polyhedron_process_info
                     PolyhedronParticle& polyhedron_element = dynamic_cast<Kratos::PolyhedronParticle&> (*it);
-                    polyhedron_element.UpdateVerticesFromFEM(r_fem_model_part);
+                    if (polyhedron_element.mIsBelongingToDEMWall) {
+                        polyhedron_element.UpdateVerticesFromFEM(r_fem_model_part);
+                    }
                 }
             }
         }
@@ -581,35 +603,16 @@ namespace Kratos {
                 
             } else {
 
-                ModelPart& polyhedron_model_part = GetPolyhedronModelPart();
                 #pragma omp for nowait
                 for (int i = 0; i < number_of_polyhedron_particles; i++) {
-                    bool is_in_dem_wall_sub_model_part = false;
-                    for (ModelPart::SubModelPartsContainerType::iterator sub_model_part = polyhedron_model_part.SubModelPartsBegin(); sub_model_part != polyhedron_model_part.SubModelPartsEnd(); ++sub_model_part) {
-                        if (sub_model_part->Name() == "DEMWall") {
-                            if (sub_model_part->HasElement(mListOfPolyhedronParticles[i]->Id())) {
-                                is_in_dem_wall_sub_model_part = true;
-                                break;
-                            }
-                        }
-                    }
-                    if (!is_in_dem_wall_sub_model_part) {
+                    if (!mListOfPolyhedronParticles[i]->mIsBelongingToDEMWall) {
                         mListOfPolyhedronParticles[i]->Move(delta_t, rotation_option, force_reduction_factor, StepFlag);
                     }
                 }
 
                 #pragma omp for nowait
                 for (int i = 0; i < number_of_ghost_polyhedron_particles; i++) {
-                    bool is_in_dem_wall_sub_model_part = false;
-                    for (ModelPart::SubModelPartsContainerType::iterator sub_model_part = polyhedron_model_part.SubModelPartsBegin(); sub_model_part != polyhedron_model_part.SubModelPartsEnd(); ++sub_model_part) {
-                        if (sub_model_part->Name() == "DEMWall") {
-                            if (sub_model_part->HasElement(mListOfPolyhedronParticles[i]->Id())) {
-                                is_in_dem_wall_sub_model_part = true;
-                                break;
-                            }
-                        }
-                    }
-                    if (!is_in_dem_wall_sub_model_part) {
+                    if (!mListOfGhostPolyhedronParticles[i]->mIsBelongingToDEMWall) {
                         mListOfGhostPolyhedronParticles[i]->Move(delta_t, rotation_option, force_reduction_factor, StepFlag);
                     }
                 }
@@ -798,22 +801,12 @@ namespace Kratos {
             bool add_new_bond = true;
             std::vector<PolyhedronParticle*>& neighbour_elements = mListOfPolyhedronParticles[i]->mNeighbourElements;
             unsigned int neighbors_size = mListOfPolyhedronParticles[i]->mNeighbourElements.size();
-
+            
             for (unsigned int j = 0; j < neighbors_size; j++) {
                 PolyhedronParticle* neighbour_element = dynamic_cast<PolyhedronParticle*> (neighbour_elements[j]);
                 if (neighbour_element == NULL) continue; //The initial neighbor was deleted at some point in time!!
                 if (mListOfPolyhedronParticles[i]->Id() > neighbour_element->Id()) continue;
-                
-                bool is_in_dem_wall_sub_model_part = false;
-                for (ModelPart::SubModelPartsContainerType::iterator sub_model_part = polyhedron_model_part.SubModelPartsBegin(); sub_model_part != polyhedron_model_part.SubModelPartsEnd(); ++sub_model_part) {
-                    if (sub_model_part->Name() == "DEMWall") {
-                        if (sub_model_part->HasElement(mListOfPolyhedronParticles[i]->Id()) && sub_model_part->HasElement(neighbour_element->Id())) {
-                            is_in_dem_wall_sub_model_part = true;
-                            break;
-                        }
-                    }
-                }
-                if (is_in_dem_wall_sub_model_part) continue;
+                if (mListOfPolyhedronParticles[i]->mIsBelongingToDEMWall && neighbour_element->mIsBelongingToDEMWall) continue;
 
                 bool go_ahead = false;
                 go_ahead = ElementExists(mPolyhedronContactElements, mListOfPolyhedronParticles[i]->Id(), neighbour_element->Id());
@@ -826,18 +819,14 @@ namespace Kratos {
                     mPolyhedronContactElements[used_contacts_counter]->Initialize(r_process_info);
                     used_contacts_counter++;
                 }
-                
-                
+
             }
             
             //delete useless elements
             for (int k = 0; k < (int) mPolyhedronContactElements.size(); k++) {
                 if (mPolyhedronContactElements[k]->GetDeleteFlag()) {
-                    #pragma omp critical
-                    {
-                        delete mPolyhedronContactElements[k];
-                        mPolyhedronContactElements[k] = nullptr;
-                    }
+                    delete mPolyhedronContactElements[k];
+                    mPolyhedronContactElements[k] = nullptr;
                 }
             }
 
@@ -848,7 +837,8 @@ namespace Kratos {
                 mPolyhedronContactElements[i]->SetId(i+1);
             }
 
-        } //#pragma omp parallel
+        }
+
         KRATOS_CATCH("")
     } //CreateContactElements
 

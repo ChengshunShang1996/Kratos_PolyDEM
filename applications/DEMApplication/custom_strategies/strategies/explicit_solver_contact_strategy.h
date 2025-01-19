@@ -132,6 +132,7 @@ namespace Kratos {
         virtual void RepairPointersToNormalPropertiesOfPolyhedron(std::vector<PolyhedronParticle*>& rCustomListOfPolyhedronParticles);
         void InitializePolyhedrons();
         virtual void CheckRigidBodyMotionForPolyWall(ModelPart& fem_model_part);
+        virtual void CheckPolydedronParticleBelongingToDEMWall(ModelPart& polyhedron_model_part);
         virtual void InitializePolyhedronContactElements();
         void UpdateMaxIdOfCreatorDestructor() override;
         void ApplyPrescribedBoundaryConditions() override;

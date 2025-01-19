@@ -77,12 +77,12 @@ namespace Kratos
 
       void SchemePredict()
       {
-          PerformTimeIntegrationOfMotion(1);
+        PerformTimeIntegrationOfMotion(1);
       }
 
       void SchemeCorrect()
       {
-          PerformTimeIntegrationOfMotion(2);
+        PerformTimeIntegrationOfMotion(2);
       }
 
       virtual double SolveSolutionStep() override

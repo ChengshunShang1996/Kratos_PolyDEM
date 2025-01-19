@@ -115,6 +115,8 @@ namespace Kratos
         PropertiesProxy* mFastProperties;
         std::vector<array_1d<double, 3>> mListOfVertices;
         std::vector<std::vector<int>> mListOfFaces;
+        //Condition::GeometryType& mMyFEMConditionReference = GetGeometry(); //This initialization is necessary but not right. It is updated before using.
+        bool mIsBelongingToDEMWall;
 
     protected:
 

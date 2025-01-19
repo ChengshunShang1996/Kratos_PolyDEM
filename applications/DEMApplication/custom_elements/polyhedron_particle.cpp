@@ -23,18 +23,21 @@ namespace Kratos {
     : SphericParticle(NewId, pGeometry) {
         mRadius = 0;
         mRealMass = 0;
+        mIsBelongingToDEMWall = false;
     }
 
     PolyhedronParticle::PolyhedronParticle(IndexType NewId, GeometryType::Pointer pGeometry, PropertiesType::Pointer pProperties)
     : SphericParticle(NewId, pGeometry, pProperties) {
         mRadius = 0;
         mRealMass = 0;
+        mIsBelongingToDEMWall = false;
     }
 
     PolyhedronParticle::PolyhedronParticle(IndexType NewId, NodesArrayType const& ThisNodes)
     : SphericParticle(NewId, ThisNodes) {
         mRadius = 0;
         mRealMass = 0;
+        mIsBelongingToDEMWall = false;
     }
 
     Element::Pointer PolyhedronParticle::Create(IndexType NewId, NodesArrayType const& ThisNodes, PropertiesType::Pointer pProperties) const {
@@ -264,7 +267,6 @@ namespace Kratos {
 
                 KRATOS_ERROR_IF_NOT(mListOfVertices.size()) << "The number of vertices is zero." << std::endl;
 
-                // Calculate the new vertices
                 for (int i = 0; i < (int)mListOfVertices.size(); i++) {
                     mListOfVertices[i][0] -= center[0];
                     mListOfVertices[i][1] -= center[1];
@@ -279,7 +281,7 @@ namespace Kratos {
                 array_1d<double, 3>& delta_disp = it->GetGeometry()[0].FastGetSolutionStepValue(DELTA_DISPLACEMENT);
                 array_1d<double, 3>& angular_velocity = it->GetGeometry()[0].FastGetSolutionStepValue(ANGULAR_VELOCITY);
                 array_1d<double, 3>& delta_rotation = it->GetGeometry()[0].FastGetSolutionStepValue(DELTA_ROTATION);
-                 
+                    
                 noalias(central_node.FastGetSolutionStepValue(VELOCITY)) = velocity;
                 noalias(central_node.FastGetSolutionStepValue(DELTA_DISPLACEMENT)) = delta_disp;
                 noalias(central_node.FastGetSolutionStepValue(ANGULAR_VELOCITY)) = angular_velocity;
