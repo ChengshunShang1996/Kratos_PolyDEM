@@ -185,7 +185,7 @@ namespace Kratos {
                 }
 
                 for (int i = 0; i < 3; i++) {
-                    center_node[i] = center[i];
+                    central_node.Coordinates()[i] = center[i];
                 }
 
                 break;
@@ -272,7 +272,7 @@ namespace Kratos {
                 }
 
                 for (int i = 0; i < 3; i++) {
-                    center_node[i] = center[i];
+                    central_node[i] = center[i];
                 }
 
                 array_1d<double, 3>& velocity = it->GetGeometry()[0].FastGetSolutionStepValue(VELOCITY);
@@ -280,10 +280,10 @@ namespace Kratos {
                 array_1d<double, 3>& angular_velocity = it->GetGeometry()[0].FastGetSolutionStepValue(ANGULAR_VELOCITY);
                 array_1d<double, 3>& delta_rotation = it->GetGeometry()[0].FastGetSolutionStepValue(DELTA_ROTATION);
                  
-                central_node.SetSolutionStepValue(VELOCITY, velocity);
-                central_node.SetSolutionStepValue(DELTA_DISPLACEMENT, delta_disp);
-                central_node.SetSolutionStepValue(ANGULAR_VELOCITY, angular_velocity);
-                central_node.SetSolutionStepValue(DELTA_ROTATION, delta_rotation);
+                noalias(central_node.FastGetSolutionStepValue(VELOCITY)) = velocity;
+                noalias(central_node.FastGetSolutionStepValue(DELTA_DISPLACEMENT)) = delta_disp;
+                noalias(central_node.FastGetSolutionStepValue(ANGULAR_VELOCITY)) = angular_velocity;
+                noalias(central_node.FastGetSolutionStepValue(DELTA_ROTATION)) = delta_rotation;
 
                 break;
             }

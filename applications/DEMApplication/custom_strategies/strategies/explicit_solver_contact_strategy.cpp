@@ -77,6 +77,15 @@ namespace Kratos {
         InitializeClusters(); // This adds elements to the balls modelpart
         InitializePolyhedrons();
 
+        for (ModelPart::SubModelPartsContainerType::iterator sub_model_part = fem_model_part.SubModelPartsBegin();
+            sub_model_part != fem_model_part.SubModelPartsEnd(); ++sub_model_part) {
+            if (sub_model_part->Name() == "SurfaceForPolyWall") {
+                ModelPart& submp = *sub_model_part;
+                m_rigid_body_motion = submp[RIGID_BODY_MOTION];
+                break;
+            }
+        }
+
         UpdateMaxIdOfCreatorDestructor();
 
         RebuildListOfSphericParticles <SphericParticle> (r_model_part.GetCommunicator().LocalMesh().Elements(), mListOfSphericParticles);
@@ -287,17 +296,8 @@ namespace Kratos {
                 ConditionsArrayType::iterator it = pConditions.ptr_begin() + k;
                 (it)->InitializeSolutionStep(r_fem_process_info);
             }
-
-            bool rigid_body_motion = false;
-            for (ModelPart::SubModelPartsContainerType::iterator sub_model_part = r_fem_model_part.SubModelPartsBegin(); sub_model_part != r_fem_model_part.SubModelPartsEnd(); ++sub_model_part) {
-                if (sub_model_part->Name() == "SurfaceForPolyWall") {
-                    ModelPart& submp = *sub_model_part;
-                    rigid_body_motion = submp[RIGID_BODY_MOTION];
-                    break;
-                }
-            }
             
-            if (rigid_body_motion) {
+            if (!m_rigid_body_motion) {
                 #pragma omp for nowait
                 for (int k = 0; k < (int) pPolyElements.size(); k++) {
                     ElementsArrayType::iterator it = pPolyElements.ptr_begin() + k;
@@ -556,17 +556,20 @@ namespace Kratos {
                 rigid_body_element.Move(delta_t, rotation_option, force_reduction_factor, StepFlag);
             }
 
-            bool rigid_body_motion = false;
-            for (ModelPart::SubModelPartsContainerType::iterator sub_model_part = r_fem_model_part.SubModelPartsBegin();
-                sub_model_part != r_fem_model_part.SubModelPartsEnd(); ++sub_model_part) {
-                if (sub_model_part->Name() == "SurfaceForPolyWall") {
-                    ModelPart& submp = *sub_model_part;
-                    rigid_body_motion = submp[RIGID_BODY_MOTION];
-                    break;
-                }
-            }
+            if (!m_rigid_body_motion){
 
-            if (rigid_body_motion){
+                #pragma omp for nowait
+                for (int i = 0; i < number_of_polyhedron_particles; i++) {
+                    mListOfPolyhedronParticles[i]->Move(delta_t, rotation_option, force_reduction_factor, StepFlag);
+                }
+
+                #pragma omp for nowait
+                for (int i = 0; i < number_of_ghost_polyhedron_particles; i++) {
+                    mListOfGhostPolyhedronParticles[i]->Move(delta_t, rotation_option, force_reduction_factor, StepFlag);
+                }
+                
+            } else {
+
                 ModelPart& polyhedron_model_part = GetPolyhedronModelPart();
                 #pragma omp for nowait
                 for (int i = 0; i < number_of_polyhedron_particles; i++) {
@@ -600,17 +603,6 @@ namespace Kratos {
                     }
                 }
 
-            } else {
-
-                #pragma omp for nowait
-                for (int i = 0; i < number_of_polyhedron_particles; i++) {
-                    mListOfPolyhedronParticles[i]->Move(delta_t, rotation_option, force_reduction_factor, StepFlag);
-                }
-
-                #pragma omp for nowait
-                for (int i = 0; i < number_of_ghost_polyhedron_particles; i++) {
-                    mListOfGhostPolyhedronParticles[i]->Move(delta_t, rotation_option, force_reduction_factor, StepFlag);
-                }
             }
             
         }
