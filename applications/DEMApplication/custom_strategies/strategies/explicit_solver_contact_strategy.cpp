@@ -77,15 +77,8 @@ namespace Kratos {
         InitializeClusters(); // This adds elements to the balls modelpart
         InitializePolyhedrons();
 
-        for (ModelPart::SubModelPartsContainerType::iterator sub_model_part = fem_model_part.SubModelPartsBegin();
-            sub_model_part != fem_model_part.SubModelPartsEnd(); ++sub_model_part) {
-            if (sub_model_part->Name() == "SurfaceForPolyWall") {
-                ModelPart& submp = *sub_model_part;
-                mRigidBodyMotionForPolyWall = submp[RIGID_BODY_MOTION];
-                break;
-            }
-        }
-
+        CheckRigidBodyMotionForPolyWall(fem_model_part);
+        
         UpdateMaxIdOfCreatorDestructor();
 
         RebuildListOfSphericParticles <SphericParticle> (r_model_part.GetCommunicator().LocalMesh().Elements(), mListOfSphericParticles);
@@ -238,6 +231,24 @@ namespace Kratos {
             }
         
         });
+
+        KRATOS_CATCH("")
+    }
+
+    void ContactExplicitSolverStrategy::CheckRigidBodyMotionForPolyWall(ModelPart& fem_model_part) {
+
+        KRATOS_TRY
+
+        mRigidBodyMotionForPolyWall = false;
+
+        for (ModelPart::SubModelPartsContainerType::iterator sub_model_part = fem_model_part.SubModelPartsBegin();
+            sub_model_part != fem_model_part.SubModelPartsEnd(); ++sub_model_part) {
+            if (sub_model_part->Name() == "SurfaceForPolyWall") {
+                ModelPart& submp = *sub_model_part;
+                mRigidBodyMotionForPolyWall = submp[RIGID_BODY_MOTION];
+                break;
+            }
+        }
 
         KRATOS_CATCH("")
     }
