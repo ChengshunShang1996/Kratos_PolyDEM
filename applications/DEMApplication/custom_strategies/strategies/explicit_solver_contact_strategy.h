@@ -189,7 +189,7 @@ namespace Kratos {
         VectorDistanceType mResultsDistancesPoly;
         RadiusArrayType mArrayOfAmplifiedRadiiPoly;
         SpatialSearch::Pointer mpSpSearch;
-        bool m_rigid_body_motion = false;
+        bool mRigidBodyMotionForPolyWall = false;
 
     }; //Class ContactExplicitSolverStrategy
 

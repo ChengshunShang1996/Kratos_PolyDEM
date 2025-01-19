@@ -81,7 +81,7 @@ namespace Kratos {
             sub_model_part != fem_model_part.SubModelPartsEnd(); ++sub_model_part) {
             if (sub_model_part->Name() == "SurfaceForPolyWall") {
                 ModelPart& submp = *sub_model_part;
-                m_rigid_body_motion = submp[RIGID_BODY_MOTION];
+                mRigidBodyMotionForPolyWall = submp[RIGID_BODY_MOTION];
                 break;
             }
         }
@@ -297,7 +297,7 @@ namespace Kratos {
                 (it)->InitializeSolutionStep(r_fem_process_info);
             }
             
-            if (!m_rigid_body_motion) {
+            if (!mRigidBodyMotionForPolyWall) {
                 #pragma omp for nowait
                 for (int k = 0; k < (int) pPolyElements.size(); k++) {
                     ElementsArrayType::iterator it = pPolyElements.ptr_begin() + k;
@@ -556,7 +556,7 @@ namespace Kratos {
                 rigid_body_element.Move(delta_t, rotation_option, force_reduction_factor, StepFlag);
             }
 
-            if (!m_rigid_body_motion){
+            if (!mRigidBodyMotionForPolyWall){
 
                 #pragma omp for nowait
                 for (int i = 0; i < number_of_polyhedron_particles; i++) {
