@@ -258,10 +258,29 @@ namespace Kratos {
                     central_node[i] = center[i];
                 }
 
-                array_1d<double, 3>& velocity = it->GetGeometry()[0].FastGetSolutionStepValue(VELOCITY);
-                array_1d<double, 3>& delta_disp = it->GetGeometry()[0].FastGetSolutionStepValue(DELTA_DISPLACEMENT);
-                array_1d<double, 3>& angular_velocity = it->GetGeometry()[0].FastGetSolutionStepValue(ANGULAR_VELOCITY);
-                array_1d<double, 3>& delta_rotation = it->GetGeometry()[0].FastGetSolutionStepValue(DELTA_ROTATION);
+                auto& this_condition = it->GetGeometry();
+                const double this_condition_size = this_condition.size();
+                const double weight = 1.0 / this_condition_size;
+                
+                array_1d<double, 3> velocity = ZeroVector(3);
+                for (unsigned int i = 0; i < this_condition_size; ++i) {
+                    noalias(velocity) += this_condition[i].FastGetSolutionStepValue(VELOCITY) * weight;
+                }
+
+                array_1d<double, 3> delta_disp = ZeroVector(3);
+                for (unsigned int i = 0; i < this_condition_size; ++i) {
+                    noalias(delta_disp) += this_condition[i].FastGetSolutionStepValue(DELTA_DISPLACEMENT) * weight;
+                }
+
+                array_1d<double, 3> angular_velocity = ZeroVector(3);
+                for (unsigned int i = 0; i < this_condition_size; ++i) {
+                    noalias(angular_velocity) += this_condition[i].FastGetSolutionStepValue(ANGULAR_VELOCITY) * weight;
+                }
+
+                array_1d<double, 3> delta_rotation = ZeroVector(3);
+                for (unsigned int i = 0; i < this_condition_size; ++i) {
+                    noalias(delta_rotation) += this_condition[i].FastGetSolutionStepValue(DELTA_ROTATION) * weight;
+                }
                     
                 noalias(central_node.FastGetSolutionStepValue(VELOCITY)) = velocity;
                 noalias(central_node.FastGetSolutionStepValue(DELTA_DISPLACEMENT)) = delta_disp;
@@ -275,7 +294,7 @@ namespace Kratos {
         KRATOS_CATCH("")
     }
 
-    void PolyhedronParticle::SyncTotalForcesForFEMSurface(ModelPart& r_fem_model_part){
+    void PolyhedronParticle::SyncForcesForFEMSurface(ModelPart& r_fem_model_part){
         
         KRATOS_TRY
 
@@ -285,10 +304,16 @@ namespace Kratos {
         for (auto it = r_fem_model_part.GetSubModelPart("SurfaceForPolyWall").ConditionsBegin(); 
              it != r_fem_model_part.GetSubModelPart("SurfaceForPolyWall").ConditionsEnd(); ++it) {
             if (it->Id() == this->Id()) {
-                array_1d<double, 3>& total_forces = central_node.FastGetSolutionStepValue(TOTAL_FORCES); 
+                auto& this_condition = it->GetGeometry();
+
                 array_1d<double, 3>& contact_forces = central_node.FastGetSolutionStepValue(CONTACT_FORCES); //CONTACT_FOCES is used for DEM-FEM coupling
-                noalias(it->GetGeometry()[0].FastGetSolutionStepValue(TOTAL_FORCES)) = total_forces;
-                noalias(it->GetGeometry()[0].FastGetSolutionStepValue(CONTACT_FORCES)) = contact_forces;
+                
+                // Calculate the weighted contact force for each node
+                for (unsigned int i = 0; i < this_condition.size(); ++i) {
+                    double weight = 1.0 / this_condition.size();
+                    noalias(this_condition[i].FastGetSolutionStepValue(CONTACT_FORCES)) += weight * contact_forces;
+                }
+                
                 break;
             }
         }

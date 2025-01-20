@@ -47,7 +47,7 @@ namespace Kratos
         void InitializeFromFEM(const ProcessInfo& r_process_info, ModelPart& r_fem_model_part);
         void InitializeSolutionStep(const ProcessInfo& r_process_info) override;
         virtual void UpdateVerticesFromFEM(ModelPart& r_fem_model_part);
-        virtual void SyncTotalForcesForFEMSurface(ModelPart& r_fem_model_part);
+        virtual void SyncForcesForFEMSurface(ModelPart& r_fem_model_part);
         void ComputeExternalForces(const array_1d<double,3>& gravity);
         virtual void ComputeNewNeighboursHistoricalData(DenseVector<int>& temp_neighbours_ids, std::vector<array_1d<double, 3> >& temp_neighbour_elastic_contact_forces);
         double CalculateVolume() override;

@@ -925,7 +925,7 @@ namespace Kratos {
             ElementsArrayType::iterator it = pPolyElements.ptr_begin() + k;
             PolyhedronParticle& polyhedron_element = dynamic_cast<Kratos::PolyhedronParticle&> (*it);
             if (polyhedron_element.mIsBelongingToDEMWall) {
-                polyhedron_element.SyncTotalForcesForFEMSurface(r_fem_model_part);
+                polyhedron_element.SyncForcesForFEMSurface(r_fem_model_part);
             }
         }
 
