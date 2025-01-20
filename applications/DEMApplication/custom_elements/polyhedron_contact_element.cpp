@@ -110,9 +110,6 @@ void PolyhedronContactElement::CalculateRightHandSide(const ProcessInfo& r_proce
 		Vector3 contact_moment_1(0.0, 0.0, 0.0);
 		Vector3 contact_moment_2(0.0, 0.0, 0.0);
 
-		//double kn = 100000.0;
-		//contact_force = mOverlapVector * kn;
-
 		ClonePolyhedronDiscontinuumConstitutiveLawWithNeighbour();
     	mPolyhedronDiscontinuumConstitutiveLaw->CalculateForces(r_process_info, mPolyhedronParticle1, mPolyhedronParticle2, 
 																mOverlapVector, mContactPoint, contact_force, mTangentialElasticContactForce);
@@ -122,10 +119,6 @@ void PolyhedronContactElement::CalculateRightHandSide(const ProcessInfo& r_proce
 			Vector3 torque_arm_2 = mContactPoint - coll2Pos;
 			contact_moment_1 = Vector3::Cross(torque_arm_1, contact_force);
 			contact_moment_2 = Vector3::Cross(torque_arm_2, -contact_force);
-			//KRATOS_INFO("torque_arm_1") << torque_arm_1 << std::endl;
-			//KRATOS_INFO("torque_arm_2") << torque_arm_2 << std::endl;
-			//KRATOS_INFO("Contact Moment 1") << contact_moment_1 << std::endl;
-			//KRATOS_INFO("Contact Moment 2") << contact_moment_2 << std::endl;
 			const array_1d<double, 3>& velocity_1 = central_node_1.FastGetSolutionStepValue(VELOCITY);
         	const array_1d<double, 3>& velocity_2 = central_node_2.FastGetSolutionStepValue(VELOCITY);
 			Vector3 velocity_1_vec(velocity_1[0], velocity_1[1], velocity_1[2]);
