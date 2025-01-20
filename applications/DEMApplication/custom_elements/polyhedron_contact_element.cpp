@@ -148,6 +148,7 @@ void PolyhedronContactElement::CalculateRightHandSide(const ProcessInfo& r_proce
 		array_1d<double,3>& total_forces_1 = central_node_1.FastGetSolutionStepValue(TOTAL_FORCES);
 		array_1d<double,3>& total_moment_1 = central_node_1.FastGetSolutionStepValue(PARTICLE_MOMENT);
 
+		//TODO: can be improved by calculating the weighted contact forces
 		contact_forces_1[0] = contact_force[0];
 		contact_forces_1[1] = contact_force[1];
 		contact_forces_1[2] = contact_force[2];
