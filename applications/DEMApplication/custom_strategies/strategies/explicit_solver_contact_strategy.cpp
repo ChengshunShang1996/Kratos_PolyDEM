@@ -78,7 +78,6 @@ namespace Kratos {
         InitializePolyhedrons();
 
         CheckRigidBodyMotionForPolyWall(fem_model_part);
-        CheckPolydedronParticleBelongingToDEMWall(polyhedron_model_part);
         
         UpdateMaxIdOfCreatorDestructor();
 
@@ -250,25 +249,6 @@ namespace Kratos {
                 break;
             }
         }
-
-        KRATOS_CATCH("")
-    }
-
-    void ContactExplicitSolverStrategy::CheckPolydedronParticleBelongingToDEMWall(ModelPart& polyhedron_model_part) {
-
-        KRATOS_TRY
-
-        IndexPartition<unsigned int>(mListOfPolyhedronParticles.size()).for_each([&](unsigned int i){
-            for (ModelPart::SubModelPartsContainerType::iterator sub_model_part = polyhedron_model_part.SubModelPartsBegin(); 
-                sub_model_part != polyhedron_model_part.SubModelPartsEnd(); ++sub_model_part) {
-                if (sub_model_part->Name() == "DEMWall") {
-                    if (sub_model_part->HasElement(mListOfPolyhedronParticles[i]->Id())) {
-                        mListOfPolyhedronParticles[i]->mIsBelongingToDEMWall = true;
-                        break;
-                    }
-                }
-            }
-        });
 
         KRATOS_CATCH("")
     }

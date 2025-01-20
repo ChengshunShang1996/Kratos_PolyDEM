@@ -151,6 +151,8 @@ namespace Kratos {
         
         SetRadius();
 
+        mIsBelongingToDEMWall = true;
+
         // Check if the first Condition type of r_fem_model_part is a tetrahedron
         const auto& first_condition = *r_fem_model_part.ConditionsBegin();
         const unsigned int number_of_vertices = first_condition.GetGeometry().size(); 
