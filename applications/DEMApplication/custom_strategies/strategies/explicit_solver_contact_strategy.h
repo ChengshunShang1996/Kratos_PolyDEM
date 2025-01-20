@@ -148,6 +148,7 @@ namespace Kratos {
         void PerformTimeIntegrationOfMotion(int StepFlag = 0) override;
         virtual void ForceOperations(ModelPart& r_model_part, ModelPart& r_polyhedron_model_part);
         void GetPolyhedronForce();
+        virtual void SynchronizeTotalForcesFromDEMWallToFEMSurface();
         void FinalizeSolutionStep() override;
         void FinalizeSolutionStepFEM();
         VectorResultElementsContainerType& GetResultsPoly() { return (mResultsPoly);}

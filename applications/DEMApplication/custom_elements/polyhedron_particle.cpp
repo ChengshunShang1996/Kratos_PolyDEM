@@ -274,6 +274,27 @@ namespace Kratos {
 
         KRATOS_CATCH("")
     }
+
+    void PolyhedronParticle::SyncTotalForcesForFEMSurface(ModelPart& r_fem_model_part){
+        
+        KRATOS_TRY
+
+        auto& central_node = GetGeometry()[0];
+
+        //TODO: "SurfaceForPolyWall" is a temporary name, it should be changed to something more general
+        for (auto it = r_fem_model_part.GetSubModelPart("SurfaceForPolyWall").ConditionsBegin(); 
+             it != r_fem_model_part.GetSubModelPart("SurfaceForPolyWall").ConditionsEnd(); ++it) {
+            if (it->Id() == this->Id()) {
+                array_1d<double, 3>& total_forces = central_node.FastGetSolutionStepValue(TOTAL_FORCES); 
+                array_1d<double, 3>& contact_forces = central_node.FastGetSolutionStepValue(CONTACT_FORCES); //CONTACT_FOCES is used for DEM-FEM coupling
+                noalias(it->GetGeometry()[0].FastGetSolutionStepValue(TOTAL_FORCES)) = total_forces;
+                noalias(it->GetGeometry()[0].FastGetSolutionStepValue(CONTACT_FORCES)) = contact_forces;
+                break;
+            }
+        }
+
+        KRATOS_CATCH("")
+    }
     
     void PolyhedronParticle::ComputeExternalForces(const array_1d<double,3>& gravity) {
 

@@ -867,6 +867,10 @@ namespace Kratos {
         SynchronizeRHS(r_model_part);
         SynchronizeRHS(r_polyhedron_model_part);
 
+        if (mRigidBodyMotionForPolyWall){
+            SynchronizeTotalForcesFromDEMWallToFEMSurface();
+        }
+
         KRATOS_CATCH("")
     }//ForceOperations;
 
@@ -904,6 +908,26 @@ namespace Kratos {
         #pragma omp parallel for schedule(dynamic, 100)
         for(int i=0; i<(int) mPolyhedronContactElements.size(); i++) {
             mPolyhedronContactElements[i]->CalculateRightHandSide(r_process_info, dt, gravity);;
+        }
+
+        KRATOS_CATCH("")
+    }
+
+    void ContactExplicitSolverStrategy::SynchronizeTotalForcesFromDEMWallToFEMSurface() {
+        KRATOS_TRY
+
+        ModelPart& r_fem_model_part = GetFemModelPart();
+        ModelPart& r_polyhedron_model_part = GetPolyhedronModelPart();
+        ElementsArrayType& pPolyElements = r_polyhedron_model_part.GetCommunicator().LocalMesh().Elements();
+        const int number_of_polyhedron_elements = pPolyElements.size();
+
+        #pragma omp parallel for
+        for (int k = 0; k < number_of_polyhedron_elements; k++) {
+            ElementsArrayType::iterator it = pPolyElements.ptr_begin() + k;
+            PolyhedronParticle& polyhedron_element = dynamic_cast<Kratos::PolyhedronParticle&> (*it);
+            if (polyhedron_element.mIsBelongingToDEMWall) {
+                polyhedron_element.SyncTotalForcesForFEMSurface(r_fem_model_part);
+            }
         }
 
         KRATOS_CATCH("")
