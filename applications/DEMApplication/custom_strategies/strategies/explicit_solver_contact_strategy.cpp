@@ -858,6 +858,9 @@ namespace Kratos {
 
         // force operations based on contact loop
         GetPolyhedronForce();
+        if (mRigidBodyMotionForPolyWall){
+            SynchronizeTotalForcesFromDEMWallToFEMSurface();
+        }
 
         if (r_model_part.GetProcessInfo()[COMPUTE_FEM_RESULTS_OPTION]) {
             CalculateNodalPressuresAndStressesOnWalls();
@@ -866,10 +869,6 @@ namespace Kratos {
         // Synchronize (should be just FORCE and TORQUE)
         SynchronizeRHS(r_model_part);
         SynchronizeRHS(r_polyhedron_model_part);
-
-        if (mRigidBodyMotionForPolyWall){
-            SynchronizeTotalForcesFromDEMWallToFEMSurface();
-        }
 
         KRATOS_CATCH("")
     }//ForceOperations;
