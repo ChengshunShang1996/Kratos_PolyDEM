@@ -422,6 +422,14 @@ void PolyhedronContactElement::EPA(Point& a, Point& b, Point& c, Point& d)
 				std::vector<Vector3> intersectionVertices = CalculateIntersection(faceVertices1, faceVertices2, normal1);
 
 				if (!intersectionVertices.empty()){
+
+					for (int i = 0; i < intersectionVertices.size(); i++){
+						if (std::isnan(intersectionVertices[i][0])){
+							mContactPoint = (mContactPoint1 + mContactPoint2)/2;
+							return;
+						}
+					}
+
 					// Determine the contact point
 					mContactPoint = CalculateCentroid(intersectionVertices);
 
@@ -435,11 +443,12 @@ void PolyhedronContactElement::EPA(Point& a, Point& b, Point& c, Point& d)
 
 					mIsFaceParallel = true;
 
+					return;
+
 				} else {
 					mContactPoint = (mContactPoint1 + mContactPoint2)/2;
+					return;
 				}
-
-				return;
 			} else {
 
 				mContactPoint = (mContactPoint1 + mContactPoint2)/2;
@@ -554,7 +563,14 @@ void PolyhedronContactElement::EPA(Point& a, Point& b, Point& c, Point& d)
 		std::vector<Vector3> intersectionVertices = CalculateIntersection(faceVertices1, faceVertices2, normal1);
 
 		if (!intersectionVertices.empty()){
-			// Determine the contact point
+			
+			for (int i = 0; i < intersectionVertices.size(); i++){
+				if (std::isnan(intersectionVertices[i][0])){
+					mContactPoint = (mContactPoint1 + mContactPoint2)/2;
+					return;
+				}
+			}
+
 			mContactPoint = CalculateCentroid(intersectionVertices);
 
 			Vector3 TempOverlapVector = mOverlapVector.Normalised();

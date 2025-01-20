@@ -79,11 +79,6 @@ namespace Kratos
         Vector2 ProjectToPlane(const Vector3& vertex, const Vector3& normal);
         bool IsPointInPolygon(const std::vector<Vector2>& polygon, const Vector2& point);
 
-        // 
-        double mEnginePower; 
-
-        array_1d<double,3> mDragConstantVector;
-
         virtual std::string Info() const override
         {
             std::stringstream buffer;

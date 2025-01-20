@@ -75,9 +75,9 @@ namespace Kratos {
         InitializeDEMElements();
         InitializeFEMElements();
         InitializeClusters(); // This adds elements to the balls modelpart
-        InitializePolyhedrons();
-
+        
         CheckRigidBodyMotionForPolyWall(fem_model_part);
+        InitializePolyhedrons();
         
         UpdateMaxIdOfCreatorDestructor();
 
@@ -224,7 +224,7 @@ namespace Kratos {
                 }
             }
             
-            if (is_in_dem_wall_sub_model_part){
+            if (is_in_dem_wall_sub_model_part && mRigidBodyMotionForPolyWall){
                 mListOfPolyhedronParticles[i]->InitializeFromFEM(r_process_info, fem_model_part);
             } else{
                 mListOfPolyhedronParticles[i]->Initialize(r_process_info);
