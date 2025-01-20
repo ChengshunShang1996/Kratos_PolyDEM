@@ -168,7 +168,7 @@ namespace Kratos {
                     mListOfVertices[i][2] = it->GetGeometry()[i].Coordinates()[2];
                 }
 
-                array_1d<double, 3> center = ZeroVector(3);
+                /*array_1d<double, 3> center = ZeroVector(3);
                 for (int i = 0; i < (int)mListOfVertices.size(); i++) {
                     center[0] += mListOfVertices[i][0];
                     center[1] += mListOfVertices[i][1];
@@ -178,7 +178,8 @@ namespace Kratos {
                 center[1] /= (int)mListOfVertices.size();
                 center[2] /= (int)mListOfVertices.size();
 
-                KRATOS_ERROR_IF_NOT(mListOfVertices.size()) << "The number of vertices is zero." << std::endl;
+                KRATOS_ERROR_IF_NOT(mListOfVertices.size()) << "The number of vertices is zero." << std::endl;*/
+                array_1d<double, 3> center = it->GetGeometry().Center();
 
                 // Calculate the new vertices
                 for (int i = 0; i < (int)mListOfVertices.size(); i++) {
@@ -255,7 +256,7 @@ namespace Kratos {
                     mListOfVertices[i][2] = it->GetGeometry()[i].Coordinates()[2];
                 }
                 
-                array_1d<double, 3> center = ZeroVector(3);
+                /*array_1d<double, 3> center = ZeroVector(3);
                 for (int i = 0; i < (int)mListOfVertices.size(); i++) {
                     center[0] += mListOfVertices[i][0];
                     center[1] += mListOfVertices[i][1];
@@ -265,7 +266,8 @@ namespace Kratos {
                 center[1] /= (int)mListOfVertices.size();
                 center[2] /= (int)mListOfVertices.size();
 
-                KRATOS_ERROR_IF_NOT(mListOfVertices.size()) << "The number of vertices is zero." << std::endl;
+                KRATOS_ERROR_IF_NOT(mListOfVertices.size()) << "The number of vertices is zero." << std::endl;*/
+                array_1d<double, 3> center = it->GetGeometry().Center();
 
                 for (int i = 0; i < (int)mListOfVertices.size(); i++) {
                     mListOfVertices[i][0] -= center[0];
