@@ -110,9 +110,6 @@ void PolyhedronContactElement::CalculateRightHandSide(const ProcessInfo& r_proce
 		Vector3 contact_moment_1(0.0, 0.0, 0.0);
 		Vector3 contact_moment_2(0.0, 0.0, 0.0);
 
-		//double kn = 100000.0;
-		//contact_force = mOverlapVector * kn;
-
 		ClonePolyhedronDiscontinuumConstitutiveLawWithNeighbour();
     	mPolyhedronDiscontinuumConstitutiveLaw->CalculateForces(r_process_info, mPolyhedronParticle1, mPolyhedronParticle2, 
 																mOverlapVector, mContactPoint, contact_force, mTangentialElasticContactForce);
@@ -122,10 +119,6 @@ void PolyhedronContactElement::CalculateRightHandSide(const ProcessInfo& r_proce
 			Vector3 torque_arm_2 = mContactPoint - coll2Pos;
 			contact_moment_1 = Vector3::Cross(torque_arm_1, contact_force);
 			contact_moment_2 = Vector3::Cross(torque_arm_2, -contact_force);
-			//KRATOS_INFO("torque_arm_1") << torque_arm_1 << std::endl;
-			//KRATOS_INFO("torque_arm_2") << torque_arm_2 << std::endl;
-			//KRATOS_INFO("Contact Moment 1") << contact_moment_1 << std::endl;
-			//KRATOS_INFO("Contact Moment 2") << contact_moment_2 << std::endl;
 			const array_1d<double, 3>& velocity_1 = central_node_1.FastGetSolutionStepValue(VELOCITY);
         	const array_1d<double, 3>& velocity_2 = central_node_2.FastGetSolutionStepValue(VELOCITY);
 			Vector3 velocity_1_vec(velocity_1[0], velocity_1[1], velocity_1[2]);
@@ -144,9 +137,15 @@ void PolyhedronContactElement::CalculateRightHandSide(const ProcessInfo& r_proce
 			}
 		}
 
+		array_1d<double,3>& contact_forces_1 = central_node_1.FastGetSolutionStepValue(CONTACT_FORCES);
 		array_1d<double,3>& total_forces_1 = central_node_1.FastGetSolutionStepValue(TOTAL_FORCES);
 		array_1d<double,3>& total_moment_1 = central_node_1.FastGetSolutionStepValue(PARTICLE_MOMENT);
 
+		//TODO: can be improved by calculating the weighted contact forces
+		contact_forces_1[0] = contact_force[0];
+		contact_forces_1[1] = contact_force[1];
+		contact_forces_1[2] = contact_force[2];
+		
 		total_forces_1[0] += contact_force[0];
 		total_forces_1[1] += contact_force[1];
 		total_forces_1[2] += contact_force[2];
@@ -155,9 +154,14 @@ void PolyhedronContactElement::CalculateRightHandSide(const ProcessInfo& r_proce
 		total_moment_1[1] += contact_moment_1[1];
 		total_moment_1[2] += contact_moment_1[2];
 
+		array_1d<double,3>& contact_forces_2 = central_node_2.FastGetSolutionStepValue(CONTACT_FORCES);
 		array_1d<double,3>& total_forces_2 = central_node_2.FastGetSolutionStepValue(TOTAL_FORCES);
 		array_1d<double,3>& total_moment_2 = central_node_2.FastGetSolutionStepValue(PARTICLE_MOMENT);
 
+		contact_forces_2[0] = -contact_force[0];
+		contact_forces_2[1] = -contact_force[1];
+		contact_forces_2[2] = -contact_force[2];
+		
 		total_forces_2[0] -= contact_force[0];
 		total_forces_2[1] -= contact_force[1];
 		total_forces_2[2] -= contact_force[2];
@@ -418,6 +422,14 @@ void PolyhedronContactElement::EPA(Point& a, Point& b, Point& c, Point& d)
 				std::vector<Vector3> intersectionVertices = CalculateIntersection(faceVertices1, faceVertices2, normal1);
 
 				if (!intersectionVertices.empty()){
+
+					for (int i = 0; i < intersectionVertices.size(); i++){
+						if (std::isnan(intersectionVertices[i][0])){
+							mContactPoint = (mContactPoint1 + mContactPoint2)/2;
+							return;
+						}
+					}
+
 					// Determine the contact point
 					mContactPoint = CalculateCentroid(intersectionVertices);
 
@@ -431,11 +443,12 @@ void PolyhedronContactElement::EPA(Point& a, Point& b, Point& c, Point& d)
 
 					mIsFaceParallel = true;
 
+					return;
+
 				} else {
 					mContactPoint = (mContactPoint1 + mContactPoint2)/2;
+					return;
 				}
-
-				return;
 			} else {
 
 				mContactPoint = (mContactPoint1 + mContactPoint2)/2;
@@ -550,7 +563,14 @@ void PolyhedronContactElement::EPA(Point& a, Point& b, Point& c, Point& d)
 		std::vector<Vector3> intersectionVertices = CalculateIntersection(faceVertices1, faceVertices2, normal1);
 
 		if (!intersectionVertices.empty()){
-			// Determine the contact point
+			
+			for (int i = 0; i < intersectionVertices.size(); i++){
+				if (std::isnan(intersectionVertices[i][0])){
+					mContactPoint = (mContactPoint1 + mContactPoint2)/2;
+					return;
+				}
+			}
+
 			mContactPoint = CalculateCentroid(intersectionVertices);
 
 			Vector3 TempOverlapVector = mOverlapVector.Normalised();

@@ -44,7 +44,10 @@ namespace Kratos
         virtual ~PolyhedronParticle();
 
         void Initialize(const ProcessInfo& r_process_info) override;
+        void InitializeFromFEM(const ProcessInfo& r_process_info, ModelPart& r_fem_model_part);
         void InitializeSolutionStep(const ProcessInfo& r_process_info) override;
+        virtual void UpdateVerticesFromFEM(ModelPart& r_fem_model_part);
+        virtual void SyncForcesForFEMSurface(ModelPart& r_fem_model_part);
         void ComputeExternalForces(const array_1d<double,3>& gravity);
         virtual void ComputeNewNeighboursHistoricalData(DenseVector<int>& temp_neighbours_ids, std::vector<array_1d<double, 3> >& temp_neighbour_elastic_contact_forces);
         double CalculateVolume() override;
@@ -75,11 +78,6 @@ namespace Kratos
         std::vector<Vector2> ProjectToPlane(const std::vector<Vector3>& vertices, const Vector3& normal);
         Vector2 ProjectToPlane(const Vector3& vertex, const Vector3& normal);
         bool IsPointInPolygon(const std::vector<Vector2>& polygon, const Vector2& point);
-
-        // 
-        double mEnginePower; 
-
-        array_1d<double,3> mDragConstantVector;
 
         virtual std::string Info() const override
         {
@@ -113,6 +111,8 @@ namespace Kratos
         PropertiesProxy* mFastProperties;
         std::vector<array_1d<double, 3>> mListOfVertices;
         std::vector<std::vector<int>> mListOfFaces;
+        //Condition::GeometryType& mMyFEMConditionReference = GetGeometry(); //This initialization is necessary but not right. It is updated before using.
+        bool mIsBelongingToDEMWall;
 
     protected:
 

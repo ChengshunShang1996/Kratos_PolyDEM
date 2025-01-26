@@ -23,18 +23,21 @@ namespace Kratos {
     : SphericParticle(NewId, pGeometry) {
         mRadius = 0;
         mRealMass = 0;
+        mIsBelongingToDEMWall = false;
     }
 
     PolyhedronParticle::PolyhedronParticle(IndexType NewId, GeometryType::Pointer pGeometry, PropertiesType::Pointer pProperties)
     : SphericParticle(NewId, pGeometry, pProperties) {
         mRadius = 0;
         mRealMass = 0;
+        mIsBelongingToDEMWall = false;
     }
 
     PolyhedronParticle::PolyhedronParticle(IndexType NewId, NodesArrayType const& ThisNodes)
     : SphericParticle(NewId, ThisNodes) {
         mRadius = 0;
         mRealMass = 0;
+        mIsBelongingToDEMWall = false;
     }
 
     Element::Pointer PolyhedronParticle::Create(IndexType NewId, NodesArrayType const& ThisNodes, PropertiesType::Pointer pProperties) const {
@@ -123,6 +126,98 @@ namespace Kratos {
         KRATOS_CATCH("")
     }
 
+    void PolyhedronParticle::InitializeFromFEM(const ProcessInfo& r_process_info, ModelPart& r_fem_model_part){
+
+        KRATOS_TRY
+
+        auto& central_node = GetGeometry()[0];
+
+        if (central_node.GetDof(VELOCITY_X).IsFixed())          central_node.Set(DEMFlags::FIXED_VEL_X, true);
+        else                                                        central_node.Set(DEMFlags::FIXED_VEL_X, false);
+        if (central_node.GetDof(VELOCITY_Y).IsFixed())          central_node.Set(DEMFlags::FIXED_VEL_Y, true);
+        else                                                        central_node.Set(DEMFlags::FIXED_VEL_Y, false);
+        if (central_node.GetDof(VELOCITY_Z).IsFixed())          central_node.Set(DEMFlags::FIXED_VEL_Z, true);
+        else                                                        central_node.Set(DEMFlags::FIXED_VEL_Z, false);
+        if (central_node.GetDof(ANGULAR_VELOCITY_X).IsFixed())  central_node.Set(DEMFlags::FIXED_ANG_VEL_X, true);
+        else                                                        central_node.Set(DEMFlags::FIXED_ANG_VEL_X, false);
+        if (central_node.GetDof(ANGULAR_VELOCITY_Y).IsFixed())  central_node.Set(DEMFlags::FIXED_ANG_VEL_Y, true);
+        else                                                        central_node.Set(DEMFlags::FIXED_ANG_VEL_Y, false);
+        if (central_node.GetDof(ANGULAR_VELOCITY_Z).IsFixed())  central_node.Set(DEMFlags::FIXED_ANG_VEL_Z, true);
+        else                                                        central_node.Set(DEMFlags::FIXED_ANG_VEL_Z, false);
+
+        DEMIntegrationScheme::Pointer& translational_integration_scheme = GetProperties()[DEM_TRANSLATIONAL_INTEGRATION_SCHEME_POINTER];
+        DEMIntegrationScheme::Pointer& rotational_integration_scheme = GetProperties()[DEM_ROTATIONAL_INTEGRATION_SCHEME_POINTER];
+        SetIntegrationScheme(translational_integration_scheme, rotational_integration_scheme);
+        
+        SetRadius();
+
+        mIsBelongingToDEMWall = true;
+
+        // Check if the first Condition type of r_fem_model_part is a tetrahedron
+        const auto first_condition = r_fem_model_part.GetSubModelPart("SurfaceForPolyWall").ConditionsBegin();
+        const unsigned int number_of_vertices = first_condition->GetGeometry().size(); 
+        const unsigned int number_of_face_vertices = number_of_vertices; // = first_condition.GetGeometry().size()
+
+        mListOfVertices.resize(number_of_vertices);
+
+        // Ensure the condition has the same id as this polyhedron particle
+        for (auto it = r_fem_model_part.GetSubModelPart("SurfaceForPolyWall").ConditionsBegin(); 
+             it != r_fem_model_part.GetSubModelPart("SurfaceForPolyWall").ConditionsEnd(); ++it) {
+            if (it->Id() == this->Id()) {
+                for (int i = 0; i < (int)number_of_vertices; i++) {
+                    mListOfVertices[i][0] = it->GetGeometry()[i].Coordinates()[0];
+                    mListOfVertices[i][1] = it->GetGeometry()[i].Coordinates()[1];
+                    mListOfVertices[i][2] = it->GetGeometry()[i].Coordinates()[2];
+                }
+
+                array_1d<double, 3> center = it->GetGeometry().Center();
+
+                for (int i = 0; i < (int)mListOfVertices.size(); i++) {
+                    mListOfVertices[i][0] -= center[0];
+                    mListOfVertices[i][1] -= center[1];
+                    mListOfVertices[i][2] -= center[2];
+                }
+
+                for (int i = 0; i < 3; i++) {
+                    central_node.Coordinates()[i] = center[i];
+                }
+
+                break;
+            }
+        }
+
+        //TODO:limited to surface
+        const unsigned int number_of_faces = 1;
+        mListOfFaces.resize(number_of_faces);
+        mListOfFaces[0].resize(number_of_face_vertices);
+
+        if (number_of_vertices == 3) {
+            mListOfFaces[0][0] = 0;
+            mListOfFaces[0][1] = 1;
+            mListOfFaces[0][2] = 2;
+        } else if (number_of_vertices == 4) {
+            mListOfFaces[0][0] = 0;
+            mListOfFaces[0][1] = 1;
+            mListOfFaces[0][2] = 2;
+            mListOfFaces[0][3] = 3;
+        } else {
+            KRATOS_ERROR << "The number of vertices of the first condition is not 3 or 4." << std::endl;
+            KRATOS_INFO("DEM") << "The number of vertices of the first condition is not 3 or 4." << std::endl;
+        }
+
+        //those values are not important for the wall elements
+        const double polyhedron_volume = 1.0;
+        const double polyhedron_mass = 1.0;
+
+        central_node.FastGetSolutionStepValue(NODAL_MASS) = polyhedron_mass;
+        central_node.FastGetSolutionStepValue(REPRESENTATIVE_VOLUME) = polyhedron_volume;
+
+        SetMass(polyhedron_mass);
+        SetMomentOfInertia();
+
+        KRATOS_CATCH("")
+    }
+
     void PolyhedronParticle::InitializeSolutionStep(const ProcessInfo& r_process_info)
     {
         KRATOS_TRY
@@ -131,6 +226,97 @@ namespace Kratos {
         mRadius = central_node.FastGetSolutionStepValue(RADIUS); //Just in case someone is overwriting the radius in Python
 
         SetMomentOfInertia();
+
+        KRATOS_CATCH("")
+    }
+
+    void PolyhedronParticle::UpdateVerticesFromFEM(ModelPart& r_fem_model_part){
+
+        KRATOS_TRY
+
+        auto& central_node = GetGeometry()[0];
+
+        //TODO: "SurfaceForPolyWall" is a temporary name, it should be changed to something more general
+        for (auto it = r_fem_model_part.GetSubModelPart("SurfaceForPolyWall").ConditionsBegin(); 
+             it != r_fem_model_part.GetSubModelPart("SurfaceForPolyWall").ConditionsEnd(); ++it) {
+            if (it->Id() == this->Id()) {
+                for (int i = 0; i < (int)mListOfVertices.size(); i++) {
+                    mListOfVertices[i][0] = it->GetGeometry()[i].Coordinates()[0];
+                    mListOfVertices[i][1] = it->GetGeometry()[i].Coordinates()[1];
+                    mListOfVertices[i][2] = it->GetGeometry()[i].Coordinates()[2];
+                }
+                
+                array_1d<double, 3> center = it->GetGeometry().Center();
+
+                for (int i = 0; i < (int)mListOfVertices.size(); i++) {
+                    mListOfVertices[i][0] -= center[0];
+                    mListOfVertices[i][1] -= center[1];
+                    mListOfVertices[i][2] -= center[2];
+                }
+
+                for (int i = 0; i < 3; i++) {
+                    central_node[i] = center[i];
+                }
+
+                auto& this_condition = it->GetGeometry();
+                const double this_condition_size = this_condition.size();
+                const double weight = 1.0 / this_condition_size;
+                
+                array_1d<double, 3> velocity = ZeroVector(3);
+                for (unsigned int i = 0; i < this_condition_size; ++i) {
+                    noalias(velocity) += this_condition[i].FastGetSolutionStepValue(VELOCITY) * weight;
+                }
+
+                array_1d<double, 3> delta_disp = ZeroVector(3);
+                for (unsigned int i = 0; i < this_condition_size; ++i) {
+                    noalias(delta_disp) += this_condition[i].FastGetSolutionStepValue(DELTA_DISPLACEMENT) * weight;
+                }
+
+                array_1d<double, 3> angular_velocity = ZeroVector(3);
+                for (unsigned int i = 0; i < this_condition_size; ++i) {
+                    noalias(angular_velocity) += this_condition[i].FastGetSolutionStepValue(ANGULAR_VELOCITY) * weight;
+                }
+
+                array_1d<double, 3> delta_rotation = ZeroVector(3);
+                for (unsigned int i = 0; i < this_condition_size; ++i) {
+                    noalias(delta_rotation) += this_condition[i].FastGetSolutionStepValue(DELTA_ROTATION) * weight;
+                }
+                    
+                noalias(central_node.FastGetSolutionStepValue(VELOCITY)) = velocity;
+                noalias(central_node.FastGetSolutionStepValue(DELTA_DISPLACEMENT)) = delta_disp;
+                noalias(central_node.FastGetSolutionStepValue(ANGULAR_VELOCITY)) = angular_velocity;
+                noalias(central_node.FastGetSolutionStepValue(DELTA_ROTATION)) = delta_rotation;
+
+                break;
+            }
+        }
+
+        KRATOS_CATCH("")
+    }
+
+    void PolyhedronParticle::SyncForcesForFEMSurface(ModelPart& r_fem_model_part){
+        
+        KRATOS_TRY
+
+        auto& central_node = GetGeometry()[0];
+
+        //TODO: "SurfaceForPolyWall" is a temporary name, it should be changed to something more general
+        for (auto it = r_fem_model_part.GetSubModelPart("SurfaceForPolyWall").ConditionsBegin(); 
+             it != r_fem_model_part.GetSubModelPart("SurfaceForPolyWall").ConditionsEnd(); ++it) {
+            if (it->Id() == this->Id()) {
+                auto& this_condition = it->GetGeometry();
+
+                array_1d<double, 3>& contact_forces = central_node.FastGetSolutionStepValue(CONTACT_FORCES); //CONTACT_FOCES is used for DEM-FEM coupling
+                
+                // Calculate the weighted contact force for each node
+                for (unsigned int i = 0; i < this_condition.size(); ++i) {
+                    double weight = 1.0 / this_condition.size();
+                    noalias(this_condition[i].FastGetSolutionStepValue(CONTACT_FORCES)) += weight * contact_forces;
+                }
+                
+                break;
+            }
+        }
 
         KRATOS_CATCH("")
     }

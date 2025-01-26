@@ -131,6 +131,7 @@ namespace Kratos {
         void CreatePolyhedronContactElements();
         virtual void RepairPointersToNormalPropertiesOfPolyhedron(std::vector<PolyhedronParticle*>& rCustomListOfPolyhedronParticles);
         void InitializePolyhedrons();
+        virtual void CheckRigidBodyMotionForPolyWall(ModelPart& fem_model_part);
         virtual void InitializePolyhedronContactElements();
         void UpdateMaxIdOfCreatorDestructor() override;
         void ApplyPrescribedBoundaryConditions() override;
@@ -147,6 +148,7 @@ namespace Kratos {
         void PerformTimeIntegrationOfMotion(int StepFlag = 0) override;
         virtual void ForceOperations(ModelPart& r_model_part, ModelPart& r_polyhedron_model_part);
         void GetPolyhedronForce();
+        virtual void SynchronizeTotalForcesFromDEMWallToFEMSurface();
         void FinalizeSolutionStep() override;
         void FinalizeSolutionStepFEM();
         VectorResultElementsContainerType& GetResultsPoly() { return (mResultsPoly);}
@@ -189,6 +191,7 @@ namespace Kratos {
         VectorDistanceType mResultsDistancesPoly;
         RadiusArrayType mArrayOfAmplifiedRadiiPoly;
         SpatialSearch::Pointer mpSpSearch;
+        bool mRigidBodyMotionForPolyWall;
 
     }; //Class ContactExplicitSolverStrategy
 

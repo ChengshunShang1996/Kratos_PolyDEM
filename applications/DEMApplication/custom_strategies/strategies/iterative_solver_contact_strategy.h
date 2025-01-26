@@ -43,7 +43,7 @@ namespace Kratos
                              Parameters strategy_parameters)
       :ContactExplicitSolverStrategy(settings, max_delta_time, n_step_search, safety_factor, delta_option, p_creator_destructor, p_dem_fem_search, pSpSearch, strategy_parameters)
       {
-          
+          KRATOS_INFO("DEM") << "ContactIterativeSolverStrategy is being used" << std::endl;
       }
 
       /// Destructor.
@@ -77,12 +77,12 @@ namespace Kratos
 
       void SchemePredict()
       {
-          PerformTimeIntegrationOfMotion(1);
+        PerformTimeIntegrationOfMotion(1);
       }
 
       void SchemeCorrect()
       {
-          PerformTimeIntegrationOfMotion(2);
+        PerformTimeIntegrationOfMotion(2);
       }
 
       virtual double SolveSolutionStep() override

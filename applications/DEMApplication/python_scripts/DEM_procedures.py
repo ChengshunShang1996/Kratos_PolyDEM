@@ -1443,8 +1443,10 @@ class DEMIo():
 
     def ShowPrintingResultsOnScreen(self, all_model_parts, format_name):
         self.KratosPrintInfo("*******************  PRINTING RESULTS FOR {}  ***************************".format(format_name))
-        self.KratosPrintInfo("                        (" + str(all_model_parts.Get("SpheresPart").NumberOfElements(0)) + " elements)")
-        self.KratosPrintInfo("                        (" + str(all_model_parts.Get("SpheresPart").NumberOfNodes(0)) + " nodes)")
+        self.KratosPrintInfo("                        (" + str(all_model_parts.Get("SpheresPart").NumberOfElements(0)) + " elements of spheres)")
+        self.KratosPrintInfo("                        (" + str(all_model_parts.Get("SpheresPart").NumberOfNodes(0)) + " nodes of spheres)")
+        self.KratosPrintInfo("                        (" + str(all_model_parts.Get("RigidFacePart").NumberOfElements(0)) + " elements of walls)")
+        self.KratosPrintInfo("                        (" + str(all_model_parts.Get("RigidFacePart").NumberOfNodes(0)) + " nodes  of walls)")
         self.KratosPrintInfo("")
 
     def ShowPrintingPolyhedronResultsOnScreen(self, all_model_parts, format_name):

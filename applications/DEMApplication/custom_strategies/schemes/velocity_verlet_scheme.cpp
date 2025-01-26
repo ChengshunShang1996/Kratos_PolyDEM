@@ -26,7 +26,7 @@ namespace Kratos {
             const double mass,
             const double delta_t,
             const bool Fix_vel[3]) {
-
+        
         double mass_inv = 1.0 / mass;
         if(StepFlag == 1) //PREDICT
         {
