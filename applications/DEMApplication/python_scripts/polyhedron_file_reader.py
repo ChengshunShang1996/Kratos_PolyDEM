@@ -20,6 +20,7 @@ def ReadPolyhedronFile(filename):
     list_of_faces_list = []
     list_of_size = []
     list_of_volume = []
+    list_of_inertia_per_unit_mass_list = []
 
     for line in f:
         if line.startswith("//"):
@@ -74,13 +75,26 @@ def ReadPolyhedronFile(filename):
                 if nextline.startswith("End Volume"):
                     break
                 list_of_volume.append(float(nextline.split()[0]))
+
+        if line.startswith("Begin InertiaPerUnitMass"):
+            while True:
+                nextline=next(f)
+                list_of_inertia_per_unit_mass = []
+                if nextline.startswith("//"):
+                    continue
+                if nextline.startswith("End InertiaPerUnitMass"):
+                    break
+                inertia_per_unit_mass_list = nextline.split()[0]
+                inertia = list(map(float, inertia_per_unit_mass_list.strip('()').split(',')))
+                list_of_inertia_per_unit_mass.append(inertia)
+                list_of_inertia_per_unit_mass_list.append(list_of_inertia_per_unit_mass)
     
     f.close()
 
-    if len(list_of_volume)==0 or len(list_of_size)==0 or len(list_of_faces_list)==0 or len(list_of_vertices_list)==0 :
+    if len(list_of_volume)==0 or len(list_of_size)==0 or len(list_of_faces_list)==0 or len(list_of_vertices_list)==0 or len(list_of_inertia_per_unit_mass_list)==0:
         message = "\n\n" + "************  ERROR!   Problems reading polyhedron file: " + filename + "   ***************\n\n"
         Kratos.Logger.PrintInfo(message)
     else:
         Kratos.Logger.PrintInfo("Polyhedron file "+ filename + " was read correctly")
 
-    return [name, list_of_vertices_list, list_of_faces_list, list_of_size, list_of_volume]
+    return [name, list_of_vertices_list, list_of_faces_list, list_of_size, list_of_volume, list_of_inertia_per_unit_mass_list]

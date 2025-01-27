@@ -241,6 +241,18 @@ namespace Kratos {
         }
     }
 
+    static inline void ProductMatrices3X3(const Matrix Matrix1, const Matrix Matrix2, Matrix Matrix3)
+    {
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                Matrix3(i, j) = 0.0;
+                for (int k = 0; k < 3; k++) {
+                    Matrix3(i, j) += Matrix1(i, k) * Matrix2(k, j);
+                }
+            }
+        }
+    }
+
     static inline void ProductMatrix3X3Vector3X1(const double Matrix[3][3], const array_1d<double,3>& Vector1, array_1d<double,3>& Vector2)
     {
         for (int i=0; i<3; i++) {

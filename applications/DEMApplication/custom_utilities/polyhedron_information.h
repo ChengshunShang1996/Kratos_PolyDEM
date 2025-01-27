@@ -20,6 +20,7 @@ public:
     std::vector<double> mListOfVolume;
     std::vector<std::vector<array_1d<double,3>>> mListOfVerticesList;
     std::vector<std::vector<std::vector<int>>> mListOfFacesList;
+    std::vector<array_1d<double,3>> mListOfInertiaPerUnitMass;
     
     virtual ~PolyhedronInformation() {};
     

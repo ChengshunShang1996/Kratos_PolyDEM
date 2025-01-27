@@ -79,10 +79,11 @@ namespace Kratos {
 	    KRATOS_ERROR_IF_NOT(GetProperties().Has(POLYHEDRON_INFORMATION))<<"Something went wrong. Properties do not contain POLYHEDRON_INFORMATION.";
         const PolyhedronInformation& poly_info = GetProperties()[POLYHEDRON_INFORMATION];
         const int poly_shape_index = central_node.GetSolutionStepValue(POLYHEDRON_SHAPE_INDEX);
-        const std::vector<array_1d<double,3> >& reference_list_of_vertices = poly_info.mListOfVerticesList[poly_shape_index];
+        const std::vector<array_1d<double,3>>& reference_list_of_vertices = poly_info.mListOfVerticesList[poly_shape_index];
         const std::vector<std::vector<int>>& reference_list_of_faces = poly_info.mListOfFacesList[poly_shape_index];
         const double reference_size = poly_info.mListOfSize[poly_shape_index];
         const double reference_volume = poly_info.mListOfVolume[poly_shape_index];
+        const array_1d<double,3>& reference_inertia_per_unit_mass = poly_info.mListOfInertiaPerUnitMass[poly_shape_index];
 
         const unsigned int number_of_vertices = reference_list_of_vertices.size();
 
@@ -121,7 +122,14 @@ namespace Kratos {
 
         //SetMass(GetDensity() * CalculateVolume());
         SetMass(polyhedron_mass);
-        SetMomentOfInertia();
+
+        if (reference_inertia_per_unit_mass[0] == 0.0 && reference_inertia_per_unit_mass[1] == 0.0 && reference_inertia_per_unit_mass[2] == 0.0) {
+            SetMomentOfInertia();
+        } else {
+            mCurrentInertia = reference_inertia_per_unit_mass * polyhedron_mass;
+            mUseInputInertia = true;
+            UseInputInertia();
+        }
 
         KRATOS_CATCH("")
     }
@@ -225,7 +233,12 @@ namespace Kratos {
         auto& central_node = GetGeometry()[0];
         mRadius = central_node.FastGetSolutionStepValue(RADIUS); //Just in case someone is overwriting the radius in Python
 
-        SetMomentOfInertia();
+        if (mUseInputInertia == true){
+            UpdateCurrentInertia();
+            UseInputInertia();
+        } else {
+            SetMomentOfInertia();
+        }
 
         KRATOS_CATCH("")
     }
@@ -432,6 +445,41 @@ namespace Kratos {
 
         central_node.FastGetSolutionStepValue(POLYHEDRON_MOMENT_OF_INERTIA) = this_moment_of_inertia;
 
+        KRATOS_CATCH("")
+    }
+
+    void PolyhedronParticle::UseInputInertia(){
+
+        KRATOS_TRY
+
+        auto& central_node = GetGeometry()[0];
+        Matrix this_moment_of_inertia(3, 3, 0.0);
+        this_moment_of_inertia(0, 0) = mCurrentInertia[0];
+        this_moment_of_inertia(1, 1) = mCurrentInertia[1];
+        this_moment_of_inertia(2, 2) = mCurrentInertia[2];
+        central_node.FastGetSolutionStepValue(POLYHEDRON_MOMENT_OF_INERTIA) = this_moment_of_inertia;
+
+        KRATOS_CATCH("")
+    }
+
+    void PolyhedronParticle::UpdateCurrentInertia(){
+        
+        KRATOS_TRY
+
+        auto& central_node = GetGeometry()[0];
+        array_1d<double, 3>& delta_rotation = central_node.FastGetSolutionStepValue(DELTA_ROTATION);
+        double modulus_square = delta_rotation[0]*delta_rotation[0] + delta_rotation[1]*delta_rotation[1] + delta_rotation[2]*delta_rotation[2];
+        if (modulus_square != 0.0){   
+            Quaternion<double> rotation_quaternion = Quaternion<double>::FromRotationVector(delta_rotation);
+            Matrix rotation_matrix(3, 3, 0.0);
+            rotation_quaternion.ToRotationMatrix(rotation_matrix);
+            Matrix inertia_matrix = central_node.FastGetSolutionStepValue(POLYHEDRON_MOMENT_OF_INERTIA);
+            Matrix inertia_matrix_rotated(3, 3, 0.0);
+            GeometryFunctions::ProductMatrices3X3(rotation_matrix, inertia_matrix, inertia_matrix_rotated);
+            mCurrentInertia[0] = inertia_matrix_rotated(0, 0);
+            mCurrentInertia[1] = inertia_matrix_rotated(1, 1);
+            mCurrentInertia[2] = inertia_matrix_rotated(2, 2);
+        }
         KRATOS_CATCH("")
     }
 

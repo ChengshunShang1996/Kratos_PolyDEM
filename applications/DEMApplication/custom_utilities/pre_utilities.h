@@ -89,6 +89,7 @@ class PreUtilities
                                             pybind11::list& list_of_faces_list,
                                             pybind11::list& list_of_size,
                                             pybind11::list& list_of_volume,
+                                            pybind11::list& list_of_inertia_per_unit_mass_list,
                                             Properties::Pointer& p_properties) {
         PolyhedronInformation poly_info;
 
@@ -129,6 +130,16 @@ class PreUtilities
 
         for (int i = 0; i < (int) pybind11::len(list_of_volume); i++) {
             poly_info.mListOfVolume.push_back(pybind11::cast<double>(list_of_volume[i]));
+        }
+
+        for (int i = 0; i < (int) pybind11::len(list_of_inertia_per_unit_mass_list); i++) {
+            auto list_of_inertia_per_unit_mass = list_of_inertia_per_unit_mass_list[i].cast<pybind11::list>();
+            array_1d<double,3> temp_inertia_per_unit_mass;
+            pybind11::list list(list_of_inertia_per_unit_mass[0]);
+            temp_inertia_per_unit_mass[0] =  pybind11::cast<double>(list[0]);
+            temp_inertia_per_unit_mass[1] =  pybind11::cast<double>(list[1]);
+            temp_inertia_per_unit_mass[2] =  pybind11::cast<double>(list[2]);
+            poly_info.mListOfInertiaPerUnitMass.push_back(temp_inertia_per_unit_mass);
         }
 
         p_properties->SetValue(POLYHEDRON_INFORMATION, poly_info);

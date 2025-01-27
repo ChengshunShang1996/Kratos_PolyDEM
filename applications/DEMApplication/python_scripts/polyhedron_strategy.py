@@ -32,10 +32,10 @@ class ExplicitStrategy(BaseExplicitStrategy):
 
         if "PolyhedronFileName" in self.DEM_parameters.keys():
             polyhedron_file_name = self.DEM_parameters["PolyhedronFileName"].GetString()
-            [name, list_of_vertices_list, list_of_faces_list, list_of_size, list_of_volume] = polyhedron_file_reader.ReadPolyhedronFile(polyhedron_file_name)
+            [name, list_of_vertices_list, list_of_faces_list, list_of_size, list_of_volume, list_of_inertia_per_unit_mass_list] = polyhedron_file_reader.ReadPolyhedronFile(polyhedron_file_name)
             pre_utils = PreUtilities()
             for properties in self.spheres_model_part.Properties:
-                pre_utils.SetPolyhedronInformationInProperties(name, list_of_vertices_list, list_of_faces_list, list_of_size, list_of_volume, properties)
+                pre_utils.SetPolyhedronInformationInProperties(name, list_of_vertices_list, list_of_faces_list, list_of_size, list_of_volume, list_of_inertia_per_unit_mass_list, properties)
         
         self.settings = ContactExplicitSolverSettings()
         self.settings.r_model_part = self.spheres_model_part
