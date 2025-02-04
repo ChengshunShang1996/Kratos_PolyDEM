@@ -87,17 +87,19 @@ namespace Kratos {
 
         const unsigned int number_of_vertices = reference_list_of_vertices.size();
 
-        mListOfVertices.resize(number_of_vertices);
+        mListOfVerticesLocal.resize(number_of_vertices);
+        mListOfVerticesGlobal.resize(number_of_vertices);
 
         const double scaling_factor = (mRadius * 2.0) / reference_size;
 
         for (int i = 0; i < (int)number_of_vertices; i++) {
-            mListOfVertices[i][0] = scaling_factor * reference_list_of_vertices[i][0];
-            mListOfVertices[i][1] = scaling_factor * reference_list_of_vertices[i][1];
-            mListOfVertices[i][2] = scaling_factor * reference_list_of_vertices[i][2];
+            mListOfVerticesLocal[i][0] = scaling_factor * reference_list_of_vertices[i][0];
+            mListOfVerticesLocal[i][1] = scaling_factor * reference_list_of_vertices[i][1];
+            mListOfVerticesLocal[i][2] = scaling_factor * reference_list_of_vertices[i][2];
         }
 
         //InitializeVerticesDueToRotation();
+        UpdateListOfVerticesGlobal();
 
         const unsigned int number_of_faces = reference_list_of_faces.size();
 
@@ -127,7 +129,6 @@ namespace Kratos {
             SetMomentOfInertia();
         } else {
             mCurrentInertia = reference_inertia_per_unit_mass * polyhedron_mass;
-            mUseInputInertia = true;
             UseInputMomentOfInertia();
         }
 
@@ -233,9 +234,7 @@ namespace Kratos {
         auto& central_node = GetGeometry()[0];
         mRadius = central_node.FastGetSolutionStepValue(RADIUS); //Just in case someone is overwriting the radius in Python
 
-        if (mUseInputInertia != true){
-            SetMomentOfInertia();
-        }
+        UpdateListOfVerticesGlobal();
 
         KRATOS_CATCH("")
     }
@@ -524,6 +523,16 @@ namespace Kratos {
 
         }
     }*/
+
+    void PolyhedronParticle::UpdateListOfVerticesGlobal(){
+        auto& central_node = GetGeometry()[0];
+        Quaternion<double>& Orientation = central_node.FastGetSolutionStepValue(ORIENTATION);
+        array_1d<double, 3> global_rel_coord;
+        for (int i = 0; i < mListOfVerticesLocal.size(); ++i) {
+            GeometryFunctions::QuaternionVectorLocal2Global(Orientation, mListOfVerticesLocal[i], global_rel_coord);
+            noalias(mListOfVerticesGlobal[i]) = global_rel_coord;
+        }
+    }
 
     std::vector<Vector3> PolyhedronParticle::GetIntersectingFaceVertices(const Vector3& closestPoint, const Vector3& ContactVector, bool& find_face)
     {

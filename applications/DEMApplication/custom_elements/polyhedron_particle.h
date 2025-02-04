@@ -68,8 +68,9 @@ namespace Kratos
         void SetDensityFromProperties(double* density);
         void SetParticleMaterialFromProperties(int* particle_material);
         void SetMomentOfInertia();
-        virtual void UseInputMomentOfInertia();
-        virtual void UpdateCurrentInertia();
+        //virtual void UseInputMomentOfInertia();
+        //virtual void UpdateCurrentInertia();
+        virtual void UpdateListOfVerticesGlobal();
         void Move(const double delta_t, const bool rotation_option, const double force_reduction_factor, const int StepFlag) override;
         //void UpdateVerticesDueToRotation();
         //void InitializeVerticesDueToRotation();
@@ -111,10 +112,10 @@ namespace Kratos
         double mSearchRadius;
         double mRealMass;
         PropertiesProxy* mFastProperties;
-        std::vector<array_1d<double, 3>> mListOfVertices;
+        std::vector<array_1d<double, 3>> mListOfVerticesLocal;
+        std::vector<array_1d<double, 3>> mListOfVerticesGlobal;
         std::vector<std::vector<int>> mListOfFaces;
         array_1d<double,3> mCurrentInertia;
-        bool mUseInputInertia = false;
         //Condition::GeometryType& mMyFEMConditionReference = GetGeometry(); //This initialization is necessary but not right. It is updated before using.
         bool mIsBelongingToDEMWall;
 
