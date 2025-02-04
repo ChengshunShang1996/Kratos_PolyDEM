@@ -461,11 +461,12 @@ namespace Kratos {
         KRATOS_CATCH("")
     }
 
+    /*
     void PolyhedronParticle::UpdateCurrentInertia(){
         
         KRATOS_TRY
 
-        /*
+        
         auto& central_node = GetGeometry()[0];
         array_1d<double, 3>& delta_rotation = central_node.FastGetSolutionStepValue(DELTA_ROTATION);
         double modulus_square = delta_rotation[0]*delta_rotation[0] + delta_rotation[1]*delta_rotation[1] + delta_rotation[2]*delta_rotation[2];
@@ -479,9 +480,9 @@ namespace Kratos {
             mCurrentInertia[0] = inertia_matrix_rotated(0, 0);
             mCurrentInertia[1] = inertia_matrix_rotated(1, 1);
             mCurrentInertia[2] = inertia_matrix_rotated(2, 2);
-        }*/
+        }
         KRATOS_CATCH("")
-    }
+    }*/
 
     void PolyhedronParticle::Move(const double delta_t, const bool rotation_option, const double force_reduction_factor, const int StepFlag) {
         KRATOS_TRY
