@@ -72,7 +72,7 @@ namespace Kratos
         virtual void UpdateCurrentInertia();
         void Move(const double delta_t, const bool rotation_option, const double force_reduction_factor, const int StepFlag) override;
         void UpdateVerticesDueToRotation();
-        void InitializeVerticesDueToRotation();
+        //void InitializeVerticesDueToRotation();
         
         std::vector<Vector3> GetIntersectingFaceVertices(const Vector3& closestPoint, const Vector3& ContactVector, bool& find_face);
         bool IsPointOnFace(const std::vector<int> face, const Vector3& point);

@@ -97,7 +97,7 @@ namespace Kratos {
             mListOfVertices[i][2] = scaling_factor * reference_list_of_vertices[i][2];
         }
 
-        InitializeVerticesDueToRotation();
+        //InitializeVerticesDueToRotation();
 
         const unsigned int number_of_faces = reference_list_of_faces.size();
 
@@ -506,6 +506,7 @@ namespace Kratos {
         }
     }
 
+    /*
     void PolyhedronParticle::InitializeVerticesDueToRotation(){
         auto& central_node = GetGeometry()[0];
         array_1d<double, 3>& delta_rotation = central_node.FastGetSolutionStepValue(INITIAL_ROTATION_VECTOR);
@@ -521,7 +522,7 @@ namespace Kratos {
             }
 
         }
-    }
+    }*/
 
     std::vector<Vector3> PolyhedronParticle::GetIntersectingFaceVertices(const Vector3& closestPoint, const Vector3& ContactVector, bool& find_face)
     {
