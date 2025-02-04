@@ -37,9 +37,9 @@ namespace Kratos {
 
     void DEMIntegrationScheme::RotatePolyhedron(PolyhedronParticle* polyhedron_element, Node & i, const double delta_t, const double moment_reduction_factor, const int StepFlag) {
         CalculateRotationalMotionOfPolyhedronNode(i, delta_t, moment_reduction_factor, StepFlag);
-        if (StepFlag != 1){
-            polyhedron_element->UpdateVerticesDueToRotation();
-        }
+        //if (StepFlag != 1){
+        //    polyhedron_element->UpdateVerticesDueToRotation();
+        //}
     }
 
     void DEMIntegrationScheme::MoveRigidBodyElement(RigidBodyElement3D* rigid_body_element, Node & i, const double delta_t, const double force_reduction_factor, const int StepFlag) {

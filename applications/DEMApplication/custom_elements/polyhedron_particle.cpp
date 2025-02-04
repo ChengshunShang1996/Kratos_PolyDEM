@@ -490,6 +490,7 @@ namespace Kratos {
         KRATOS_CATCH("")
     }
 
+    /*
     void PolyhedronParticle::UpdateVerticesDueToRotation(){
         auto& central_node = GetGeometry()[0];
         array_1d<double, 3>& delta_rotation = central_node.FastGetSolutionStepValue(DELTA_ROTATION);
@@ -504,7 +505,7 @@ namespace Kratos {
                 mListOfVertices[k] = tempVector;
             }
         }
-    }
+    }*/
 
     /*
     void PolyhedronParticle::InitializeVerticesDueToRotation(){
