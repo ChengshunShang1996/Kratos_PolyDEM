@@ -128,7 +128,7 @@ namespace Kratos {
         } else {
             mCurrentInertia = reference_inertia_per_unit_mass * polyhedron_mass;
             mUseInputInertia = true;
-            UseInputInertia();
+            UseInputMomentOfInertia();
         }
 
         KRATOS_CATCH("")
@@ -233,10 +233,7 @@ namespace Kratos {
         auto& central_node = GetGeometry()[0];
         mRadius = central_node.FastGetSolutionStepValue(RADIUS); //Just in case someone is overwriting the radius in Python
 
-        if (mUseInputInertia == true){
-            UpdateCurrentInertia();
-            UseInputInertia();
-        } else {
+        if (mUseInputInertia != true){
             SetMomentOfInertia();
         }
 
@@ -443,21 +440,19 @@ namespace Kratos {
             }
         }
 
-        central_node.FastGetSolutionStepValue(POLYHEDRON_MOMENT_OF_INERTIA) = this_moment_of_inertia;
+        central_node.FastGetSolutionStepValue(PRINCIPAL_MOMENTS_OF_INERTIA)[0] = this_moment_of_inertia(0,0);
+        central_node.FastGetSolutionStepValue(PRINCIPAL_MOMENTS_OF_INERTIA)[1] = this_moment_of_inertia(1,1);
+        central_node.FastGetSolutionStepValue(PRINCIPAL_MOMENTS_OF_INERTIA)[2] = this_moment_of_inertia(2,2);
 
         KRATOS_CATCH("")
     }
 
-    void PolyhedronParticle::UseInputInertia(){
+    void PolyhedronParticle::UseInputMomentOfInertia(){
 
         KRATOS_TRY
 
         auto& central_node = GetGeometry()[0];
-        Matrix this_moment_of_inertia(3, 3, 0.0);
-        this_moment_of_inertia(0, 0) = mCurrentInertia[0];
-        this_moment_of_inertia(1, 1) = mCurrentInertia[1];
-        this_moment_of_inertia(2, 2) = mCurrentInertia[2];
-        central_node.FastGetSolutionStepValue(POLYHEDRON_MOMENT_OF_INERTIA) = this_moment_of_inertia;
+        central_node.FastGetSolutionStepValue(PRINCIPAL_MOMENTS_OF_INERTIA) = mCurrentInertia;
 
         KRATOS_CATCH("")
     }
@@ -466,6 +461,7 @@ namespace Kratos {
         
         KRATOS_TRY
 
+        /*
         auto& central_node = GetGeometry()[0];
         array_1d<double, 3>& delta_rotation = central_node.FastGetSolutionStepValue(DELTA_ROTATION);
         double modulus_square = delta_rotation[0]*delta_rotation[0] + delta_rotation[1]*delta_rotation[1] + delta_rotation[2]*delta_rotation[2];
@@ -473,13 +469,13 @@ namespace Kratos {
             Quaternion<double> rotation_quaternion = Quaternion<double>::FromRotationVector(delta_rotation);
             Matrix rotation_matrix(3, 3, 0.0);
             rotation_quaternion.ToRotationMatrix(rotation_matrix);
-            Matrix inertia_matrix = central_node.FastGetSolutionStepValue(POLYHEDRON_MOMENT_OF_INERTIA);
+            Matrix inertia_matrix = central_node.FastGetSolutionStepValue(PRINCIPAL_MOMENTS_OF_INERTIA);
             Matrix inertia_matrix_rotated(3, 3, 0.0);
             GeometryFunctions::ProductMatrices3X3(rotation_matrix, inertia_matrix, inertia_matrix_rotated);
             mCurrentInertia[0] = inertia_matrix_rotated(0, 0);
             mCurrentInertia[1] = inertia_matrix_rotated(1, 1);
             mCurrentInertia[2] = inertia_matrix_rotated(2, 2);
-        }
+        }*/
         KRATOS_CATCH("")
     }
 

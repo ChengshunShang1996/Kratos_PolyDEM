@@ -68,7 +68,7 @@ namespace Kratos
         void SetDensityFromProperties(double* density);
         void SetParticleMaterialFromProperties(int* particle_material);
         void SetMomentOfInertia();
-        virtual void UseInputInertia();
+        virtual void UseInputMomentOfInertia();
         virtual void UpdateCurrentInertia();
         void Move(const double delta_t, const bool rotation_option, const double force_reduction_factor, const int StepFlag) override;
         void UpdateVerticesDueToRotation();

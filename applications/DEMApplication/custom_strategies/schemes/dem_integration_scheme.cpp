@@ -97,11 +97,12 @@ namespace Kratos {
 
     void DEMIntegrationScheme::CalculateRotationalMotionOfPolyhedronNode(Node & i, const double delta_t, const double moment_reduction_factor, const int StepFlag) {
 
-        Matrix moment_of_inertia               = i.FastGetSolutionStepValue(POLYHEDRON_MOMENT_OF_INERTIA);
-        array_1d<double, 3 >& angular_velocity = i.FastGetSolutionStepValue(ANGULAR_VELOCITY);
-        array_1d<double, 3 >& torque           = i.FastGetSolutionStepValue(PARTICLE_MOMENT);
-        array_1d<double, 3 >& rotated_angle    = i.FastGetSolutionStepValue(PARTICLE_ROTATION_ANGLE);
-        array_1d<double, 3 >& delta_rotation   = i.FastGetSolutionStepValue(DELTA_ROTATION);
+        array_1d<double, 3 >& moments_of_inertia = i.FastGetSolutionStepValue(PRINCIPAL_MOMENTS_OF_INERTIA);
+        array_1d<double, 3 >& angular_velocity   = i.FastGetSolutionStepValue(ANGULAR_VELOCITY);
+        array_1d<double, 3 >& torque             = i.FastGetSolutionStepValue(PARTICLE_MOMENT);
+        array_1d<double, 3 >& rotated_angle      = i.FastGetSolutionStepValue(PARTICLE_ROTATION_ANGLE);
+        array_1d<double, 3 >& delta_rotation     = i.FastGetSolutionStepValue(DELTA_ROTATION);
+        Quaternion<double  >& Orientation        = i.FastGetSolutionStepValue(ORIENTATION);
 
         #ifdef KRATOS_DEBUG
         DemDebugFunctions::CheckIfNan(torque, "NAN in Torque in Integration Scheme");
@@ -112,8 +113,10 @@ namespace Kratos {
         Fix_Ang_vel[1] = i.Is(DEMFlags::FIXED_ANG_VEL_Y);
         Fix_Ang_vel[2] = i.Is(DEMFlags::FIXED_ANG_VEL_Z);
 
+        //TODO: CLEAN THIS UP
         //TODO: ONLY SUPPORT symplectic_euler_scheme and velocity_verlet_scheme now
-        CalculateNewRotationalVariablesOfPolyhedrons(StepFlag, i, moment_of_inertia, angular_velocity, torque, moment_reduction_factor, rotated_angle, delta_rotation, delta_t, Fix_Ang_vel);
+        //CalculateNewRotationalVariablesOfPolyhedrons(StepFlag, i, moment_of_inertia, angular_velocity, torque, moment_reduction_factor, rotated_angle, delta_rotation, delta_t, Fix_Ang_vel);
+        CalculateNewRotationalVariablesOfRigidBodyElements(StepFlag, i, moments_of_inertia, angular_velocity, torque, moment_reduction_factor, rotated_angle, delta_rotation, Orientation, delta_t, Fix_Ang_vel);
     }
 
     void DEMIntegrationScheme::CalculateRotationalMotionOfRigidBodyElementNode(Node & i, const double delta_t, const double moment_reduction_factor, const int StepFlag) {
